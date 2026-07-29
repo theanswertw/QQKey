@@ -1,0 +1,44 @@
+:root {
+  color-scheme: light dark;
+  --qq-bg: #16181d;
+  --qq-text: #e8eaed;
+  --qq-text-dim: rgba(232, 234, 237, 0.55);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --qq-bg: #f7f8fa;
+    --qq-text: #1a1c1e;
+    --qq-text-dim: rgba(26, 28, 30, 0.55);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--qq-bg);
+  color: var(--qq-text);
+  font-family: "Segoe UI", "Microsoft JhengHei UI", system-ui, sans-serif;
+}
+
+.settings {
+  padding: 24px 28px;
+}
+
+.settings__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.settings__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--qq-text-dim);
+}

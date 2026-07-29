@@ -1,0 +1,152 @@
+:root {
+  --qq-radius: 12px;
+  --qq-surface: rgba(28, 30, 36, 0.92);
+  --qq-border: rgba(255, 255, 255, 0.12);
+  --qq-text: #e8eaed;
+  --qq-text-dim: rgba(232, 234, 237, 0.55);
+  --qq-accent: #4a9eff;
+  --qq-selected: rgba(74, 158, 255, 0.16);
+  --qq-mono: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --qq-surface: rgba(252, 252, 253, 0.94);
+    --qq-border: rgba(0, 0, 0, 0.12);
+    --qq-text: #1a1c1e;
+    --qq-text-dim: rgba(26, 28, 30, 0.55);
+    --qq-selected: rgba(74, 158, 255, 0.14);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  /* 視窗設為 transparent，圓角外的區域必須完全透明才不會出現方形底 */
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  font-family: "Segoe UI", "Microsoft JhengHei UI", system-ui, sans-serif;
+}
+
+.launcher {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--qq-border);
+  border-radius: var(--qq-radius);
+  background: var(--qq-surface);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  color: var(--qq-text);
+  overflow: hidden;
+}
+
+.launcher__input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--qq-border);
+}
+
+.launcher__glyph {
+  font-size: 18px;
+  color: var(--qq-text-dim);
+}
+
+.launcher__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-family: var(--qq-mono);
+  font-size: 16px;
+  user-select: text;
+}
+
+.launcher__input::placeholder {
+  color: var(--qq-text-dim);
+}
+
+.launcher__list {
+  flex: 1;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.launcher__item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.launcher__item--selected {
+  background: var(--qq-selected);
+}
+
+.launcher__index {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  font-family: var(--qq-mono);
+  font-size: 12px;
+  color: var(--qq-text-dim);
+}
+
+.launcher__command {
+  flex: none;
+  font-family: var(--qq-mono);
+  font-size: 14px;
+  white-space: pre;
+}
+
+/* 佔位符不會被送出，僅提示使用者接下來要在終端機裡補什麼 */
+.launcher__hint {
+  color: var(--qq-text-dim);
+}
+
+.launcher__description {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--qq-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.launcher__score {
+  flex: none;
+  font-size: 11px;
+  color: var(--qq-accent);
+}
+
+.launcher__empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--qq-text-dim);
+}
+
+.launcher__footer {
+  display: flex;
+  gap: 14px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--qq-border);
+  font-size: 11px;
+  color: var(--qq-text-dim);
+}
