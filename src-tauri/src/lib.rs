@@ -1,10 +1,17 @@
 mod caret;
+mod catalog;
 mod commands;
 mod hotkey;
 mod inject;
+mod ranking;
+mod state;
+mod store;
 mod template;
 
 use tauri::{Manager, WindowEvent};
+
+use crate::state::AppState;
+use crate::store::Store;
 
 /// 開發時的診斷輸出。定位與注入牽涉一連串可能失敗的 Win32 呼叫，
 /// 出問題時需要知道是在哪一步退出的。
@@ -22,12 +29,16 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
+            commands::search_candidates,
             commands::hide_launcher,
             commands::accept_candidate,
             commands::open_settings
         ])
         .setup(|app| {
             let handle = app.handle();
+
+            let database = app.path().app_data_dir()?.join("qqkey.db");
+            app.manage(AppState::load(Store::open(&database)?)?);
 
             inject::watch_foreground();
 

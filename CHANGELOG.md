@@ -23,6 +23,16 @@
 - **M3**：以 `SetWinEventHook` 持續追蹤前景視窗，取代按下快捷鍵當下才查詢的作法。
 - **M3**：收起候選框時把焦點還給原本的視窗，Esc 之後可直接接著打字。
 
+- **M4**：SQLite 儲存（`store.rs`）與記憶體候選池（`state.rs`），
+  候選池啟動時全載入，敲鍵搜尋不必碰資料庫。
+- **M4**：內建命令目錄，涵蓋 usbipd、git、wsl、netsh、docker、winget、npm、cargo
+  共 104 筆命令，全附繁體中文說明與中文搜尋關鍵字。
+- **M4**：`ranking.rs` 以 `nucleo-matcher` 模糊比對，乘上 frecency 加權排序；
+  frecency 採三十天半衰期的增量衰減，只需存分數與最後使用時間。
+  分數相同時依 來源優先序 → 命令長度 決勝。
+- **M4**：候選框改為向後端查詢真實資料；空查詢時只列出用過的命令，
+  而不是塞一串沒用過的當噪音。
+
 ### Fixed
 
 - **M3**：`settings` 視窗即使設為 `visible: false`，在啟動時仍會被 Windows
@@ -32,4 +42,5 @@
 
 ### Notes
 
-- 候選框資料在 M4 之前為固定示範資料。
+- `rusqlite` 固定在 0.37：0.40 會帶進 `libsqlite3-sys` 0.38，其 build script
+  用了 unstable 的 `cfg_select`，在 Rust 1.92 stable 上編不過。

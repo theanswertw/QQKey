@@ -1,0 +1,55 @@
+{
+  "tool": "usbipd",
+  "commands": [
+    {
+      "template": "usbipd list",
+      "description": "列出所有 USB 裝置與其 BUSID",
+      "keywords": "usb 列表 裝置 busid"
+    },
+    {
+      "template": "usbipd state",
+      "description": "以 JSON 輸出目前的分享狀態",
+      "keywords": "狀態 json"
+    },
+    {
+      "template": "usbipd bind --busid {busid}",
+      "description": "綁定裝置以供分享（需系統管理員）",
+      "keywords": "綁定 分享"
+    },
+    {
+      "template": "usbipd unbind --busid {busid}",
+      "description": "解除單一裝置的綁定",
+      "keywords": "解除綁定"
+    },
+    {
+      "template": "usbipd unbind --all",
+      "description": "解除所有裝置的綁定",
+      "keywords": "解除綁定 全部"
+    },
+    {
+      "template": "usbipd attach --wsl --busid {busid}",
+      "description": "將裝置掛載到 WSL",
+      "keywords": "掛載 wsl 連接"
+    },
+    {
+      "template": "usbipd attach --wsl --auto-attach --busid {busid}",
+      "description": "掛載到 WSL 並在重新插拔後自動重連",
+      "keywords": "掛載 wsl 自動 重連"
+    },
+    {
+      "template": "usbipd detach --busid {busid}",
+      "description": "從 WSL 卸離裝置",
+      "keywords": "卸離 中斷"
+    },
+    {
+      "template": "usbipd detach --all",
+      "description": "卸離所有已掛載的裝置",
+      "keywords": "卸離 全部"
+    },
+    {
+      "template": "usbipd --version",
+      "description": "顯示 usbipd-win 版本",
+      "keywords": "版本"
+    }
+  ]
+}

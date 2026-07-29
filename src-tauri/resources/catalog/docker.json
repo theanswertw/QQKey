@@ -1,0 +1,75 @@
+{
+  "tool": "docker",
+  "commands": [
+    {
+      "template": "docker ps",
+      "description": "列出執行中的容器",
+      "keywords": "容器 列表"
+    },
+    {
+      "template": "docker ps -a",
+      "description": "列出所有容器（含已停止）",
+      "keywords": "容器 列表 全部"
+    },
+    {
+      "template": "docker images",
+      "description": "列出本機映像檔",
+      "keywords": "映像 列表"
+    },
+    {
+      "template": "docker logs -f {container}",
+      "description": "持續跟看容器日誌",
+      "keywords": "日誌 log"
+    },
+    {
+      "template": "docker exec -it {container} sh",
+      "description": "進入執行中的容器",
+      "keywords": "進入 shell"
+    },
+    {
+      "template": "docker build -t {tag} .",
+      "description": "以目前目錄的 Dockerfile 建置映像",
+      "keywords": "建置 映像"
+    },
+    {
+      "template": "docker run --rm -it {image} sh",
+      "description": "以互動模式跑一個用完即刪的容器",
+      "keywords": "執行 暫時"
+    },
+    {
+      "template": "docker rm -f {container}",
+      "description": "強制移除容器",
+      "keywords": "移除 刪除"
+    },
+    {
+      "template": "docker rmi {image}",
+      "description": "移除映像檔",
+      "keywords": "移除 映像"
+    },
+    {
+      "template": "docker compose up -d",
+      "description": "以背景模式啟動 compose 服務",
+      "keywords": "compose 啟動"
+    },
+    {
+      "template": "docker compose down",
+      "description": "停止並移除 compose 服務",
+      "keywords": "compose 停止"
+    },
+    {
+      "template": "docker compose logs -f",
+      "description": "持續跟看 compose 服務日誌",
+      "keywords": "compose 日誌"
+    },
+    {
+      "template": "docker system prune -a",
+      "description": "清除未使用的容器、映像與網路",
+      "keywords": "清理 空間"
+    },
+    {
+      "template": "docker volume ls",
+      "description": "列出資料卷",
+      "keywords": "資料卷 volume"
+    }
+  ]
+}

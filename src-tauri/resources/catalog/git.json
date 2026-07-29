@@ -1,0 +1,105 @@
+{
+  "tool": "git",
+  "commands": [
+    {
+      "template": "git status",
+      "description": "顯示工作區狀態",
+      "keywords": "狀態"
+    },
+    {
+      "template": "git switch {branch}",
+      "description": "切換到指定分支",
+      "keywords": "切換 分支"
+    },
+    {
+      "template": "git switch -c {branch}",
+      "description": "建立並切換到新分支",
+      "keywords": "新增 分支"
+    },
+    {
+      "template": "git add -A",
+      "description": "暫存所有變更",
+      "keywords": "暫存"
+    },
+    {
+      "template": "git commit -m \"{message}\"",
+      "description": "提交暫存的變更",
+      "keywords": "提交"
+    },
+    {
+      "template": "git commit --amend",
+      "description": "修改最近一次提交",
+      "keywords": "提交 修改"
+    },
+    {
+      "template": "git push",
+      "description": "推送到遠端",
+      "keywords": "推送"
+    },
+    {
+      "template": "git pull --rebase",
+      "description": "拉取並以 rebase 併入",
+      "keywords": "拉取 更新"
+    },
+    {
+      "template": "git fetch --all --prune",
+      "description": "抓取所有遠端並清掉已刪除的分支",
+      "keywords": "抓取 清理"
+    },
+    {
+      "template": "git log --oneline --graph --decorate -20",
+      "description": "以圖形檢視最近 20 筆提交",
+      "keywords": "歷史 紀錄"
+    },
+    {
+      "template": "git diff",
+      "description": "檢視尚未暫存的變更",
+      "keywords": "差異 比對"
+    },
+    {
+      "template": "git diff --staged",
+      "description": "檢視已暫存的變更",
+      "keywords": "差異 暫存"
+    },
+    {
+      "template": "git restore {path}",
+      "description": "捨棄檔案的工作區變更",
+      "keywords": "還原 捨棄"
+    },
+    {
+      "template": "git restore --staged {path}",
+      "description": "把檔案移出暫存區",
+      "keywords": "取消暫存"
+    },
+    {
+      "template": "git stash",
+      "description": "暫存目前的變更",
+      "keywords": "擱置"
+    },
+    {
+      "template": "git stash pop",
+      "description": "取回最近一次擱置的變更",
+      "keywords": "擱置 取回"
+    },
+    {
+      "template": "git branch -vv",
+      "description": "列出分支與其追蹤的遠端",
+      "keywords": "分支 列表"
+    },
+    {
+      "template": "git reset --hard origin/{branch}",
+      "description": "捨棄本機變更並對齊遠端分支",
+      "keywords": "重設 對齊"
+    },
+    {
+      "template": "git cherry-pick {commit}",
+      "description": "套用指定提交",
+      "keywords": "挑選 提交"
+    },
+    {
+      "template": "git rebase -i HEAD~{n}",
+      "description": "互動式重整最近 n 筆提交",
+      "keywords": "重整 互動"
+    }
+  ]
+}

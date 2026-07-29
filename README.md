@@ -13,12 +13,13 @@
 | M1 | ✅ | Tauri 骨架、雙視窗、全域快捷鍵 Alt+Q |
 | M2 | ✅ | 焦點還原與 `SendInput` 文字注入 |
 | M3 | ✅ | 候選框貼齊輸入游標 |
-| M4 | ⬜ | 命令目錄、模糊搜尋、frecency 排序 |
+| M4 | ✅ | 命令目錄、模糊搜尋、frecency 排序 |
 | M5 | ⬜ | PSReadLine 歷史學習與機密過濾 |
 | M6 | ⬜ | 字詞設定畫面 |
 | M7 | ⬜ | 系統匣、開機自啟、封裝 |
 
-M4 之前，候選框顯示的是一組固定的示範資料。
+內建目錄涵蓋 **usbipd、git、wsl、netsh、docker、winget、npm、cargo** 共 104 筆命令，
+全附繁體中文說明。搜尋支援中文關鍵字——輸入「掛載」也能找到 `usbipd attach --wsl`。
 
 ## 技術架構
 
@@ -26,19 +27,26 @@ M4 之前，候選框顯示的是一組固定的示範資料。
   caret 定位與文字注入直接呼叫 Win32（`windows` crate）。
 - **前端**：React + TypeScript + Vite，兩個入口對應兩個 Tauri 視窗
   （`launcher` 無邊框透明置頂候選框、`settings` 字詞設定畫面）。
-- **資料**：SQLite，存放於 `%APPDATA%\QQKey\`，不對外傳送。
+- **資料**：SQLite，存放於 `%APPDATA%\com.example.qqkey\qqkey.db`，不對外傳送。
+  候選池啟動時全載入記憶體，每次敲鍵的搜尋都不必再碰資料庫。
 
 ```
 src/
 ├─ launcher/   候選框 UI
 ├─ settings/   字詞設定畫面
 └─ shared/     共用型別
-src-tauri/src/
-├─ hotkey.rs    全域快捷鍵與候選框顯示／隱藏
-├─ caret.rs     游標定位（三層 fallback）與螢幕邊界夾制
-├─ inject.rs    前景追蹤、焦點還原 + SendInput 注入
-├─ template.rs  `{佔位符}` 截斷
-└─ commands.rs  前端可呼叫的 IPC
+src-tauri/
+├─ resources/catalog/*.json   內建命令目錄（隨執行檔內嵌）
+└─ src/
+   ├─ hotkey.rs    全域快捷鍵與候選框顯示／隱藏
+   ├─ caret.rs     游標定位（三層 fallback）與螢幕邊界夾制
+   ├─ inject.rs    前景追蹤、焦點還原 + SendInput 注入
+   ├─ template.rs  `{佔位符}` 截斷
+   ├─ catalog/     候選命令型別與內建目錄載入
+   ├─ store.rs     SQLite 儲存與 frecency 持久化
+   ├─ ranking.rs   模糊比對 × frecency 排序
+   ├─ state.rs     資料庫與記憶體候選池
+   └─ commands.rs  前端可呼叫的 IPC
 spike/
 ├─ caret-probe/  caret 定位驗證（M0）
 └─ input-probe/  SendInput 與快捷鍵驗證

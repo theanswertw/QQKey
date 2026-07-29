@@ -1,0 +1,80 @@
+{
+  "tool": "cargo",
+  "commands": [
+    {
+      "template": "cargo build",
+      "description": "建置除錯版本",
+      "keywords": "建置"
+    },
+    {
+      "template": "cargo build --release",
+      "description": "建置最佳化的產品版本",
+      "keywords": "建置 發行"
+    },
+    {
+      "template": "cargo run",
+      "description": "建置並執行",
+      "keywords": "執行"
+    },
+    {
+      "template": "cargo test",
+      "description": "執行所有測試",
+      "keywords": "測試"
+    },
+    {
+      "template": "cargo check",
+      "description": "只做型別檢查，不產生執行檔",
+      "keywords": "檢查 編譯"
+    },
+    {
+      "template": "cargo clippy",
+      "description": "執行 lint 檢查",
+      "keywords": "lint 檢查"
+    },
+    {
+      "template": "cargo fmt",
+      "description": "格式化程式碼",
+      "keywords": "格式化"
+    },
+    {
+      "template": "cargo add {crate}",
+      "description": "加入相依套件",
+      "keywords": "新增 相依"
+    },
+    {
+      "template": "cargo remove {crate}",
+      "description": "移除相依套件",
+      "keywords": "移除 相依"
+    },
+    {
+      "template": "cargo update",
+      "description": "更新 Cargo.lock 中的相依版本",
+      "keywords": "更新"
+    },
+    {
+      "template": "cargo tree",
+      "description": "以樹狀檢視相依關係",
+      "keywords": "相依 樹狀"
+    },
+    {
+      "template": "cargo clean",
+      "description": "清除建置產物",
+      "keywords": "清理"
+    },
+    {
+      "template": "cargo doc --open",
+      "description": "產生並開啟文件",
+      "keywords": "文件"
+    },
+    {
+      "template": "cargo tauri dev",
+      "description": "啟動 Tauri 開發模式",
+      "keywords": "tauri 開發"
+    },
+    {
+      "template": "cargo tauri build",
+      "description": "建置 Tauri 安裝檔",
+      "keywords": "tauri 建置 打包"
+    }
+  ]
+}

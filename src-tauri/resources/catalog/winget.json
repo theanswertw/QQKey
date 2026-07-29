@@ -1,0 +1,45 @@
+{
+  "tool": "winget",
+  "commands": [
+    {
+      "template": "winget search {query}",
+      "description": "搜尋可安裝的套件",
+      "keywords": "搜尋"
+    },
+    {
+      "template": "winget install {package}",
+      "description": "安裝套件",
+      "keywords": "安裝"
+    },
+    {
+      "template": "winget list",
+      "description": "列出已安裝的套件",
+      "keywords": "列表 已安裝"
+    },
+    {
+      "template": "winget upgrade",
+      "description": "列出有更新可用的套件",
+      "keywords": "更新 檢查"
+    },
+    {
+      "template": "winget upgrade --all",
+      "description": "更新所有套件",
+      "keywords": "更新 全部"
+    },
+    {
+      "template": "winget uninstall {package}",
+      "description": "移除套件",
+      "keywords": "移除 解除安裝"
+    },
+    {
+      "template": "winget show {package}",
+      "description": "顯示套件的詳細資訊",
+      "keywords": "詳情 資訊"
+    },
+    {
+      "template": "winget source update",
+      "description": "更新套件來源索引",
+      "keywords": "來源 更新"
+    }
+  ]
+}

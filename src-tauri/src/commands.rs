@@ -1,10 +1,21 @@
 //! 前端可呼叫的 IPC 指令。
 
-use tauri::{Manager, Runtime, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
+use crate::catalog::Candidate;
 use crate::hotkey::LAUNCHER_LABEL;
+use crate::state::AppState;
 
 const SETTINGS_LABEL: &str = "settings";
+
+/// 一次最多回九筆，對應數字鍵 1–9。
+const MAX_CANDIDATES: usize = 9;
+
+/// 依查詢字串取得候選命令。查詢為空時回傳最常用的幾筆。
+#[tauri::command]
+pub fn search_candidates(state: State<AppState>, query: String) -> Vec<Candidate> {
+    state.search(&query, MAX_CANDIDATES)
+}
 
 /// 取消（Esc）：收起候選框並把焦點還給原本的視窗。
 #[tauri::command]
@@ -17,10 +28,15 @@ pub fn hide_launcher<R: Runtime>(window: WebviewWindow<R>) {
 #[tauri::command]
 pub fn accept_candidate<R: Runtime>(
     window: WebviewWindow<R>,
-    template: String,
+    state: State<AppState>,
+    id: i64,
 ) -> Result<(), String> {
+    let template = state.template_of(id)?;
     let _ = window.hide();
-    crate::inject::inject_text(crate::template::injectable_prefix(&template))
+    crate::inject::inject_text(crate::template::injectable_prefix(&template))?;
+
+    // 注入成功才算數，免得把失敗的嘗試也拉高排序
+    state.record_use(id)
 }
 
 /// 由系統匣或設定入口開啟設定視窗。

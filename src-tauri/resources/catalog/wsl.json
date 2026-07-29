@@ -1,0 +1,65 @@
+{
+  "tool": "wsl",
+  "commands": [
+    {
+      "template": "wsl --list --verbose",
+      "description": "列出所有發行版與其狀態、WSL 版本",
+      "keywords": "列表 發行版 狀態"
+    },
+    {
+      "template": "wsl --status",
+      "description": "顯示 WSL 整體設定與預設發行版",
+      "keywords": "狀態 設定"
+    },
+    {
+      "template": "wsl -d {distro}",
+      "description": "進入指定的發行版",
+      "keywords": "進入 啟動"
+    },
+    {
+      "template": "wsl --shutdown",
+      "description": "關閉所有發行版與虛擬機（網路異常時常用）",
+      "keywords": "關閉 重啟 網路"
+    },
+    {
+      "template": "wsl --terminate {distro}",
+      "description": "只關閉指定的發行版",
+      "keywords": "關閉 終止"
+    },
+    {
+      "template": "wsl --set-default {distro}",
+      "description": "設定預設發行版",
+      "keywords": "預設"
+    },
+    {
+      "template": "wsl --install -d {distro}",
+      "description": "安裝指定的發行版",
+      "keywords": "安裝"
+    },
+    {
+      "template": "wsl --list --online",
+      "description": "列出可安裝的發行版",
+      "keywords": "列表 線上 可安裝"
+    },
+    {
+      "template": "wsl --update",
+      "description": "更新 WSL 核心",
+      "keywords": "更新"
+    },
+    {
+      "template": "wsl --export {distro} {path}",
+      "description": "把發行版匯出成 tar 檔備份",
+      "keywords": "匯出 備份"
+    },
+    {
+      "template": "wsl --import {distro} {installPath} {tarball}",
+      "description": "從 tar 檔還原發行版",
+      "keywords": "匯入 還原"
+    },
+    {
+      "template": "wsl --unregister {distro}",
+      "description": "移除發行版與其所有資料",
+      "keywords": "移除 刪除"
+    }
+  ]
+}

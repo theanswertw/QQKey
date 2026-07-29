@@ -1,0 +1,65 @@
+{
+  "tool": "npm",
+  "commands": [
+    {
+      "template": "npm install",
+      "description": "依 package.json 安裝相依套件",
+      "keywords": "安裝 相依"
+    },
+    {
+      "template": "npm install {package}",
+      "description": "安裝並加入 dependencies",
+      "keywords": "安裝 新增"
+    },
+    {
+      "template": "npm install -D {package}",
+      "description": "安裝並加入 devDependencies",
+      "keywords": "安裝 開發"
+    },
+    {
+      "template": "npm uninstall {package}",
+      "description": "移除套件",
+      "keywords": "移除"
+    },
+    {
+      "template": "npm ci",
+      "description": "依 lock 檔乾淨安裝（CI 用）",
+      "keywords": "安裝 乾淨 ci"
+    },
+    {
+      "template": "npm run {script}",
+      "description": "執行 package.json 中的 script",
+      "keywords": "執行 腳本"
+    },
+    {
+      "template": "npm run dev",
+      "description": "啟動開發模式",
+      "keywords": "開發 啟動"
+    },
+    {
+      "template": "npm run build",
+      "description": "建置產品版本",
+      "keywords": "建置"
+    },
+    {
+      "template": "npm test",
+      "description": "執行測試",
+      "keywords": "測試"
+    },
+    {
+      "template": "npm outdated",
+      "description": "列出有新版本的套件",
+      "keywords": "過期 更新 檢查"
+    },
+    {
+      "template": "npm list --depth=0",
+      "description": "列出直接相依的套件",
+      "keywords": "列表 相依"
+    },
+    {
+      "template": "npx {command}",
+      "description": "直接執行套件提供的指令",
+      "keywords": "執行"
+    }
+  ]
+}

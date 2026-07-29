@@ -1,14 +1,13 @@
 /** 候選項目來源。使用者自訂 > 內建目錄 > 歷史紀錄，同分時依此優先。 */
 export type CandidateSource = "user" | "builtin" | "history";
 
+/** 對應後端 `catalog::Candidate`。 */
 export interface Candidate {
   id: number;
   /** 完整命令樣板，`{name}` 為待填參數，例如 `usbipd attach --wsl --busid {busid}` */
   template: string;
-  /** 顯示用標題（樣板去除佔位符後的部分） */
-  title: string;
   /** 繁體中文說明 */
-  description?: string;
+  description: string | null;
   source: CandidateSource;
   /** frecency 累計分數，供 UI 顯示常用程度 */
   score: number;
