@@ -18,8 +18,11 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
     KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_LMENU, VK_Q,
 };
+use windows::Win32::Foundation::RECT;
+use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetWindowTextW, IsWindowVisible,
+    EnumWindows, GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
+    SetForegroundWindow,
 };
 
 fn main() {
@@ -36,6 +39,16 @@ fn main() {
                 println!("  {:?}  {title}", hwnd.0);
             }
         }
+        Some("--focus") => {
+            let keyword = args.get(1).map(String::as_str).unwrap_or("");
+            match find_windows(keyword).first() {
+                Some((hwnd, title)) => {
+                    let ok = focus_window(*hwnd);
+                    println!("將 {title:?} 設為前景：{}", if ok { "成功" } else { "失敗" });
+                }
+                None => println!("找不到標題含 {keyword:?} 的可見視窗"),
+            }
+        }
         Some("--type") => {
             let text = args.get(1).map(String::as_str).unwrap_or("");
             println!("3 秒後送出：{text:?}");
@@ -44,7 +57,7 @@ fn main() {
             println!("送出 {sent} 個事件");
         }
         _ => {
-            eprintln!("用法：--alt-q | --find <關鍵字> | --type <文字>");
+            eprintln!("用法：--alt-q | --find <關鍵字> | --focus <關鍵字> | --type <文字>");
         }
     }
 }
@@ -53,10 +66,35 @@ fn main() {
 /// 與執行中的終端機，標題都會含有 "QQKey"。
 const LAUNCHER_TITLE: &str = "QQKey";
 
-fn launcher_visible() -> bool {
+fn launcher_window() -> Option<HWND> {
     find_windows(LAUNCHER_TITLE)
-        .iter()
-        .any(|(_, title)| title == LAUNCHER_TITLE)
+        .into_iter()
+        .find(|(_, title)| title == LAUNCHER_TITLE)
+        .map(|(hwnd, _)| hwnd)
+}
+
+fn launcher_visible() -> bool {
+    launcher_window().is_some()
+}
+
+/// 印出候選框的實際位置，用來比對它有沒有貼齊 caret-probe 回報的游標座標。
+fn report_launcher_rect() {
+    let Some(hwnd) = launcher_window() else {
+        return;
+    };
+    let mut rect = RECT::default();
+    if unsafe { GetWindowRect(hwnd, &mut rect) }.is_err() {
+        return;
+    }
+    println!(
+        "候選框位置：left={} top={} right={} bottom={}（寬 {} 高 {}）",
+        rect.left,
+        rect.top,
+        rect.right,
+        rect.bottom,
+        rect.right - rect.left,
+        rect.bottom - rect.top
+    );
 }
 
 /// 送出 Alt+Q 後檢查 QQKey 候選框是否現身，用來確認全域快捷鍵註冊成功。
@@ -70,6 +108,9 @@ fn test_alt_q() {
 
     let after = launcher_visible();
     println!("送出後候選框：{}", if after { "顯示中" } else { "隱藏" });
+    if after {
+        report_launcher_rect();
+    }
 
     if before == after {
         println!("\n結果：狀態未改變，快捷鍵可能未註冊成功或被其他程式攔截。");
@@ -77,6 +118,25 @@ fn test_alt_q() {
         println!("\n結果：全域快捷鍵生效，候選框已顯示。");
     } else {
         println!("\n結果：全域快捷鍵生效，候選框已收起。");
+    }
+}
+
+/// 把指定視窗設為前景，用來觸發 QQKey 的前景追蹤 hook。
+/// 與 `inject.rs` 的還原焦點同樣需要繞過前景鎖定。
+fn focus_window(target: HWND) -> bool {
+    unsafe {
+        if SetForegroundWindow(target).as_bool() {
+            return true;
+        }
+        let target_thread = GetWindowThreadProcessId(target, None);
+        if target_thread == 0 {
+            return false;
+        }
+        let current = GetCurrentThreadId();
+        let _ = AttachThreadInput(current, target_thread, true);
+        let ok = SetForegroundWindow(target).as_bool();
+        let _ = AttachThreadInput(current, target_thread, false);
+        ok
     }
 }
 

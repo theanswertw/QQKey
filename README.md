@@ -12,13 +12,13 @@
 | M0 | ✅ | caret 定位驗證（Windows Terminal 可精準定位） |
 | M1 | ✅ | Tauri 骨架、雙視窗、全域快捷鍵 Alt+Q |
 | M2 | ✅ | 焦點還原與 `SendInput` 文字注入 |
-| M3 | ⬜ | 候選框貼齊輸入游標 |
+| M3 | ✅ | 候選框貼齊輸入游標 |
 | M4 | ⬜ | 命令目錄、模糊搜尋、frecency 排序 |
 | M5 | ⬜ | PSReadLine 歷史學習與機密過濾 |
 | M6 | ⬜ | 字詞設定畫面 |
 | M7 | ⬜ | 系統匣、開機自啟、封裝 |
 
-M4 之前，候選框顯示的是一組固定的示範資料，且固定出現在螢幕中央。
+M4 之前，候選框顯示的是一組固定的示範資料。
 
 ## 技術架構
 
@@ -35,7 +35,8 @@ src/
 └─ shared/     共用型別
 src-tauri/src/
 ├─ hotkey.rs    全域快捷鍵與候選框顯示／隱藏
-├─ inject.rs    焦點還原 + SendInput 注入
+├─ caret.rs     游標定位（三層 fallback）與螢幕邊界夾制
+├─ inject.rs    前景追蹤、焦點還原 + SendInput 注入
 ├─ template.rs  `{佔位符}` 截斷
 └─ commands.rs  前端可呼叫的 IPC
 spike/

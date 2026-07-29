@@ -23,19 +23,7 @@
         "skipTaskbar": true,
         "visible": false,
         "resizable": false,
-        "shadow": false,
-        "center": true
-      },
-      {
-        "label": "settings",
-        "title": "QQKey 設定",
-        "url": "settings.html",
-        "width": 960,
-        "height": 680,
-        "minWidth": 720,
-        "minHeight": 480,
-        "visible": false,
-        "resizable": true
+        "shadow": false
       }
     ],
     "security": {
