@@ -24,6 +24,31 @@ export default function Launcher() {
   }, []);
 
   /**
+   * 背景不透明度。CSS 裡寫的那個值只在取到設定之前撐著，所以掛載時一定要
+   * 主動問一次——不然重新啟動後使用者設定的不透明度就不會生效。
+   * 事件只負責讓設定畫面改完立即套用，不必等重新啟動。
+   */
+  useEffect(() => {
+    const apply = (percent: number) => {
+      document.documentElement.style.setProperty(
+        "--qq-surface-alpha",
+        String(percent / 100),
+      );
+    };
+    invoke<number>("launcher_opacity")
+      .then(apply)
+      .catch((error) => {
+        console.error("取得背景不透明度失敗", error);
+      });
+    const unlisten = listen<number>("launcher:opacity", (event) => {
+      apply(event.payload);
+    });
+    return () => {
+      unlisten.then((dispose) => dispose());
+    };
+  }, []);
+
+  /**
    * 視窗拿到焦點不代表 webview 拿到焦點，webview 拿到也不代表輸入框拿到。
    * 三層都要點名，而且要等這一幀畫完——`show()` 之後立刻 focus 會落空。
    */

@@ -22,6 +22,15 @@ const META_HISTORY_IMPORT: &str = "history_import";
 const META_SHORTCUT: &str = "shortcut";
 /// 歷史匯入的機密關鍵字樣式。
 const META_SECRET_PATTERN: &str = "secret_pattern";
+/// 候選框背景不透明度，以百分比整數字串存放。
+const META_LAUNCHER_OPACITY: &str = "launcher_opacity";
+
+/// 候選框背景預設不透明度。留一點透視感，又不至於讓命令文字難讀。
+const DEFAULT_LAUNCHER_OPACITY: u8 = 92;
+/// 下限刻意不開到 0——候選框幾乎看不見時，使用者會以為程式壞了，
+/// 而不是想起自己把它調透明了。
+const MIN_LAUNCHER_OPACITY: u8 = 20;
+const MAX_LAUNCHER_OPACITY: u8 = 100;
 
 /// 設定畫面一次取得的所有一般設定。
 #[derive(Debug, Clone, serde::Serialize)]
@@ -32,6 +41,10 @@ pub struct Settings {
     pub secret_pattern: String,
     /// 讓設定畫面能提供「還原預設」
     pub default_secret_pattern: String,
+    /// 候選框背景不透明度（百分比整數）
+    pub launcher_opacity: u8,
+    /// 讓設定畫面能提供「還原預設」
+    pub default_launcher_opacity: u8,
     pub pool_size: usize,
 }
 
@@ -289,6 +302,8 @@ impl AppState {
             history_import: self.history_import_enabled(),
             secret_pattern: self.secret_pattern(),
             default_secret_pattern: history::DEFAULT_SECRET_PATTERN.to_string(),
+            launcher_opacity: self.launcher_opacity(),
+            default_launcher_opacity: DEFAULT_LAUNCHER_OPACITY,
             pool_size: self.pool_size(),
         }
     }
@@ -323,6 +338,31 @@ impl AppState {
             .map_err(|error| error.to_string())
     }
 
+    /// 候選框背景不透明度（百分比）。
+    ///
+    /// 解析不出來或超出範圍時靜默退回預設——比照 `secret_filter()` 的策略，
+    /// 不讓一個壞掉的設定值把候選框變成看不見的東西。
+    pub fn launcher_opacity(&self) -> u8 {
+        self.store
+            .meta(META_LAUNCHER_OPACITY)
+            .ok()
+            .flatten()
+            .and_then(|value| value.parse::<u8>().ok())
+            .filter(|percent| (MIN_LAUNCHER_OPACITY..=MAX_LAUNCHER_OPACITY).contains(percent))
+            .unwrap_or(DEFAULT_LAUNCHER_OPACITY)
+    }
+
+    pub fn set_launcher_opacity(&self, percent: u8) -> Result<(), String> {
+        if !(MIN_LAUNCHER_OPACITY..=MAX_LAUNCHER_OPACITY).contains(&percent) {
+            return Err(format!(
+                "不透明度必須介於 {MIN_LAUNCHER_OPACITY}–{MAX_LAUNCHER_OPACITY}%，收到 {percent}%"
+            ));
+        }
+        self.store
+            .set_meta(META_LAUNCHER_OPACITY, &percent.to_string())
+            .map_err(|error| error.to_string())
+    }
+
     /// 依設定建立過濾器。設定壞掉時退回預設，不要讓匯入整個停擺。
     fn secret_filter(&self) -> SecretFilter {
         SecretFilter::from_pattern(&self.secret_pattern()).unwrap_or_else(|error| {
@@ -350,7 +390,10 @@ fn read_from(path: &Path, offset: u64) -> std::io::Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::AppState;
+    use super::{
+        AppState, DEFAULT_LAUNCHER_OPACITY, MAX_LAUNCHER_OPACITY, META_LAUNCHER_OPACITY,
+        MIN_LAUNCHER_OPACITY,
+    };
     use crate::catalog::{EntryPatch, Source};
     use crate::store::Store;
 
@@ -464,6 +507,85 @@ mod tests {
             state.secret_pattern(),
             crate::catalog::history::DEFAULT_SECRET_PATTERN,
             "設定失敗時不該把壞掉的規則寫進去"
+        );
+    }
+
+    #[test]
+    fn launcher_opacity_falls_back_to_the_default_when_never_set() {
+        let (state, _dir) = temp_state();
+        assert_eq!(
+            state.launcher_opacity(),
+            DEFAULT_LAUNCHER_OPACITY,
+            "沒設定過時要用預設值，不能是 0——那等於候選框整個不見"
+        );
+        assert_eq!(
+            state.settings().launcher_opacity,
+            DEFAULT_LAUNCHER_OPACITY,
+            "整包設定要帶同一個值，設定畫面才不會顯示成另一個數字"
+        );
+    }
+
+    #[test]
+    fn launcher_opacity_accepts_both_ends_of_the_allowed_range() {
+        let (state, _dir) = temp_state();
+
+        state.set_launcher_opacity(MIN_LAUNCHER_OPACITY).unwrap();
+        assert_eq!(
+            state.launcher_opacity(),
+            MIN_LAUNCHER_OPACITY,
+            "下限是合法的選擇，不該被自己的驗證擋掉"
+        );
+
+        state.set_launcher_opacity(MAX_LAUNCHER_OPACITY).unwrap();
+        assert_eq!(
+            state.launcher_opacity(),
+            MAX_LAUNCHER_OPACITY,
+            "上限即完全不透明，也是合法的選擇"
+        );
+    }
+
+    #[test]
+    fn rejects_a_launcher_opacity_outside_the_allowed_range() {
+        let (state, _dir) = temp_state();
+        state.set_launcher_opacity(80).unwrap();
+
+        let error = state
+            .set_launcher_opacity(MIN_LAUNCHER_OPACITY - 1)
+            .unwrap_err();
+        assert!(
+            error.contains("不透明度"),
+            "錯誤訊息要講清楚是哪個設定出問題，實際訊息：{error}"
+        );
+        assert!(
+            state.set_launcher_opacity(MAX_LAUNCHER_OPACITY + 1).is_err(),
+            "超過 100% 沒有意義，應該被擋下"
+        );
+        assert_eq!(
+            state.launcher_opacity(),
+            80,
+            "設定失敗時不該把超出範圍的值寫進去"
+        );
+    }
+
+    #[test]
+    fn a_corrupted_launcher_opacity_falls_back_to_the_default() {
+        let (state, _dir) = temp_state();
+
+        state
+            .store
+            .set_meta(META_LAUNCHER_OPACITY, "半透明")
+            .unwrap();
+        assert_eq!(
+            state.launcher_opacity(),
+            DEFAULT_LAUNCHER_OPACITY,
+            "手動改壞資料庫時要退回預設，不讓候選框變成看不見"
+        );
+
+        state.store.set_meta(META_LAUNCHER_OPACITY, "0").unwrap();
+        assert_eq!(
+            state.launcher_opacity(),
+            DEFAULT_LAUNCHER_OPACITY,
+            "超出範圍的舊值同樣要退回預設，而不是照著用"
         );
     }
 }

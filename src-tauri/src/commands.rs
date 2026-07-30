@@ -138,6 +138,30 @@ pub fn set_secret_pattern(state: State<AppState>, pattern: String) -> Result<(),
     state.set_secret_pattern(&pattern)
 }
 
+/// 候選框掛載時取初值。
+///
+/// 刻意不共用 `get_settings`——候選框只需要這一個數字，不必認識整個 `Settings`。
+/// CSS 裡寫的那個不透明度只在取到這個值之前撐著，所以這條路不是備援而是必要的。
+#[tauri::command]
+pub fn launcher_opacity(state: State<AppState>) -> u8 {
+    state.launcher_opacity()
+}
+
+/// 更新候選框背景不透明度。
+///
+/// 比照 `set_shortcut`：先寫進資料庫，再把副作用推到別處——這裡是把新值
+/// 推給候選框，讓它就地覆寫 CSS 變數，不必等到重新啟動。
+#[tauri::command]
+pub fn set_launcher_opacity<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    state: State<AppState>,
+    percent: u8,
+) -> Result<(), String> {
+    state.set_launcher_opacity(percent)?;
+    crate::hotkey::notify_launcher_opacity(&app, percent);
+    Ok(())
+}
+
 /// 手動觸發一次歷史匯入，回傳這次掃描與過濾的統計。
 #[tauri::command]
 pub fn import_history(state: State<AppState>) -> Result<ImportReport, String> {

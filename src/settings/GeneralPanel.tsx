@@ -1,6 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { ImportReport, Settings } from "../shared/types";
+
+/** 不透明度可調的範圍。後端才是權威，這裡只是不讓 UI 送出後端會拒絕的值。 */
+const MIN_OPACITY = 20;
+const MAX_OPACITY = 100;
+
+/**
+ * 預覽底下墊的假終端機輸出。
+ *
+ * 只是襯底——候選框在設定視窗開著時是隱藏的，沒有東西墊在後面就看不出
+ * 不透明度的差別。內容刻意用中性的建置訊息，不帶任何真實路徑。
+ */
+const PREVIEW_DESK = `PS C:\\dev\\qqkey> npm run tauri dev
+
+  VITE v5.4.10  ready in 412 ms
+
+  ➜  Local:   http://localhost:1420/
+  ➜  press h + enter to show help
+
+   Compiling qqkey v0.1.0
+    Finished dev profile in 18.42s
+
+PS C:\\dev\\qqkey> _`;
 
 export default function GeneralPanel({
   onError,
@@ -14,6 +36,8 @@ export default function GeneralPanel({
   const [pattern, setPattern] = useState("");
   const [report, setReport] = useState<ImportReport | null>(null);
   const [autostart, setAutostart] = useState(false);
+  /** 不透明度草稿。拖動時只驅動預覽，放手才寫入。 */
+  const [opacity, setOpacity] = useState(0);
 
   const reload = async () => {
     try {
@@ -21,6 +45,7 @@ export default function GeneralPanel({
       setSettings(result);
       setShortcut(result.shortcut);
       setPattern(result.secretPattern);
+      setOpacity(result.launcherOpacity);
       setAutostart(await invoke<boolean>("autostart_enabled"));
     } catch (error) {
       onError(String(error));
@@ -40,6 +65,31 @@ export default function GeneralPanel({
       await action();
       await reload();
       onNotice(notice);
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
+  /**
+   * 滑桿與預覽用的值。輸入框可能暫時是空的或超出範圍（打「25」會先經過「2」），
+   * 這裡夾制過再用，空的就退回已存的值。
+   */
+  const shown = Number.isFinite(opacity)
+    ? Math.min(MAX_OPACITY, Math.max(MIN_OPACITY, Math.round(opacity)))
+    : settings.launcherOpacity;
+
+  /**
+   * 放手才寫入。刻意不走 `run()`——那會跳 toast，而拖一次滑桿彈一次提示太吵，
+   * 預覽本身就是回饋。
+   */
+  const applyOpacity = async (percent: number) => {
+    setOpacity(percent);
+    if (percent === settings.launcherOpacity) {
+      return;
+    }
+    try {
+      await invoke("set_launcher_opacity", { percent });
+      await reload();
     } catch (error) {
       onError(String(error));
     }
@@ -90,6 +140,96 @@ export default function GeneralPanel({
             套用
           </button>
         </div>
+      </section>
+
+      <section className="section">
+        <h2 className="section__title">候選框背景</h2>
+        <p className="section__note">
+          候選框浮在你正在用的視窗上。不透明度越低，透出的底下內容越多；
+          背景模糊會維持命令文字的可讀性。設定視窗開著時候選框是隱藏的，
+          下面的預覽就是它實際的樣子。
+        </p>
+
+        <div className="preview" aria-hidden="true">
+          <pre className="preview__desk">{PREVIEW_DESK}</pre>
+          <div
+            className="preview__launcher"
+            style={{ "--preview-alpha": shown / 100 } as CSSProperties}
+          >
+            <div className="preview__input-row">
+              <span className="preview__glyph">⌕</span>
+              <span className="preview__query">git</span>
+            </div>
+            <div className="preview__list">
+              <div className="preview__item preview__item--selected">
+                <span className="preview__index">1</span>
+                <span className="preview__command">
+                  git switch <span className="preview__hint">&lt;branch&gt;</span>
+                </span>
+              </div>
+              <div className="preview__item">
+                <span className="preview__index">2</span>
+                <span className="preview__command">
+                  git rebase -i <span className="preview__hint">&lt;base&gt;</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <span className="preview__label">預覽</span>
+        </div>
+
+        <div className="section__row">
+          <input
+            className="slider"
+            type="range"
+            aria-label="候選框背景不透明度"
+            min={MIN_OPACITY}
+            max={MAX_OPACITY}
+            step={1}
+            value={shown}
+            style={
+              {
+                "--slider-fill": `${
+                  ((shown - MIN_OPACITY) / (MAX_OPACITY - MIN_OPACITY)) * 100
+                }%`,
+              } as CSSProperties
+            }
+            onChange={(event) => setOpacity(Number(event.target.value))}
+            onPointerUp={() => void applyOpacity(shown)}
+            onKeyUp={() => void applyOpacity(shown)}
+            /* 快速拖曳有可能在元素外放手而漏掉 pointerup，失焦時再補一次。
+               值沒變時 applyOpacity 會直接返回，多叫幾次不會多寫入 */
+            onBlur={() => void applyOpacity(shown)}
+          />
+          <input
+            className="field__input field__input--mono field__input--tiny"
+            type="number"
+            aria-label="候選框背景不透明度百分比"
+            min={MIN_OPACITY}
+            max={MAX_OPACITY}
+            value={Number.isFinite(opacity) ? opacity : ""}
+            onChange={(event) =>
+              setOpacity(event.target.value === "" ? NaN : Number(event.target.value))
+            }
+            onBlur={() => void applyOpacity(shown)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                void applyOpacity(shown);
+              }
+            }}
+          />
+          <span className="field__unit">%</span>
+          <button
+            className="button"
+            disabled={settings.launcherOpacity === settings.defaultLauncherOpacity}
+            onClick={() => void applyOpacity(settings.defaultLauncherOpacity)}
+          >
+            還原預設
+          </button>
+        </div>
+        <span className="field__hint">
+          下限 {MIN_OPACITY}%——再低，命令會被底下的內容干擾到讀不出來。
+        </span>
       </section>
 
       <section className="section">

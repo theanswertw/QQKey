@@ -70,7 +70,7 @@ cargo test --lib caret::      # 單一模組
 
 schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()` 以
 `CREATE TABLE IF NOT EXISTS` 處理。`meta` 存字串設定（快捷鍵、歷史匯入位移與開關、
-機密過濾樣式），key 常數定義在 `state.rs` 頂端。
+機密過濾樣式、候選框背景不透明度），key 常數定義在 `state.rs` 頂端。
 
 ### 條目來源與優先序
 

@@ -368,6 +368,23 @@ code {
   width: 120px;
 }
 
+.field__input--tiny {
+  width: 68px;
+  text-align: right;
+}
+
+/* 滑桿就是 stepper，原生的上下鈕擺在旁邊只是雜訊 */
+.field__input--tiny::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.field__unit {
+  margin-left: -4px;
+  font-size: 13px;
+  color: var(--qq-text-dim);
+}
+
 .field__textarea {
   margin-bottom: 12px;
   resize: vertical;
@@ -396,6 +413,189 @@ code {
   background: var(--qq-surface-2);
   font-size: 13px;
   line-height: 1.6;
+}
+
+/* ------------------------------------------------------------ 滑桿 */
+
+/*
+ * 加前綴版本不是多餘的：WebKit 系的原生外觀要靠 `-webkit-appearance` 才關得掉，
+ * 少了它下面那些自訂樣式會被原生樣式整組蓋掉。
+ */
+.slider {
+  flex: 1;
+  height: 22px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  /* 已選範圍填上強調色，不看數字也讀得出目前拉到哪 */
+  background: linear-gradient(
+    to right,
+    var(--qq-accent) 0 var(--slider-fill),
+    var(--qq-surface-2) var(--slider-fill) 100%
+  );
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  /* 軌道 6px、拉柄 16px，往上推 5px 才會落在軌道中線 */
+  margin-top: -5px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--qq-accent);
+  border-radius: 50%;
+  background: var(--qq-surface);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.slider:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.slider:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 6px rgba(74, 158, 255, 0.2);
+}
+
+.slider:focus-visible {
+  outline: none;
+}
+
+/* 內圈用背景色墊開，焦點環才不會和拉柄的強調色外框糊在一起 */
+.slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--qq-bg), 0 0 0 5px var(--qq-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slider::-webkit-slider-thumb {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------ 候選框預覽 */
+
+/*
+ * 用 launcher.css 那一組表面色，不是本檔的 --qq-surface（那是不透明的）。
+ * 兩個視窗在同一個系統下 prefers-color-scheme 一致，所以淺色模式一起換就忠實。
+ */
+.preview {
+  --preview-desk: #0b0d10;
+  --preview-surface-rgb: 28 30 36;
+  --preview-border: rgba(255, 255, 255, 0.12);
+  --preview-text: #e8eaed;
+  --preview-text-dim: rgba(232, 234, 237, 0.55);
+  --preview-selected: rgba(74, 158, 255, 0.16);
+
+  position: relative;
+  /* 假終端機與迷你候選框疊在同一格，格高取兩者較高的那個，永遠不會溢出 */
+  display: grid;
+  margin-bottom: 14px;
+  padding: 18px 22px;
+  border: 1px solid var(--qq-border);
+  border-radius: 10px;
+  background: var(--preview-desk);
+}
+
+@media (prefers-color-scheme: light) {
+  .preview {
+    --preview-desk: #e5e7ec;
+    --preview-surface-rgb: 252 252 253;
+    --preview-border: rgba(0, 0, 0, 0.12);
+    --preview-text: #1a1c1e;
+    --preview-text-dim: rgba(26, 28, 30, 0.55);
+    --preview-selected: rgba(74, 158, 255, 0.14);
+  }
+}
+
+.preview__desk {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-family: var(--qq-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--preview-text-dim);
+  white-space: pre;
+  overflow: hidden;
+}
+
+.preview__label {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  font-size: 11px;
+  color: var(--preview-text-dim);
+}
+
+/* 疊在假終端機上，backdrop-filter 會真的模糊底下那段文字——預覽即所見 */
+.preview__launcher {
+  grid-area: 1 / 1;
+  align-self: center;
+  margin: 0 7%;
+  border: 1px solid var(--preview-border);
+  border-radius: 10px;
+  background: rgb(var(--preview-surface-rgb) / var(--preview-alpha));
+  backdrop-filter: blur(24px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: var(--preview-text);
+}
+
+.preview__input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--preview-border);
+}
+
+.preview__glyph {
+  font-size: 13px;
+  color: var(--preview-text-dim);
+}
+
+.preview__query {
+  font-family: var(--qq-mono);
+  font-size: 12px;
+}
+
+.preview__list {
+  padding: 5px;
+}
+
+.preview__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+.preview__item--selected {
+  background: var(--preview-selected);
+}
+
+.preview__index {
+  width: 12px;
+  text-align: center;
+  font-family: var(--qq-mono);
+  font-size: 10px;
+  color: var(--preview-text-dim);
+}
+
+.preview__command {
+  font-family: var(--qq-mono);
+  font-size: 12px;
+}
+
+/* 佔位符不會被送出，只是提示接下來要填什麼——與候選框一致 */
+.preview__hint {
+  color: var(--preview-text-dim);
 }
 
 /* ------------------------------------------------------------ 對話框 */

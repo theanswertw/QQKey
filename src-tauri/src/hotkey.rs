@@ -24,6 +24,9 @@ pub const SETTINGS_SHORTCUT: &str = "Alt+Shift+KeyQ";
 /// 候選框顯示時通知前端重設查詢字串與輸入焦點。
 const EVENT_LAUNCHER_SHOWN: &str = "launcher:shown";
 
+/// 不透明度改變時通知候選框覆寫 CSS 變數。
+const EVENT_LAUNCHER_OPACITY: &str = "launcher:opacity";
+
 pub fn parse(value: &str) -> Result<Shortcut, String> {
     Shortcut::from_str(value).map_err(|error| format!("無法解析快捷鍵 {value:?}：{error}"))
 }
@@ -99,6 +102,17 @@ pub fn show_launcher<R: Runtime>(window: &WebviewWindow<R>) {
     let _ = window.show();
     let _ = window.set_focus();
     let _ = window.emit(EVENT_LAUNCHER_SHOWN, ());
+}
+
+/// 把新的不透明度推給候選框，讓它就地覆寫 CSS 變數，不必重新啟動。
+///
+/// 指名 label 而不是全域 emit——設定視窗不需要這個事件。
+/// 推送失敗只記錄不當成錯誤：候選框仍有可能還沒掛載完，
+/// 而它掛載時會自己取一次初值，那才是保證正確的那條路。
+pub fn notify_launcher_opacity<R: Runtime>(app: &AppHandle<R>, percent: u8) {
+    if let Err(error) = app.emit_to(LAUNCHER_LABEL, EVENT_LAUNCHER_OPACITY, percent) {
+        crate::trace("設定", &format!("推送不透明度失敗：{error}"));
+    }
 }
 
 /// 把候選框移到輸入游標旁邊。

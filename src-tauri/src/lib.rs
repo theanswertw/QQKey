@@ -48,6 +48,8 @@ pub fn run() {
             commands::import_entries,
             commands::get_settings,
             commands::set_shortcut,
+            commands::launcher_opacity,
+            commands::set_launcher_opacity,
             commands::set_secret_pattern,
             commands::import_history,
             commands::set_history_import_enabled,

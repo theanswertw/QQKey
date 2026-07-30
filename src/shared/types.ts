@@ -45,6 +45,8 @@ export interface Settings {
   historyImport: boolean;
   secretPattern: string;
   defaultSecretPattern: string;
+  launcherOpacity: number;
+  defaultLauncherOpacity: number;
   poolSize: number;
 }
 

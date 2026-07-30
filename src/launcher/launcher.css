@@ -1,6 +1,9 @@
 :root {
   --qq-radius: 12px;
-  --qq-surface: rgba(28, 30, 36, 0.92);
+  --qq-surface-rgb: 28 30 36;
+  /* 只在取到設定值之前撐著，實際值由 Launcher.tsx 覆寫成使用者設定的不透明度 */
+  --qq-surface-alpha: 0.92;
+  --qq-surface: rgb(var(--qq-surface-rgb) / var(--qq-surface-alpha));
   --qq-border: rgba(255, 255, 255, 0.12);
   --qq-text: #e8eaed;
   --qq-text-dim: rgba(232, 234, 237, 0.55);
@@ -11,7 +14,8 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --qq-surface: rgba(252, 252, 253, 0.94);
+    /* 只換底色，不透明度共用一個設定值 */
+    --qq-surface-rgb: 252 252 253;
     --qq-border: rgba(0, 0, 0, 0.12);
     --qq-text: #1a1c1e;
     --qq-text-dim: rgba(26, 28, 30, 0.55);
