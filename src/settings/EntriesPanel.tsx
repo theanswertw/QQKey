@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslation } from "react-i18next";
 import {
-  SOURCE_LABELS,
   splitTemplate,
   type CandidateSource,
   type EntryPage,
@@ -15,25 +15,6 @@ const PAGE_SIZE = 40;
 
 type SourceFilter = CandidateSource | "all";
 
-/** 把最後使用時間寫成「3 天前」。後端一直有傳這個值，只是從來沒被畫出來過。 */
-function relativeTime(seconds: number | null): string {
-  if (!seconds) {
-    return "未用過";
-  }
-  const days = Math.floor(Date.now() / 1000 / 86400 - seconds / 86400);
-  if (days <= 0) {
-    return "今天";
-  }
-  if (days === 1) {
-    return "昨天";
-  }
-  if (days < 30) {
-    return `${days} 天前`;
-  }
-  const months = Math.floor(days / 30);
-  return months < 12 ? `${months} 個月前` : `${Math.floor(days / 365)} 年前`;
-}
-
 /** 待確認的刪除。單筆與批次共用一個對話框。 */
 interface PendingDelete {
   ids: number[];
@@ -42,6 +23,7 @@ interface PendingDelete {
 }
 
 export default function EntriesPanel({ onError }: { onError: (message: string) => void }) {
+  const { t, i18n } = useTranslation();
   const [query, setQuery] = useState("");
   const [source, setSource] = useState<SourceFilter>("all");
   const [page, setPage] = useState(0);
@@ -125,6 +107,45 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
 
   const lastPage = Math.max(0, Math.ceil(data.total / PAGE_SIZE) - 1);
 
+  /*
+   * 兩個 Intl formatter 提到 useMemo：一頁 40 列，逐列 new Intl.* 是可測量的
+   * 成本，而原本的 toFixed 與手寫的相對時間完全不建構物件——這是新增的開銷，
+   * 得刻意處理掉。
+   */
+  const relative = useMemo(
+    // numeric: "auto" 才會給出「今天」／「昨天」而不是「0 天前」／「1 天前」，
+    // 正好等於原本手寫的那兩個特例，現在六種語言免費得到。
+    () => new Intl.RelativeTimeFormat(i18n.language, { numeric: "auto" }),
+    [i18n.language],
+  );
+  const scoreFormat = useMemo(
+    // 德文與法文的小數點是逗號，toFixed 永遠給句點
+    () =>
+      new Intl.NumberFormat(i18n.language, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
+    [i18n.language],
+  );
+
+  /** 把最後使用時間寫成「3 天前」。後端一直有傳這個值，只是從來沒被畫出來過。 */
+  const relativeTime = (seconds: number | null): string => {
+    if (!seconds) {
+      return t("settings.entries.neverUsed");
+    }
+    const days = Math.floor(Date.now() / 1000 / 86400 - seconds / 86400);
+    if (days <= 0) {
+      return relative.format(0, "day");
+    }
+    if (days < 30) {
+      return relative.format(-days, "day");
+    }
+    const months = Math.floor(days / 30);
+    return months < 12
+      ? relative.format(-months, "month")
+      : relative.format(-Math.floor(days / 365), "year");
+  };
+
   return (
     <div className="panel">
       <div className="toolbar">
@@ -132,34 +153,36 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
           className="toolbar__search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜尋命令、說明或關鍵字"
+          placeholder={t("settings.entries.searchPlaceholder")}
           spellCheck={false}
         />
         <select
           className="toolbar__select"
+          aria-label={t("settings.entries.sourceFilter")}
           value={source}
           onChange={(event) => setSource(event.target.value as SourceFilter)}
         >
-          <option value="all">全部來源</option>
-          <option value="user">自訂</option>
-          <option value="builtin">內建</option>
-          <option value="history">歷史</option>
+          {/* 三個來源標籤跟表格裡的標籤共用同一組 key，兩處不可能再分岔 */}
+          <option value="all">{t("settings.entries.allSources")}</option>
+          <option value="user">{t("common.source.user")}</option>
+          <option value="builtin">{t("common.source.builtin")}</option>
+          <option value="history">{t("common.source.history")}</option>
         </select>
         <button
           className="button"
           disabled={data.entries.length === 0}
           onClick={() => setChecked(new Set(data.entries.map((entry) => entry.id)))}
         >
-          選取本頁
+          {t("settings.entries.selectPage")}
         </button>
         <button className="button button--primary" onClick={() => setEditing(null)}>
-          新增命令
+          {t("settings.entries.create")}
         </button>
       </div>
 
       {checked.size > 0 && (
         <div className="bulk">
-          <span>已選取 {checked.size} 筆</span>
+          <span>{t("settings.entries.selectedCount", { count: checked.size })}</span>
           <button
             className="button"
             onClick={() =>
@@ -168,7 +191,7 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
               ).then(() => setChecked(new Set()))
             }
           >
-            啟用
+            {t("settings.entries.enable")}
           </button>
           <button
             className="button"
@@ -178,16 +201,16 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
               ).then(() => setChecked(new Set()))
             }
           >
-            停用
+            {t("settings.entries.disable")}
           </button>
           <button
             className="button button--danger"
             onClick={() => setPendingDelete({ ids: [...checked] })}
           >
-            刪除
+            {t("settings.entries.delete")}
           </button>
           <button className="button button--ghost" onClick={() => setChecked(new Set())}>
-            取消選取
+            {t("settings.entries.clearSelection")}
           </button>
         </div>
       )}
@@ -216,18 +239,15 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
                 )}
               </div>
               <span className={`tag tag--${entry.source}`}>
-                {SOURCE_LABELS[entry.source]}
+                {t(`common.source.${entry.source}`)}
               </span>
-              <span
-                className="row__score"
-                title="衰減後的使用分數——就是候選框拿來排序的那一個"
-              >
-                {entry.score >= 0.05 ? entry.score.toFixed(1) : "—"}
+              <span className="row__score" title={t("settings.entries.scoreHint")}>
+                {entry.score >= 0.05 ? scoreFormat.format(entry.score) : "—"}
               </span>
-              <span className="row__boost" title="手動加權">
+              <span className="row__boost" title={t("settings.entries.boostHint")}>
                 {entry.boost > 0 ? `+${entry.boost}` : ""}
               </span>
-              <span className="row__used" title="最後使用時間">
+              <span className="row__used" title={t("settings.entries.lastUsedHint")}>
                 {relativeTime(entry.lastUsed)}
               </span>
               <div className="row__actions">
@@ -246,17 +266,19 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
                     )
                   }
                 >
-                  {entry.enabled ? "停用" : "啟用"}
+                  {entry.enabled
+                    ? t("settings.entries.disable")
+                    : t("settings.entries.enable")}
                 </button>
                 <button className="button button--ghost" onClick={() => setEditing(entry)}>
-                  編輯
+                  {t("settings.entries.edit")}
                 </button>
                 <button
                   className="button button--ghost"
-                  title="清除使用統計"
+                  title={t("settings.entries.resetScoreHint")}
                   onClick={() => void run(() => invoke("reset_entry_score", { id: entry.id }))}
                 >
-                  歸零
+                  {t("settings.entries.resetScore")}
                 </button>
                 <button
                   className="button button--ghost button--danger"
@@ -264,7 +286,7 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
                     setPendingDelete({ ids: [entry.id], template: entry.template })
                   }
                 >
-                  刪除
+                  {t("settings.entries.delete")}
                 </button>
               </div>
             </div>
@@ -272,14 +294,23 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
         })}
 
         {data.entries.length === 0 && (
-          <div className="table__empty">沒有符合條件的命令</div>
+          <div className="table__empty">{t("settings.entries.empty")}</div>
         )}
       </div>
 
       <div className="pager">
+        {/*
+         * 兩條完整的句子，而不是「共 N 筆」再接一個以逗號開頭的片段。
+         * 續段那種寫法翻不了——它假設了語序，也不讓譯者改標點。
+         */}
         <span>
-          共 {data.total} 筆
-          {data.total > PAGE_SIZE && `，第 ${page + 1} / ${lastPage + 1} 頁`}
+          {data.total > PAGE_SIZE
+            ? t("settings.entries.countPaged", {
+                count: data.total,
+                page: page + 1,
+                pages: lastPage + 1,
+              })
+            : t("settings.entries.count", { count: data.total })}
         </span>
         <div className="pager__buttons">
           <button
@@ -287,14 +318,14 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
             disabled={page === 0}
             onClick={() => setPage((current) => current - 1)}
           >
-            上一頁
+            {t("settings.entries.previousPage")}
           </button>
           <button
             className="button"
             disabled={page >= lastPage}
             onClick={() => setPage((current) => current + 1)}
           >
-            下一頁
+            {t("settings.entries.nextPage")}
           </button>
         </div>
       </div>
@@ -309,13 +340,17 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
 
       {pendingDelete && (
         <ConfirmDialog
-          title={pendingDelete.ids.length > 1 ? "刪除選取的命令" : "刪除這筆命令"}
+          title={
+            pendingDelete.ids.length > 1
+              ? t("settings.entries.deleteManyTitle")
+              : t("settings.entries.deleteOneTitle")
+          }
           message={
             pendingDelete.template
-              ? `${pendingDelete.template}\n\n刪除後無法復原。若只是想讓它不出現在候選框，用「停用」就好。`
-              : `將刪除 ${pendingDelete.ids.length} 筆命令，無法復原。\n\n若只是想讓它們不出現在候選框，用「停用」就好。`
+              ? t("settings.entries.deleteOneMessage", { template: pendingDelete.template })
+              : t("settings.entries.deleteManyMessage", { count: pendingDelete.ids.length })
           }
-          confirmLabel="刪除"
+          confirmLabel={t("settings.entries.delete")}
           danger
           onConfirm={() => {
             const { ids } = pendingDelete;

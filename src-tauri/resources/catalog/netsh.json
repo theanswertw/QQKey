@@ -3,68 +3,250 @@
   "commands": [
     {
       "template": "netsh interface show interface",
-      "description": "列出所有網路介面與其狀態",
-      "keywords": "介面 網卡 列表"
+      "description": {
+        "zh-Hant": "列出所有網路介面與其狀態",
+        "ja": "すべてのネットワークインターフェイスと状態を一覧表示",
+        "en": "List all network interfaces and their state",
+        "fr": "Lister toutes les interfaces réseau et leur état",
+        "de": "Alle Netzwerkschnittstellen und ihren Status auflisten",
+        "ko": "모든 네트워크 인터페이스와 상태 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "介面 網卡 列表",
+        "ja": "インターフェイス アダプター 一覧",
+        "en": "interface adapter list nic",
+        "fr": "interface carte liste réseau",
+        "de": "schnittstelle adapter liste netzwerkkarte",
+        "ko": "인터페이스 어댑터 목록"
+      }
     },
     {
       "template": "netsh interface ip show config",
-      "description": "顯示所有介面的 IP 組態",
-      "keywords": "ip 組態 設定"
+      "description": {
+        "zh-Hant": "顯示所有介面的 IP 組態",
+        "ja": "すべてのインターフェイスの IP 構成を表示",
+        "en": "Show the IP configuration of every interface",
+        "fr": "Afficher la configuration IP de chaque interface",
+        "de": "IP-Konfiguration aller Schnittstellen anzeigen",
+        "ko": "모든 인터페이스의 IP 구성 표시"
+      },
+      "keywords": {
+        "zh-Hant": "ip 組態 設定",
+        "ja": "ip 構成 設定",
+        "en": "ip config configuration",
+        "fr": "ip configuration paramètres",
+        "de": "ip konfiguration einstellungen",
+        "ko": "ip 구성 설정"
+      }
     },
     {
       "template": "netsh interface ip show address",
-      "description": "顯示各介面的 IP 位址",
-      "keywords": "ip 位址"
+      "description": {
+        "zh-Hant": "顯示各介面的 IP 位址",
+        "ja": "各インターフェイスの IP アドレスを表示",
+        "en": "Show the IP address of each interface",
+        "fr": "Afficher l'adresse IP de chaque interface",
+        "de": "IP-Adresse jeder Schnittstelle anzeigen",
+        "ko": "각 인터페이스의 IP 주소 표시"
+      },
+      "keywords": {
+        "zh-Hant": "ip 位址",
+        "ja": "ip アドレス",
+        "en": "ip address",
+        "fr": "ip adresse",
+        "de": "ip adresse",
+        "ko": "ip 주소"
+      }
     },
     {
       "template": "netsh interface ip set address name=\"{name}\" static {ip} {mask} {gateway}",
-      "description": "設定介面為靜態 IP",
-      "keywords": "ip 靜態 固定"
+      "description": {
+        "zh-Hant": "設定介面為靜態 IP",
+        "ja": "インターフェイスを固定 IP に設定",
+        "en": "Set an interface to a static IP",
+        "fr": "Définir une IP statique sur une interface",
+        "de": "Schnittstelle auf eine statische IP setzen",
+        "ko": "인터페이스를 고정 IP로 설정"
+      },
+      "keywords": {
+        "zh-Hant": "ip 靜態 固定",
+        "ja": "ip 固定 静的 スタティック",
+        "en": "ip static fixed",
+        "fr": "ip statique fixe",
+        "de": "ip statisch fest",
+        "ko": "ip 고정 정적"
+      }
     },
     {
       "template": "netsh interface ip set address name=\"{name}\" dhcp",
-      "description": "把介面切回 DHCP 自動取得",
-      "keywords": "dhcp 自動"
+      "description": {
+        "zh-Hant": "把介面切回 DHCP 自動取得",
+        "ja": "インターフェイスを DHCP の自動取得に戻す",
+        "en": "Switch an interface back to DHCP",
+        "fr": "Rebasculer une interface sur DHCP",
+        "de": "Schnittstelle zurück auf DHCP umstellen",
+        "ko": "인터페이스를 DHCP 자동 할당으로 되돌리기"
+      },
+      "keywords": {
+        "zh-Hant": "dhcp 自動",
+        "ja": "dhcp 自動",
+        "en": "dhcp automatic",
+        "fr": "dhcp automatique",
+        "de": "dhcp automatisch",
+        "ko": "dhcp 자동"
+      }
     },
     {
       "template": "netsh interface ip set dns name=\"{name}\" static {dns}",
-      "description": "設定介面的 DNS 伺服器",
-      "keywords": "dns"
+      "description": {
+        "zh-Hant": "設定介面的 DNS 伺服器",
+        "ja": "インターフェイスの DNS サーバーを設定",
+        "en": "Set the DNS server for an interface",
+        "fr": "Définir le serveur DNS d'une interface",
+        "de": "DNS-Server für eine Schnittstelle festlegen",
+        "ko": "인터페이스의 DNS 서버 설정"
+      },
+      "keywords": {
+        "zh-Hant": "dns 網域 名稱",
+        "ja": "dns 名前解決 サーバー",
+        "en": "dns server resolver",
+        "fr": "dns serveur résolution",
+        "de": "dns server namensauflösung",
+        "ko": "dns 서버 이름 확인"
+      }
     },
     {
       "template": "netsh interface portproxy show all",
-      "description": "列出所有連接埠轉送規則（WSL 對外服務常用）",
-      "keywords": "轉送 portproxy wsl"
+      "description": {
+        "zh-Hant": "列出所有連接埠轉送規則（WSL 對外服務常用）",
+        "ja": "すべてのポート転送ルールを一覧表示（WSL の外部公開でよく使う）",
+        "en": "List all port forwarding rules (common when exposing WSL services)",
+        "fr": "Lister toutes les règles de redirection de port (courant pour exposer des services WSL)",
+        "de": "Alle Portweiterleitungsregeln auflisten (häufig beim Freigeben von WSL-Diensten)",
+        "ko": "모든 포트 전달 규칙 목록 표시(WSL 서비스 외부 공개에 자주 사용)"
+      },
+      "keywords": {
+        "zh-Hant": "轉送 portproxy wsl 連接埠",
+        "ja": "転送 ポートフォワード portproxy wsl ポート",
+        "en": "portproxy forward port wsl",
+        "fr": "redirection port portproxy wsl",
+        "de": "portweiterleitung portproxy port wsl",
+        "ko": "포트 전달 portproxy wsl"
+      }
     },
     {
       "template": "netsh interface portproxy add v4tov4 listenport={port} listenaddress=0.0.0.0 connectport={port} connectaddress={address}",
-      "description": "新增連接埠轉送規則",
-      "keywords": "轉送 新增 portproxy"
+      "description": {
+        "zh-Hant": "新增連接埠轉送規則",
+        "ja": "ポート転送ルールを追加",
+        "en": "Add a port forwarding rule",
+        "fr": "Ajouter une règle de redirection de port",
+        "de": "Portweiterleitungsregel hinzufügen",
+        "ko": "포트 전달 규칙 추가"
+      },
+      "keywords": {
+        "zh-Hant": "轉送 新增 portproxy",
+        "ja": "転送 追加 portproxy",
+        "en": "portproxy forward add port",
+        "fr": "redirection ajouter portproxy port",
+        "de": "portweiterleitung hinzufügen portproxy",
+        "ko": "포트 전달 추가 portproxy"
+      }
     },
     {
       "template": "netsh interface portproxy delete v4tov4 listenport={port} listenaddress=0.0.0.0",
-      "description": "刪除連接埠轉送規則",
-      "keywords": "轉送 刪除"
+      "description": {
+        "zh-Hant": "刪除連接埠轉送規則",
+        "ja": "ポート転送ルールを削除",
+        "en": "Delete a port forwarding rule",
+        "fr": "Supprimer une règle de redirection de port",
+        "de": "Portweiterleitungsregel löschen",
+        "ko": "포트 전달 규칙 삭제"
+      },
+      "keywords": {
+        "zh-Hant": "轉送 刪除",
+        "ja": "転送 削除",
+        "en": "portproxy forward delete remove port",
+        "fr": "redirection supprimer port",
+        "de": "portweiterleitung löschen entfernen",
+        "ko": "포트 전달 삭제 제거"
+      }
     },
     {
       "template": "netsh wlan show profiles",
-      "description": "列出已儲存的無線網路設定檔",
-      "keywords": "wifi 無線 設定檔"
+      "description": {
+        "zh-Hant": "列出已儲存的無線網路設定檔",
+        "ja": "保存済みの無線 LAN プロファイルを一覧表示",
+        "en": "List the saved wireless network profiles",
+        "fr": "Lister les profils de réseau sans fil enregistrés",
+        "de": "Gespeicherte WLAN-Profile auflisten",
+        "ko": "저장된 무선 네트워크 프로필 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "wifi 無線 設定檔",
+        "ja": "wifi 無線 プロファイル",
+        "en": "wifi wireless wlan profiles",
+        "fr": "wifi sans fil profils",
+        "de": "wlan wifi drahtlos profile",
+        "ko": "wifi 무선 프로필"
+      }
     },
     {
       "template": "netsh advfirewall firewall show rule name=all",
-      "description": "列出所有防火牆規則",
-      "keywords": "防火牆 規則"
+      "description": {
+        "zh-Hant": "列出所有防火牆規則",
+        "ja": "すべてのファイアウォールルールを一覧表示",
+        "en": "List every firewall rule",
+        "fr": "Lister toutes les règles du pare-feu",
+        "de": "Alle Firewallregeln auflisten",
+        "ko": "모든 방화벽 규칙 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "防火牆 規則",
+        "ja": "ファイアウォール ルール",
+        "en": "firewall rules",
+        "fr": "pare-feu règles",
+        "de": "firewall regeln",
+        "ko": "방화벽 규칙"
+      }
     },
     {
       "template": "netsh winsock reset",
-      "description": "重設 Winsock 目錄（需重新開機）",
-      "keywords": "重設 網路 修復"
+      "description": {
+        "zh-Hant": "重設 Winsock 目錄（需重新開機）",
+        "ja": "Winsock カタログをリセット（再起動が必要）",
+        "en": "Reset the Winsock catalog (requires a reboot)",
+        "fr": "Réinitialiser le catalogue Winsock (redémarrage requis)",
+        "de": "Winsock-Katalog zurücksetzen (Neustart erforderlich)",
+        "ko": "Winsock 카탈로그 초기화(재부팅 필요)"
+      },
+      "keywords": {
+        "zh-Hant": "重設 網路 修復",
+        "ja": "リセット ネットワーク 修復",
+        "en": "reset network repair winsock",
+        "fr": "réinitialiser réseau réparer winsock",
+        "de": "zurücksetzen netzwerk reparieren winsock",
+        "ko": "초기화 네트워크 복구 winsock"
+      }
     },
     {
       "template": "netsh int ip reset",
-      "description": "重設 TCP/IP 堆疊（需重新開機）",
-      "keywords": "重設 修復"
+      "description": {
+        "zh-Hant": "重設 TCP/IP 堆疊（需重新開機）",
+        "ja": "TCP/IP スタックをリセット（再起動が必要）",
+        "en": "Reset the TCP/IP stack (requires a reboot)",
+        "fr": "Réinitialiser la pile TCP/IP (redémarrage requis)",
+        "de": "TCP/IP-Stack zurücksetzen (Neustart erforderlich)",
+        "ko": "TCP/IP 스택 초기화(재부팅 필요)"
+      },
+      "keywords": {
+        "zh-Hant": "重設 修復 tcpip",
+        "ja": "リセット 修復 tcpip スタック",
+        "en": "reset repair tcpip stack",
+        "fr": "réinitialiser réparer tcpip pile",
+        "de": "zurücksetzen reparieren tcpip stack",
+        "ko": "초기화 복구 tcpip 스택"
+      }
     }
   ]
 }

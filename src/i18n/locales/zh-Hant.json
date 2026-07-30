@@ -1,0 +1,192 @@
+{
+  "common": {
+    "cancel": "取消",
+    "source": {
+      "user": "自訂",
+      "builtin": "內建",
+      "history": "歷史"
+    },
+    "crash": {
+      "title": "畫面出了問題",
+      "retry": "重新載入"
+    }
+  },
+  "launcher": {
+    "searchLabel": "搜尋命令",
+    "placeholder": "輸入命令關鍵字，例如 usbipd 或「掛載」",
+    "empty": "沒有相符的命令",
+    "prompt": "輸入關鍵字開始搜尋",
+    "searchFailed": "搜尋失敗：{{reason}}",
+    "injectFailed": "填不進去：{{error}}",
+    "hint": {
+      "move": "↑↓ 移動",
+      "complete": "Tab 補完",
+      "direct": "Alt+1–9 直選",
+      "accept": "Enter 填入",
+      "dismiss": "Esc 取消",
+      "settings": "Alt+Shift+Q 設定"
+    }
+  },
+  "settings": {
+    "title": "QQKey 設定",
+    "tab": {
+      "entries": "命令字詞",
+      "general": "一般設定",
+      "about": "關於"
+    },
+    "language": {
+      "title": "介面語言",
+      "note": "候選框、設定畫面、系統匣選單與內建命令的說明都會跟著換。選「跟隨系統」時依 Windows 的顯示語言決定。",
+      "auto": "跟隨系統（{{language}}）"
+    },
+    "general": {
+      "loading": "載入中…",
+      "loadFailed": "讀不到設定",
+      "retry": "重試",
+      "apply": "套用",
+      "restoreDefault": "還原預設",
+      "shortcutTitle": "全域快捷鍵",
+      "shortcutNote": "格式為修飾鍵加按鍵代碼，例如 <code>Alt+KeyQ</code>、<code>Control+Shift+Space</code>。字母鍵要寫成 <code>KeyQ</code> 這種形式。避開 <code>Alt+Space</code>——那是 Windows 系統視窗選單的保留鍵。",
+      "shortcutUpdated": "快捷鍵已更新",
+      "shortcutFellBack": "{{wanted}} 沒有註冊成功，多半是被其他程式佔用了。目前實際可用的是 {{active}}，換一組再套用就會生效。",
+      "shortcutNoneActive": "{{wanted}} 註冊失敗，現在沒有任何快捷鍵可以叫出候選框——請從系統匣圖示操作，或在這裡換一組。"
+    },
+    "opacity": {
+      "title": "候選框背景",
+      "note": "候選框浮在你正在用的視窗上。不透明度越低，透出的底下內容越多；背景模糊會維持命令文字的可讀性。設定視窗開著時候選框是隱藏的，下面的預覽就是它實際的樣子。",
+      "preview": "預覽",
+      "sliderLabel": "候選框背景不透明度",
+      "percentLabel": "候選框背景不透明度百分比",
+      "minimumHint": "下限 {{percent}}%——再低，命令會被底下的內容干擾到讀不出來。"
+    },
+    "startup": {
+      "title": "啟動",
+      "note": "QQKey 平常沒有可見視窗，靠系統匣圖示常駐。左鍵單擊圖示可叫出候選框，右鍵開選單。",
+      "label": "開機時自動啟動",
+      "enabled": "已設為開機自動啟動",
+      "disabled": "已取消開機自動啟動"
+    },
+    "history": {
+      "title": "歷史紀錄學習",
+      "note_one": "從 PSReadLine 歷史學習你實際用過的命令，出現次數越多初始排序越前面。採增量匯入，只讀上次之後新增的部分。目前候選池共 {{count}} 筆。",
+      "note_other": "從 PSReadLine 歷史學習你實際用過的命令，出現次數越多初始排序越前面。採增量匯入，只讀上次之後新增的部分。目前候選池共 {{count}} 筆。",
+      "autoImport": "啟動時自動匯入",
+      "importNow": "立即匯入",
+      "enabled": "已啟用歷史學習",
+      "disabled": "已停用歷史學習",
+      "report_one": "掃描 {{count}} 行，匯入 {{imported}} 筆，略過 {{skippedSecret}} 筆疑似含憑證、{{skippedNoise}} 筆雜訊。",
+      "report_other": "掃描 {{count}} 行，匯入 {{imported}} 筆，略過 {{skippedSecret}} 筆疑似含憑證、{{skippedNoise}} 筆雜訊。",
+      "reportEmpty": "沒有新增的歷史紀錄。"
+    },
+    "secret": {
+      "title": "機密過濾規則",
+      "note": "命中這個正規表示式的歷史行會整行略過，不會進資料庫也不會出現在候選框。只會回報略過的筆數，內容不會被記錄。另有一條固定規則會擋下 <code>=</code> 或 <code>:</code> 後接 20 字元以上的長字串，不受此處影響。",
+      "updated": "過濾規則已更新",
+      "warning": "放寬規則前請先確認：漏放的憑證會一直留在本機資料庫裡。被誤殺的命令可以在「{{tab}}」頁自己新增回來。"
+    },
+    "share": {
+      "title": "分享自訂命令",
+      "note": "透過剪貼簿以 JSON 交換。只包含你自己新增或編輯過的命令——內建目錄對方也有，歷史學來的可能夾帶工作內容，都不會被匯出。",
+      "export": "匯出到剪貼簿",
+      "import": "從剪貼簿匯入",
+      "exported_one": "已複製 {{count}} 筆自訂命令到剪貼簿",
+      "exported_other": "已複製 {{count}} 筆自訂命令到剪貼簿",
+      "clipboardEmpty": "剪貼簿裡的檔案沒有任何命令"
+    },
+    "backup": {
+      "title": "備份與還原",
+      "note": "跟上面的「{{share}}」是兩件事。備份帶走<strong>全部</strong>——內建、歷史學來的、以及累積的使用統計與這一頁的所有設定，換一台機器能回到原狀。歷史學來的那上千筆只有這條路帶得走。",
+      "save": "備份到檔案",
+      "restore": "從備份還原",
+      "warning": "還原會<strong>取代</strong>目前的全部資料，包含你之後新增或編輯過的命令。",
+      "saveTitle": "備份 QQKey 資料",
+      "openTitle": "選擇要還原的備份",
+      "saved_one": "已備份 {{count}} 筆命令與目前的設定",
+      "saved_other": "已備份 {{count}} 筆命令與目前的設定"
+    },
+    "import": {
+      "confirmTitle": "確認匯入",
+      "confirm_one": "這個檔案有 {{count}} 筆命令，全部都會新增。",
+      "confirm_other": "這個檔案有 {{count}} 筆命令，全部都會新增。",
+      "confirmOverwrite_one": "這個檔案有 {{count}} 筆命令：新增 {{added}} 筆，覆寫本機已有的 {{overwritten}} 筆。\n\n被覆寫的說明與關鍵字會換成檔案裡的版本，無法復原。",
+      "confirmOverwrite_other": "這個檔案有 {{count}} 筆命令：新增 {{added}} 筆，覆寫本機已有的 {{overwritten}} 筆。\n\n被覆寫的說明與關鍵字會換成檔案裡的版本，無法復原。",
+      "confirmLabel": "匯入",
+      "done_one": "已匯入 {{count}} 筆命令",
+      "done_other": "已匯入 {{count}} 筆命令"
+    },
+    "restore": {
+      "confirmTitle": "確認還原",
+      "confirmMessage": "{{path}}\n\n將以這份備份取代目前的全部資料——現有的命令、使用統計與設定都會被蓋掉，無法復原。",
+      "confirmLabel": "還原",
+      "done": "已從備份還原"
+    },
+    "logs": {
+      "title": "診斷紀錄",
+      "note": "QQKey 平常沒有可見視窗，出問題時只能靠日誌回推是哪一步失敗的。日誌記錄叫出候選框、定位與注入各走到哪裡，<strong>不記錄視窗標題，也不記錄填入的內容</strong>。",
+      "open": "開啟日誌資料夾"
+    },
+    "entries": {
+      "searchPlaceholder": "搜尋命令、說明或關鍵字",
+      "sourceFilter": "依來源篩選",
+      "allSources": "全部來源",
+      "selectPage": "選取本頁",
+      "create": "新增命令",
+      "selectedCount_one": "已選取 {{count}} 筆",
+      "selectedCount_other": "已選取 {{count}} 筆",
+      "enable": "啟用",
+      "disable": "停用",
+      "delete": "刪除",
+      "edit": "編輯",
+      "clearSelection": "取消選取",
+      "resetScore": "歸零",
+      "resetScoreHint": "清除使用統計",
+      "scoreHint": "衰減後的使用分數——就是候選框拿來排序的那一個",
+      "boostHint": "手動加權",
+      "lastUsedHint": "最後使用時間",
+      "neverUsed": "未用過",
+      "empty": "沒有符合條件的命令",
+      "count_one": "共 {{count}} 筆",
+      "count_other": "共 {{count}} 筆",
+      "countPaged_one": "共 {{count}} 筆，第 {{page}} / {{pages}} 頁",
+      "countPaged_other": "共 {{count}} 筆，第 {{page}} / {{pages}} 頁",
+      "previousPage": "上一頁",
+      "nextPage": "下一頁",
+      "deleteOneTitle": "刪除這筆命令",
+      "deleteManyTitle": "刪除選取的命令",
+      "deleteOneMessage": "{{template}}\n\n刪除後無法復原。若只是想讓它不出現在候選框，用「停用」就好。",
+      "deleteManyMessage_one": "將刪除 {{count}} 筆命令，無法復原。\n\n若只是想讓它們不出現在候選框，用「停用」就好。",
+      "deleteManyMessage_other": "將刪除 {{count}} 筆命令，無法復原。\n\n若只是想讓它們不出現在候選框，用「停用」就好。"
+    },
+    "entry": {
+      "createTitle": "新增命令",
+      "editTitle": "編輯命令",
+      "template": "命令",
+      "templateHint": "以 <code>{名稱}</code> 標記待填參數。填入命令列時會截斷在第一個佔位符之前，游標剛好停在你要接手輸入的位置。",
+      "description": "說明",
+      "descriptionPlaceholder": "將裝置掛載到 WSL",
+      "keywords": "搜尋關鍵字",
+      "keywordsPlaceholder": "掛載 wsl 連接",
+      "keywordsHint": "以空白分隔。加了自己語言的詞，就能用那個語言搜到這筆命令。",
+      "keywordsBuiltinHint": "這是內建條目，顯示的是目前語言那一份；存檔後它會變成自訂條目，只吃你填的關鍵字。",
+      "boost": "手動加權",
+      "boostHint": "加到 frecency 分數上，讓這筆命令固定往前排。不收負數——想讓某筆不要出現請用「停用」。",
+      "save": "儲存"
+    },
+    "about": {
+      "pitch": "在任何視窗按下快捷鍵叫出候選框，鍵入關鍵字找到命令後<strong>填入</strong>命令列而不執行，游標停在第一個待填參數處。按不按 Enter 由你決定。常用的命令依 frecency 自動上浮。",
+      "version": "版本",
+      "license": "授權",
+      "data": "資料",
+      "dataValue": "全部存於本機，不對外傳送",
+      "authorTitle": "作者",
+      "origin": "QQKey 由 {{author}} 一人開發與維護。起因很單純：usbipd、git、netsh 這些工具的子命令與旗標記不住，每次都得回頭翻 <code>--help</code>，所以做了一個能用母語關鍵字找命令的工具，找到之後填進命令列讓自己再看一眼，而不是替你按下去。",
+      "contact": "使用上的問題、想補進內建目錄的命令，或是回報 bug，都歡迎從下面任一條路找我。",
+      "emailCopied": "已複製 Email 到剪貼簿",
+      "sendMail": "寄信",
+      "copy": "複製",
+      "repo": "專案頁",
+      "open": "開啟",
+      "secretWarning": "回報問題時請避免貼上含有憑證或公司內部路徑的命令內容。"
+    }
+  }
+}

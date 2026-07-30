@@ -2,6 +2,7 @@ mod caret;
 mod catalog;
 mod commands;
 mod hotkey;
+mod i18n;
 mod inject;
 mod ranking;
 mod state;
@@ -85,17 +86,22 @@ fn register_shortcut(app: &tauri::AppHandle, desired: &str) -> String {
 /// 錯誤訊息要讓使用者自己判斷得出是什麼問題（磁碟滿？權限？檔案壞了？），
 /// 所以連資料庫路徑一起帶出去——他至少能去那個位置看一眼。
 fn load_state(app: &tauri::AppHandle) -> Result<AppState, String> {
+    // 這一整條路上語系只能是系統語系——資料庫還沒開起來，`meta` 讀不到。
+    // `setup()` 已經先 set_current(system_language()) 過了。
+    let lang = i18n::current();
+
     let database = app
         .path()
         .app_data_dir()
-        .map_err(|error| format!("取不到資料夾位置：{error}"))?
+        .map_err(|error| i18n::fatal_no_data_dir(lang, &error.to_string()))?
         .join("qqkey.db");
 
-    let store = Store::open(&database)
-        .map_err(|error| format!("開啟資料庫失敗：{error}\n\n{}", database.display()))?;
+    let store = Store::open(&database).map_err(|error| {
+        i18n::fatal_open_database(lang, &error, &database.display().to_string())
+    })?;
 
     AppState::load(store)
-        .map_err(|error| format!("載入候選池失敗：{error}\n\n{}", database.display()))
+        .map_err(|error| i18n::fatal_load_pool(lang, &error.to_string(), &database.display().to_string()))
 }
 
 /// 啟動失敗時的最後手段。
@@ -107,7 +113,7 @@ fn fatal_dialog(message: &str) {
     use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_OK};
 
     let text = HSTRING::from(message);
-    let caption = HSTRING::from("QQKey 無法啟動");
+    let caption = HSTRING::from(i18n::fatal_caption(i18n::current()));
     unsafe {
         MessageBoxW(None, &text, &caption, MB_OK | MB_ICONERROR);
     }
@@ -167,6 +173,8 @@ pub fn run() {
             commands::set_shortcut,
             commands::launcher_opacity,
             commands::set_launcher_opacity,
+            commands::active_language,
+            commands::set_language,
             commands::set_secret_pattern,
             commands::import_history,
             commands::set_history_import_enabled,
@@ -177,6 +185,14 @@ pub fn run() {
         ])
         .setup(|app| {
             let handle = app.handle();
+
+            // 語系要在任何可能講話的路徑之前定下來：下面的 fatal_dialog 與
+            // store::migrate() 的訊息都在資料庫開起來之前產生，那時 `meta`
+            // 讀不到，只有系統語系可依。
+            //
+            // 也不能更早搬到 run() 開頭——plugin 是在 setup 之前才初始化的，
+            // 那時 log 巨集還沒有 logger，偵測結果的那行 trace 會被靜默丟掉。
+            i18n::set_current(i18n::system_language());
 
             // 資料庫是整個工具的地基，開不起來就沒有候選池可搜。原本這裡
             // 兩個 `?` 會一路傳到 run() 的 expect——release 版沒有 console、
@@ -189,6 +205,10 @@ pub fn run() {
                     std::process::exit(1);
                 }
             };
+
+            // 資料庫開起來了，換成使用者選過的語言。必須在 tray::setup() 之前——
+            // 否則系統匣第一次建立會用系統語系，而使用者明明選過別的。
+            i18n::set_current(state.active_language());
 
             if state.history_import_enabled() {
                 match state.import_history() {
@@ -219,7 +239,7 @@ pub fn run() {
             let active = register_shortcut(handle, &state.shortcut());
             state.set_active_shortcut(&active);
 
-            if let Err(error) = tray::setup(handle, &active) {
+            if let Err(error) = tray::setup(handle, &active, state.active_language()) {
                 // 系統匣是唯一的常駐入口，建不起來要讓使用者知道
                 log::error!("系統匣建立失敗：{error}");
             }

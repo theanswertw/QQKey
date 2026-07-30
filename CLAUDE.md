@@ -75,8 +75,17 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 `store.rs::migrate()` 依 `SCHEMA_VERSION` 逐段套用；**改動表結構時要 `SCHEMA_VERSION` +1
 並在階梯尾端補一段**，只加 `CREATE TABLE IF NOT EXISTS` 對既有資料庫等於沒做。
 版本比程式新時 `Store::open()` 直接回 Err（不試著降級），訊息會進啟動失敗對話框。
-`meta` 存字串設定（快捷鍵、歷史匯入位移與開關、機密過濾樣式、候選框背景不透明度），
-key 常數定義在 `state.rs` 頂端。
+`meta` 存字串設定（快捷鍵、歷史匯入位移與開關、機密過濾樣式、候選框背景不透明度、
+介面語言），key 常數定義在 `state.rs` 頂端。
+
+`entry` 有兩個關鍵字欄位，語意不同：`keywords` 是**給人看的**（設定畫面的「搜尋
+關鍵字」輸入框讀它，只放當前介面語言那一份），`keywords_all` 是**給模糊比對用的**
+（內建目錄六個語言的聯集，`Entry::haystack()` 優先用它）。分成兩欄是因為把六語言塞進
+`keywords` 的話，使用者一按存檔就把那團字變成自己的關鍵字，而條目同時轉成 user 來源、
+從此不再被內建目錄更新。**`update_entry()` 與 `upsert_user()` 必須把 `keywords_all`
+清成 NULL**——使用者接手之後就只該吃他填的字，不清的話他改成 `foo` 之後德文的舊關鍵字
+照樣命中，而他從畫面上看不出為什麼。`keywords_all` 是衍生資料，刻意不進備份檔
+（`BackupEntry` 沒有這一欄），還原後由 `AppState::resync_builtin()` 補回。
 
 ### 條目來源與優先序
 
@@ -101,8 +110,12 @@ key 常數定義在 `state.rs` 頂端。
 `ranking.rs`：`nucleo-matcher` 模糊比對分數 × frecency 加權。frecency 只存一個分數
 加最後使用時間，每次使用先衰減（三十天半衰期）再加一，等同對歷次使用做指數加權。
 **衰減在 Rust 端算**——SQLite 的數學函式要編譯時另外開啟，不能假設有。
-比對目標是 `Entry::haystack()`（template + keywords + description 併起來），
-所以中文關鍵字搜尋（輸入「掛載」找到 `usbipd attach --wsl`）才成立。
+比對目標是 `Entry::haystack()`（template + 關鍵字 + description 併起來），
+所以中文關鍵字搜尋（輸入「掛載」找到 `usbipd attach --wsl`）才成立。內建條目用的是
+`keywords_all`（六語言聯集），所以介面切成英文之後中文關鍵字仍然找得到——**這個承諾
+由 `ranking.rs` 的 `chinese_keywords_still_match_when_the_ui_is_english` 守著**。
+代價是 haystack 從約 39 字元長到約 110，短查詢會誤命中其他條目的歐語關鍵字；
+`a_cross_language_keyword_does_not_outrank_a_real_match` 是那件事的回歸測試。
 
 空查詢時只列出用過或手動加權過的條目，不塞一串沒用過的當噪音。
 
@@ -111,7 +124,28 @@ key 常數定義在 `state.rs` 頂端。
 新增內建命令目錄
 : 在 `src-tauri/resources/catalog/` 加 JSON，**同時**在 `catalog/builtin.rs` 的
   `CATALOGS` 加一行 `include_str!`（目錄是內嵌進執行檔的，不是執行時讀檔）。
-  `builtin.rs` 的測試會擋下重複 template 與缺少中文說明的條目。
+  `description` 與 `keywords` 是**六個語言的 map**（`zh-Hant`/`ja`/`en`/`fr`/`de`/`ko`），
+  `template` 只寫一次——它是資料庫的 UNIQUE key，複製六份的失敗模式是靜默的。
+  `builtin.rs` 的測試會擋下重複 template、解析不過的檔案，以及**任何語言缺譯**
+  （`every_entry_is_translated_into_every_language` 檢查的是 `LangMap::get()`
+  而不是 `load_builtin()` 的產物——後者有 fallback，缺譯會靜靜地變成英文或繁中）。
+
+新增使用者可見的後端字串
+: 在 `i18n.rs` 的 `messages!` 巨集裡加一條，六個語言一次寫齊。少一個語言巨集就
+  不匹配、插值名字打錯 `format!` 就報錯——這是選手寫方案而不是 `rust-i18n` 的全部
+  理由，所以**不要**改成執行期查表。「每個語言都有」不需要測試（編譯器擋著），
+  但「每個語言都真的印出了插值」需要：加進
+  `every_language_keeps_the_interpolated_values`，因為把
+  `"Open launcher ({shortcut})"` 寫成 `"Open launcher"` 是合法的 `format!`。
+  **`trace()` 與 log 字串不多語化**——讀者是開發者，固定語言才 grep 得到，
+  而且同一份日誌不該前後兩種語言。
+
+新增使用者可見的前端字串
+: 六個 `src/i18n/locales/*.json` 都要加。漏一個會被 `resources.ts` 的型別標註擋下
+  （`tsc` 會指名缺哪個鍵）；但它擋不到「多」出來的鍵，所以每個帶 `{{count}}` 的鍵
+  一律六檔同時提供 `_one` 與 `_other`，中日韓兩者填相同文字。內嵌 `<code>`／`<strong>`
+  的句子用 `<Trans components={{ code: <code /> }} />` 的**對照表**形式，不要用
+  `<0>`／`<1>` 索引——譯者重排標籤的那一刻索引就錯了。
 
 新增 IPC 指令
 : `commands.rs` 加函式後，**必須**在 `lib.rs` 的 `invoke_handler!` 註冊。
@@ -162,6 +196,66 @@ key 常數定義在 `state.rs` 頂端。
   `set_enabled()` 不轉。所以**單純開關啟用一律走 `set_enabled()`**，
   前端單筆與批次都是。走錯的話，按個「停用」就會讓內建條目被算進匯出檔。
 
+## 多語言（`i18n.rs` + `src/i18n/`）
+
+支援六個語言：`zh-Hant` `ja` `en` `fr` `de` `ko`。**這六個標籤在前後端逐字相同**
+（Rust 的 `Lang` serde 名稱 = TS 的 `LANGUAGES`），不一致的話兩邊會各自 fallback
+而且都不報錯，畫面上只看到一半換了語言。用正規 BCP 47 標籤是刻意的——前端可以
+直接餵給 `Intl.*` 與 `<html lang>`，兩邊都不需要轉換表。
+
+### 語系有三層
+
+| 層 | 位置 | 角色 |
+|---|---|---|
+| 持久真值 | `meta.language` | `"auto"`（跟隨系統，預設）或某個標籤 |
+| 熱快取 | `i18n::CURRENT`（`static RwLock<Lang>`） | 給拿不到 `AppState` 的地方讀 |
+| 唯一寫入口 | `AppState::set_language()` | 同時寫 meta 與快取，兩者不可能分岔 |
+
+之所以需要全域而不是各處傳參，是三個硬約束：`lib.rs` 的 `app.manage(state)` 發生在
+`tray::setup()` **之後**；`store.rs::migrate()` 是自由函式，跑的時候 `Store` 還在建構；
+而 `fatal_dialog()` 的定義就是 `AppState` 建不起來。這條路上語系**只能是系統語系**——
+別把它「修正」成讀資料庫，那時 `meta` 讀不到。
+
+系統語系用 Win32 `GetUserPreferredUILanguages`（**顯示語言**）而不是
+`GetUserDefaultLocaleName`（那是日期數字的**地區格式**）。顯示語言設英文、地區設台灣
+的機器在台灣企業環境很常見，用後者會把它們全判成中文，而測試抓不到這個錯
+（只覆蓋 `match_tag`）。實測：繁中版 Windows 11 回報的是舊式的 `zh-TW`，不是
+`zh-Hant-TW`，所以「只看主要語言子標籤」那一段是主路徑而非備用路徑。
+
+`i18n::set_current()` 必須是 `.setup()` 的第一行：更早（`run()` 開頭）plugin 還沒
+初始化，偵測結果那行 `trace` 會被靜默丟掉；更晚就趕不上 `migrate()` 與 `fatal_dialog()`。
+
+### 切換語言時要動的四個地方
+
+`commands::set_language()` → `AppState::set_language()`（落地）→ `resync_builtin()`
+（換內建目錄說明並重載候選池）→ `tray::refresh()`（**整個選單重建**，`TrayIcon` 沒有
+`menu()` getter）→ 設定視窗 `set_title()` → `app.emit("app:language")`。
+用全域 `emit` 而不是 `emit_to`：讓發起改動的設定視窗自己也走事件，套用語系就只有
+一條路徑。`restore_from_file()` 走**同一組副作用**（`apply_language()`）——備份會覆寫
+整張 meta 含 `language`，不推副作用的話畫面要到重啟才對得上。
+
+### 刻意不做的事
+
+- **使用者編輯過的條目切語言後停在舊語言。** 覆寫會破壞「編輯過就不再被蓋回」這條
+  不變條件，等於切一次語言就靜默毀掉他自己寫的說明。想拿回內建版本就刪掉那一筆。
+- **錯誤訊息在後端就翻好**，回傳 `Result<T, String>`。改成 `{code, params}` 交前端翻
+  要動約 48 處 Rust 簽章與 15 處前端，而產物逐字相同（翻好的前綴 + 未翻的 rusqlite
+  英文 detail）。日後真要拿 code 時，作法是 serialize-as-string 的 `AppError`，
+  前端那 15 處不必動就能先繼續運作。
+- **`hotkey.rs` 註冊設定快捷鍵失敗那條訊息不多語化**——它只進日誌，從不給使用者看。
+  這類「看起來像使用者訊息、其實只進日誌」的要逐條確認，別多翻。
+
+### 測試怎麼處理語系
+
+`i18n::pin_for_tests()` 把 `CURRENT` 釘在繁中，呼叫點是 `state.rs::temp_state()`、
+`store.rs::temp_store()` 與兩個自行 `Store::open()` 的測試。兩個理由：不釘的話
+`active_language()` 會跟著開發機的 Windows 顯示語言跑；而 `CURRENT` 是 process 級的，
+`cargo test` 的執行緒共用它——**所有測試釘同一個值**，競爭才無害。要驗證別的語言請用
+顯式收 `Lang` 的純函式（`tray::show_label`、`messages!` 產出的每一支都是），不要動全域。
+
+於是 `state.rs`／`store.rs`／`tray.rs` 那些以繁中字眼斷言錯誤內容的測試字面完全不動。
+改繁中措辭時它們會壞——那是好事，改文案的人本來就該看一眼測試。
+
 ## 機密過濾（`catalog/history.rs`）
 
 從 PSReadLine 歷史學習命令前，一律過濾疑似含憑證的行。兩條規則：
@@ -184,7 +278,11 @@ key 常數定義在 `state.rs` 頂端。
 - `crate::trace(scope, message)` 是後端診斷輸出，一律寫進日誌檔（`tauri-plugin-log`，
   Windows 位置是 `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\`，注意不是資料庫所在的
   Roaming）。**日誌會留在磁碟上，所以不記錄視窗標題、不記錄注入內容**。
-- 前端沒有 lint 設定；型別檢查靠 `npm run build`。無前端測試。
+- 前端沒有 lint 設定；型別檢查靠 `npm run build`。無前端測試——所以
+  `src/i18n/resources.ts` 的型別標註是六個語系檔一致性的唯一防線。
+- UI 文案一律進 `src/i18n/locales/*.json` 或 `i18n.rs` 的 `messages!`，元件裡不留
+  硬編碼字串（`console.error` 例外，那是開發者面向的）。`aria-label`、`title`、
+  `placeholder` 與原生檔案對話框的 `title` 也算 UI 文案，最容易漏。
 
 ## 已知限制與依賴約束
 
@@ -194,6 +292,16 @@ key 常數定義在 `state.rs` 頂端。
   定位失敗才主動 `center()`。
 - 候選框在中文輸入法模式下會進入注音組字狀態。搜尋需支援中文關鍵字，
   所以不宜直接停用輸入法。
+- CSS 的字型堆疊**刻意不指名 CJK 字型**，改讓 Chromium 依 `<html lang>` 做語言感知
+  fallback。拿掉 `Microsoft JhengHei UI` 看起來像退步，實際上留著會讓日文使用者拿到
+  中文字形。代價是**要在裝有對應語言套件的機器上才驗得出來**——開發機沒裝日文字型
+  會給出假的通過。
+- `Cargo.toml` 的 `description` 會進 MSI/NSIS 與 exe 檔案屬性，是打包期決定、不隨
+  執行期語言變，所以是語言中性的英文。安裝程式語言與應用程式語言是兩件事，
+  不要試圖同步（真要多語安裝程式是 `tauri.conf.json` 的 `bundle.windows.nsis.languages`）。
+- `restore()` 會覆寫 `meta.shortcut` 與 `meta.launcher_opacity` 卻不重新註冊快捷鍵、
+  不推送不透明度（語系那一份已經在 `restore_from_file()` 補上了，這兩個還沒）。
+  既有缺陷，未修。
 - `spike/` 下兩個獨立 crate（`caret-probe`、`input-probe`）是 M0/M1 的驗證工具，
   不參與主專案建置，但 `caret-probe/README.md` 記著 caret 定位的實測結論，改
   `caret.rs` 前值得一讀。

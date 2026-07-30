@@ -37,18 +37,20 @@ impl Store {
         let mut written = 0;
         {
             let mut statement = transaction.prepare(
-                "INSERT INTO entry (template, description, keywords, source)
-                 VALUES (?1, ?2, ?3, 'builtin')
+                "INSERT INTO entry (template, description, keywords, keywords_all, source)
+                 VALUES (?1, ?2, ?3, ?4, 'builtin')
                  ON CONFLICT(template) DO UPDATE SET
-                   description = excluded.description,
-                   keywords = excluded.keywords
+                   description   = excluded.description,
+                   keywords      = excluded.keywords,
+                   keywords_all  = excluded.keywords_all
                  WHERE entry.source = 'builtin'",
             )?;
             for entry in entries {
                 written += statement.execute(params![
                     entry.template,
                     entry.description,
-                    entry.keywords
+                    entry.keywords,
+                    entry.keywords_all
                 ])?;
             }
         }
@@ -70,21 +72,23 @@ impl Store {
     fn load_where(&self, filter: &str) -> rusqlite::Result<Vec<Entry>> {
         let connection = self.connection.lock().unwrap();
         let mut statement = connection.prepare(&format!(
-            "SELECT id, template, description, keywords, source, enabled, score, last_used, boost
+            "SELECT id, template, description, keywords, keywords_all,
+                    source, enabled, score, last_used, boost
              FROM entry {filter}"
         ))?;
         let rows = statement.query_map([], |row| {
-            let source: String = row.get(4)?;
+            let source: String = row.get(5)?;
             Ok(Entry {
                 id: row.get(0)?,
                 template: row.get(1)?,
                 description: row.get(2)?,
                 keywords: row.get(3)?,
+                keywords_all: row.get(4)?,
                 source: Source::parse(&source),
-                enabled: row.get::<_, i64>(5)? != 0,
-                score: row.get(6)?,
-                last_used: row.get(7)?,
-                boost: row.get(8)?,
+                enabled: row.get::<_, i64>(6)? != 0,
+                score: row.get(7)?,
+                last_used: row.get(8)?,
+                boost: row.get(9)?,
             })
         })?;
         rows.collect()
@@ -111,13 +115,17 @@ impl Store {
     pub fn update_entry(&self, id: i64, patch: &EntryPatch) -> rusqlite::Result<()> {
         let connection = self.connection.lock().unwrap();
         connection.execute(
+            // keywords_all 一併清掉。使用者把關鍵字改成 foo 之後，內建目錄那份
+            // 六語言聯集必須失效——不清的話德文的舊關鍵字照樣命中這一筆，
+            // 而他從設定畫面上看不出來為什麼。
             "UPDATE entry SET
-               template    = ?1,
-               description = ?2,
-               keywords    = ?3,
-               enabled     = COALESCE(?4, enabled),
-               boost       = COALESCE(?5, boost),
-               source      = CASE source WHEN 'builtin' THEN 'user' ELSE source END
+               template     = ?1,
+               description  = ?2,
+               keywords     = ?3,
+               keywords_all = NULL,
+               enabled      = COALESCE(?4, enabled),
+               boost        = COALESCE(?5, boost),
+               source       = CASE source WHEN 'builtin' THEN 'user' ELSE source END
              WHERE id = ?6",
             params![
                 patch.template,
@@ -236,10 +244,13 @@ impl Store {
                 "INSERT INTO entry (template, description, keywords, source, enabled, boost)
                  VALUES (?1, ?2, ?3, 'user', ?4, ?5)
                  ON CONFLICT(template) DO UPDATE SET
-                   description = excluded.description,
-                   keywords    = excluded.keywords,
-                   boost       = excluded.boost,
-                   source      = 'user'",
+                   description  = excluded.description,
+                   keywords     = excluded.keywords,
+                   -- 理由同 update_entry：匯入的是對方整理過的單語關鍵字，
+                   -- 內建目錄的六語言聯集不再適用這一筆。
+                   keywords_all = NULL,
+                   boost        = excluded.boost,
+                   source       = 'user'",
             )?;
             for entry in entries {
                 written += statement.execute(params![
@@ -280,6 +291,9 @@ impl Store {
             transaction.execute("DELETE FROM entry", [])?;
             transaction.execute("DELETE FROM meta", [])?;
 
+            // keywords_all 刻意不在備份檔裡，所以這裡留 NULL：它是從內建目錄
+            // 算出來的衍生資料，還原後由 `AppState::resync_builtin()` 補回，
+            // 存進備份只是讓每筆多背 60 個字元。
             let mut statement = transaction.prepare(
                 "INSERT INTO entry
                    (template, description, keywords, source, enabled, score, last_used, boost)
@@ -349,7 +363,7 @@ impl Store {
 
 /// 目前的 schema 版本。動到 `entry` 或 `meta` 的結構時 +1，
 /// 並在 `migrate()` 的階梯尾端補上對應的一段。
-const SCHEMA_VERSION: i64 = 1;
+const SCHEMA_VERSION: i64 = 2;
 
 /// 建立或升級 schema。版本記在 SQLite 內建的 `user_version`，不另外開表。
 ///
@@ -358,21 +372,21 @@ const SCHEMA_VERSION: i64 = 1;
 /// 而且是在啟動時撞，使用者只會看到工具再也打不開。匯出檔案早就有版本號了，
 /// 資料庫沒理由沒有。
 fn migrate(connection: &Connection) -> Result<(), String> {
+    // 這裡跑得比 `AppState` 早，語系只能讀 process 全域的那一份
+    // （由 `lib.rs` 的 setup 開頭以系統語系填好）。
+    let lang = crate::i18n::current();
+
     connection
         .execute_batch("PRAGMA journal_mode = WAL;")
-        .map_err(|error| format!("設定 journal 模式失敗：{error}"))?;
+        .map_err(|error| crate::i18n::db_journal_mode_failed(lang, &error.to_string()))?;
 
     let version: i64 = connection
         .query_row("PRAGMA user_version", [], |row| row.get(0))
-        .map_err(|error| format!("讀取 schema 版本失敗：{error}"))?;
+        .map_err(|error| crate::i18n::db_read_version_failed(lang, &error.to_string()))?;
 
     if version > SCHEMA_VERSION {
         // 不試著降級。新版寫進去的欄位砍掉就是弄丟資料，寧可不開。
-        return Err(format!(
-            "這個資料庫是較新版本的 QQKey 建立的（schema v{version}，\
-             本程式只認得 v{SCHEMA_VERSION}）。請改用新版，\
-             或把資料庫移到別處讓 QQKey 重建一個。"
-        ));
+        return Err(crate::i18n::db_newer_version(lang, version, SCHEMA_VERSION));
     }
 
     // 既有資料庫的 user_version 是 0 但表已經在了，靠 IF NOT EXISTS 讓這一段
@@ -399,16 +413,29 @@ fn migrate(connection: &Connection) -> Result<(), String> {
                    value TEXT NOT NULL
                  );",
             )
-            .map_err(|error| format!("建立資料表失敗：{error}"))?;
+            .map_err(|error| crate::i18n::db_create_tables_failed(lang, &error.to_string()))?;
     }
 
-    // 下一次改 schema 就接在這裡：if version < 2 { ...ALTER TABLE... }
+    if version < 2 {
+        // 內建目錄六個語言的 keywords 聯集，只給 `Entry::haystack()` 用，
+        // 讓「輸入『掛載』找到 usbipd attach」在介面切成英文之後仍然成立。
+        //
+        // 跟 `keywords` 分成兩欄而不是塞在一起：`keywords` 是設定畫面
+        // 「搜尋關鍵字」輸入框讀的那一份，把六語言塞進去的話使用者一按存檔
+        // 就把那團字變成自己的關鍵字，而條目同時轉成 user 來源、從此不再被
+        // 內建目錄更新。
+        connection
+            .execute_batch("ALTER TABLE entry ADD COLUMN keywords_all TEXT;")
+            .map_err(|error| crate::i18n::db_create_tables_failed(lang, &error.to_string()))?;
+    }
+
+    // 下一次改 schema 就接在這裡：if version < 3 { ...ALTER TABLE... }
 
     if version != SCHEMA_VERSION {
         // user_version 不吃參數綁定，只能組字串；SCHEMA_VERSION 是常數。
         connection
             .execute_batch(&format!("PRAGMA user_version = {SCHEMA_VERSION};"))
-            .map_err(|error| format!("寫入 schema 版本失敗：{error}"))?;
+            .map_err(|error| crate::i18n::db_write_version_failed(lang, &error.to_string()))?;
     }
 
     Ok(())
@@ -417,17 +444,19 @@ fn migrate(connection: &Connection) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::Store;
-    use crate::catalog::{NewEntry, Source};
+    use crate::catalog::{EntryPatch, NewEntry, Source};
 
     fn new_entry(template: &str, description: &str) -> NewEntry {
         NewEntry {
             template: template.to_string(),
             description: Some(description.to_string()),
             keywords: None,
+            keywords_all: None,
         }
     }
 
     fn temp_store() -> (Store, tempfile::TempDir) {
+        crate::i18n::pin_for_tests();
         let dir = tempfile::tempdir().expect("建立暫存目錄");
         let store = Store::open(&dir.path().join("test.db")).expect("開啟資料庫");
         (store, dir)
@@ -453,6 +482,7 @@ mod tests {
 
     #[test]
     fn migration_leaves_an_existing_database_intact() {
+        crate::i18n::pin_for_tests();
         let dir = tempfile::tempdir().expect("建立暫存目錄");
         let path = dir.path().join("test.db");
         {
@@ -473,6 +503,7 @@ mod tests {
 
     #[test]
     fn refuses_a_database_written_by_a_newer_version() {
+        crate::i18n::pin_for_tests();
         let dir = tempfile::tempdir().expect("建立暫存目錄");
         let path = dir.path().join("test.db");
         Store::open(&path).expect("先建立一個正常的資料庫");
@@ -494,6 +525,102 @@ mod tests {
         assert!(
             error.contains("較新版本"),
             "訊息要讓使用者看得懂發生什麼事，實際拿到：{error}"
+        );
+    }
+
+    /// schema 階梯第一次真正被走過。
+    ///
+    /// 失敗的症狀不是測試紅字而是「使用者升版之後工具再也打不開」——舊資料庫
+    /// 少了新欄位，`load_where()` 的 SELECT 會撞上 `no such column`，而那發生在
+    /// 啟動時，一路傳到啟動失敗對話框。
+    #[test]
+    fn migration_adds_the_keywords_all_column_to_a_v1_database() {
+        crate::i18n::pin_for_tests();
+        let dir = tempfile::tempdir().expect("建立暫存目錄");
+        let path = dir.path().join("test.db");
+
+        // 手工造一個 v1 的資料庫：舊的表結構、舊的版本章、以及一筆既有資料
+        {
+            let connection = rusqlite::Connection::open(&path).unwrap();
+            connection
+                .execute_batch(
+                    "CREATE TABLE entry (
+                       id          INTEGER PRIMARY KEY,
+                       template    TEXT NOT NULL UNIQUE,
+                       description TEXT,
+                       keywords    TEXT,
+                       source      TEXT NOT NULL,
+                       enabled     INTEGER NOT NULL DEFAULT 1,
+                       score       REAL NOT NULL DEFAULT 0,
+                       last_used   INTEGER,
+                       boost       REAL NOT NULL DEFAULT 0
+                     );
+                     CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                     INSERT INTO entry (template, description, keywords, source, score)
+                       VALUES ('usbipd list', '列出裝置', 'usb 列表', 'builtin', 3.5);
+                     INSERT INTO meta (key, value) VALUES ('shortcut', 'Alt+KeyW');
+                     PRAGMA user_version = 1;",
+                )
+                .unwrap();
+        }
+
+        let store = Store::open(&path).expect("v1 資料庫必須升級得上來");
+
+        let loaded = store.load_enabled().unwrap();
+        assert_eq!(loaded.len(), 1, "升級不該弄丟既有資料");
+        assert_eq!(loaded[0].template, "usbipd list");
+        assert_eq!(loaded[0].score, 3.5, "使用統計要留著");
+        assert_eq!(
+            loaded[0].keywords_all, None,
+            "舊資料的新欄位是 NULL，等下一次 sync_builtin 補"
+        );
+        assert_eq!(
+            store.meta("shortcut").unwrap().as_deref(),
+            Some("Alt+KeyW"),
+            "meta 也不該被動到"
+        );
+    }
+
+    /// 使用者改了關鍵字之後，內建目錄那份六語言聯集必須失效。
+    ///
+    /// 不清的話他把關鍵字改成 foo，德文的舊關鍵字照樣命中這一筆，
+    /// 而他從設定畫面上看不出來為什麼。
+    #[test]
+    fn editing_keywords_clears_the_multilingual_union() {
+        let (store, _dir) = temp_store();
+        store
+            .sync_builtin(&[NewEntry {
+                template: "usbipd list".to_string(),
+                description: Some("列出裝置".to_string()),
+                keywords: Some("列表".to_string()),
+                keywords_all: Some("列表 list liste 一覧 목록".to_string()),
+            }])
+            .unwrap();
+        let id = store.load_enabled().unwrap()[0].id;
+
+        store
+            .update_entry(
+                id,
+                &EntryPatch {
+                    template: "usbipd list".to_string(),
+                    description: Some("列出裝置".to_string()),
+                    keywords: Some("foo".to_string()),
+                    enabled: None,
+                    boost: None,
+                },
+            )
+            .unwrap();
+
+        let loaded = store.load_all().unwrap();
+        assert_eq!(loaded[0].keywords, Some("foo".to_string()));
+        assert_eq!(
+            loaded[0].keywords_all, None,
+            "使用者接手之後就只吃他填的關鍵字"
+        );
+        assert_eq!(
+            loaded[0].haystack(),
+            "usbipd list foo 列出裝置",
+            "haystack 也不該再認得舊的多語關鍵字"
         );
     }
 

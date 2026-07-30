@@ -1,0 +1,192 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "source": {
+      "user": "Custom",
+      "builtin": "Built-in",
+      "history": "History"
+    },
+    "crash": {
+      "title": "Something went wrong",
+      "retry": "Reload"
+    }
+  },
+  "launcher": {
+    "searchLabel": "Search commands",
+    "placeholder": "Type a keyword, e.g. usbipd or \"attach\"",
+    "empty": "No matching command",
+    "prompt": "Type a keyword to start searching",
+    "searchFailed": "Search failed: {{reason}}",
+    "injectFailed": "Could not insert: {{error}}",
+    "hint": {
+      "move": "↑↓ move",
+      "complete": "Tab complete",
+      "direct": "Alt+1–9 pick",
+      "accept": "Enter insert",
+      "dismiss": "Esc dismiss",
+      "settings": "Alt+Shift+Q settings"
+    }
+  },
+  "settings": {
+    "title": "QQKey Settings",
+    "tab": {
+      "entries": "Commands",
+      "general": "General",
+      "about": "About"
+    },
+    "language": {
+      "title": "Interface language",
+      "note": "Applies to the launcher, this window, the tray menu and the descriptions of the built-in commands. Following the system means using the Windows display language.",
+      "auto": "Follow the system ({{language}})"
+    },
+    "general": {
+      "loading": "Loading…",
+      "loadFailed": "Could not read the settings",
+      "retry": "Retry",
+      "apply": "Apply",
+      "restoreDefault": "Restore default",
+      "shortcutTitle": "Global shortcut",
+      "shortcutNote": "A modifier plus a key code, for example <code>Alt+KeyQ</code> or <code>Control+Shift+Space</code>. Letter keys are written like <code>KeyQ</code>. Avoid <code>Alt+Space</code> — Windows reserves it for the window menu.",
+      "shortcutUpdated": "Shortcut updated",
+      "shortcutFellBack": "{{wanted}} could not be registered, most likely because another program has it. {{active}} is what actually works right now; pick a different combination and apply it again.",
+      "shortcutNoneActive": "{{wanted}} could not be registered, so no shortcut opens the launcher at the moment — use the tray icon, or pick a different combination here."
+    },
+    "opacity": {
+      "title": "Launcher background",
+      "note": "The launcher floats above the window you are working in. Lower opacity lets more of it show through; the background blur keeps the command text readable. The launcher is hidden while this window is open, so the preview below is what it actually looks like.",
+      "preview": "Preview",
+      "sliderLabel": "Launcher background opacity",
+      "percentLabel": "Launcher background opacity percentage",
+      "minimumHint": "Minimum {{percent}}% — any lower and the content underneath makes the commands hard to read."
+    },
+    "startup": {
+      "title": "Startup",
+      "note": "QQKey normally has no visible window; it lives in the tray. Left-click the icon to open the launcher, right-click for the menu.",
+      "label": "Start automatically at sign-in",
+      "enabled": "Will now start automatically",
+      "disabled": "Will no longer start automatically"
+    },
+    "history": {
+      "title": "Learning from history",
+      "note_one": "Learns the commands you actually run from your PSReadLine history; the more often one appears, the higher it starts. Imports incrementally, reading only what is new since last time. The pool currently holds {{count}} command.",
+      "note_other": "Learns the commands you actually run from your PSReadLine history; the more often one appears, the higher it starts. Imports incrementally, reading only what is new since last time. The pool currently holds {{count}} commands.",
+      "autoImport": "Import at startup",
+      "importNow": "Import now",
+      "enabled": "Learning from history enabled",
+      "disabled": "Learning from history disabled",
+      "report_one": "Scanned {{count}} line, imported {{imported}}, skipped {{skippedSecret}} that looked like credentials and {{skippedNoise}} as noise.",
+      "report_other": "Scanned {{count}} lines, imported {{imported}}, skipped {{skippedSecret}} that looked like credentials and {{skippedNoise}} as noise.",
+      "reportEmpty": "No new history to import."
+    },
+    "secret": {
+      "title": "Credential filter",
+      "note": "History lines matching this regular expression are skipped entirely — they never reach the database and never appear in the launcher. Only the number of skipped lines is reported; their contents are not recorded. A second, fixed rule also blocks any run of 20 or more characters after <code>=</code> or <code>:</code>, and is not affected by this setting.",
+      "updated": "Filter rule updated",
+      "warning": "Before loosening this: a credential that slips through stays in the local database. A command caught by mistake can simply be added back on the {{tab}} tab."
+    },
+    "share": {
+      "title": "Share your commands",
+      "note": "Exchanged as JSON through the clipboard. Only the commands you added or edited yourself — the built-in catalogue is on the other machine too, and anything learnt from history may carry work content, so neither is exported.",
+      "export": "Copy to clipboard",
+      "import": "Paste from clipboard",
+      "exported_one": "Copied {{count}} command to the clipboard",
+      "exported_other": "Copied {{count}} commands to the clipboard",
+      "clipboardEmpty": "The file in the clipboard has no commands"
+    },
+    "backup": {
+      "title": "Backup and restore",
+      "note": "Not the same thing as {{share}} above. A backup takes <strong>everything</strong> — built-in entries, whatever was learnt from history, the accumulated usage statistics and every setting on this page — so a new machine can be put back exactly as it was. Those thousands of learnt entries travel no other way.",
+      "save": "Back up to a file",
+      "restore": "Restore from a backup",
+      "warning": "Restoring <strong>replaces</strong> all current data, including commands you have added or edited since.",
+      "saveTitle": "Back up QQKey data",
+      "openTitle": "Choose a backup to restore",
+      "saved_one": "Backed up {{count}} command and the current settings",
+      "saved_other": "Backed up {{count}} commands and the current settings"
+    },
+    "import": {
+      "confirmTitle": "Confirm import",
+      "confirm_one": "This file holds {{count}} command, and it will be added.",
+      "confirm_other": "This file holds {{count}} commands, all of which will be added.",
+      "confirmOverwrite_one": "This file holds {{count}} command: adds {{added}}, overwrites {{overwritten}} already here.\n\nThe descriptions and keywords that get overwritten are replaced by the versions in the file, and that cannot be undone.",
+      "confirmOverwrite_other": "This file holds {{count}} commands: adds {{added}}, overwrites {{overwritten}} already here.\n\nThe descriptions and keywords that get overwritten are replaced by the versions in the file, and that cannot be undone.",
+      "confirmLabel": "Import",
+      "done_one": "Imported {{count}} command",
+      "done_other": "Imported {{count}} commands"
+    },
+    "restore": {
+      "confirmTitle": "Confirm restore",
+      "confirmMessage": "{{path}}\n\nThis backup will replace all current data — existing commands, usage statistics and settings will all be overwritten, and that cannot be undone.",
+      "confirmLabel": "Restore",
+      "done": "Restored from the backup"
+    },
+    "logs": {
+      "title": "Diagnostic log",
+      "note": "QQKey normally has no visible window, so when something goes wrong the log is the only way to work out which step failed. It records how far opening the launcher, locating the caret and inserting the text each got, and <strong>records neither window titles nor the text that was inserted</strong>.",
+      "open": "Open the log folder"
+    },
+    "entries": {
+      "searchPlaceholder": "Search commands, descriptions or keywords",
+      "sourceFilter": "Filter by source",
+      "allSources": "All sources",
+      "selectPage": "Select this page",
+      "create": "New command",
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected",
+      "enable": "Enable",
+      "disable": "Disable",
+      "delete": "Delete",
+      "edit": "Edit",
+      "clearSelection": "Clear selection",
+      "resetScore": "Reset",
+      "resetScoreHint": "Clear the usage statistics",
+      "scoreHint": "The decayed usage score — the same one the launcher sorts by",
+      "boostHint": "Manual boost",
+      "lastUsedHint": "Last used",
+      "neverUsed": "Never used",
+      "empty": "No command matches these filters",
+      "count_one": "{{count}} command",
+      "count_other": "{{count}} commands",
+      "countPaged_one": "{{count}} command, page {{page}} of {{pages}}",
+      "countPaged_other": "{{count}} commands, page {{page}} of {{pages}}",
+      "previousPage": "Previous",
+      "nextPage": "Next",
+      "deleteOneTitle": "Delete this command",
+      "deleteManyTitle": "Delete the selected commands",
+      "deleteOneMessage": "{{template}}\n\nDeleting cannot be undone. If you only want it out of the launcher, disable it instead.",
+      "deleteManyMessage_one": "{{count}} command will be deleted, and that cannot be undone.\n\nIf you only want it out of the launcher, disable it instead.",
+      "deleteManyMessage_other": "{{count}} commands will be deleted, and that cannot be undone.\n\nIf you only want them out of the launcher, disable them instead."
+    },
+    "entry": {
+      "createTitle": "New command",
+      "editTitle": "Edit command",
+      "template": "Command",
+      "templateHint": "Mark the parts you fill in yourself with <code>{name}</code>. When inserted, the command is cut off just before the first placeholder, leaving the caret exactly where you take over.",
+      "description": "Description",
+      "descriptionPlaceholder": "Attach a device to WSL",
+      "keywords": "Search keywords",
+      "keywordsPlaceholder": "attach wsl connect",
+      "keywordsHint": "Separated by spaces. Add words in your own language and you can find this command in that language.",
+      "keywordsBuiltinHint": "This is a built-in entry, showing the keywords for the current language; once saved it becomes your own entry and only uses what you type here.",
+      "boost": "Manual boost",
+      "boostHint": "Added to the frecency score to keep this command near the top. Negative values are not accepted — to keep something out of the launcher, disable it.",
+      "save": "Save"
+    },
+    "about": {
+      "pitch": "Press the shortcut in any window to open the launcher, type a keyword to find a command, and it is <strong>inserted</strong> into the command line rather than run — with the caret at the first thing you need to fill in. Whether to press Enter is up to you. Frequently used commands rise on their own through frecency.",
+      "version": "Version",
+      "license": "Licence",
+      "data": "Data",
+      "dataValue": "Stored entirely on this machine, never sent anywhere",
+      "authorTitle": "Author",
+      "origin": "QQKey is written and maintained by {{author}} alone. The reason was simple: the subcommands and flags of tools like usbipd, git and netsh would not stick, and every time meant going back to <code>--help</code>. So this is a tool for finding commands by keywords in your own language, which then puts them in the command line for one more look rather than pressing the key for you.",
+      "contact": "Questions, commands worth adding to the built-in catalogue, or bug reports — any of the routes below reaches me.",
+      "emailCopied": "Email copied to the clipboard",
+      "sendMail": "Send mail",
+      "copy": "Copy",
+      "repo": "Project page",
+      "open": "Open",
+      "secretWarning": "When reporting a problem, please avoid pasting command text that contains credentials or internal paths."
+    }
+  }
+}

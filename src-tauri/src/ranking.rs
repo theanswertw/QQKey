@@ -104,6 +104,7 @@ mod tests {
             template: template.to_string(),
             description: None,
             keywords: keywords.map(str::to_string),
+            keywords_all: None,
             source,
             enabled: true,
             score,
@@ -190,6 +191,69 @@ mod tests {
         ];
         let ranked = rank(&entries, "git status", NOW, 10);
         assert_eq!(ranked[0].source, Source::User);
+    }
+
+    /// 內建條目的 keywords 是「當前介面語言」那一份，`keywords_all` 是六語言
+    /// 聯集。介面切成英文之後，用中文關鍵字仍然要找得到——這是這個工具的核心
+    /// 承諾，而它不該因為使用者換了介面語言就失效。
+    #[test]
+    fn chinese_keywords_still_match_when_the_ui_is_english() {
+        let mut attach = entry(
+            2,
+            "usbipd attach --wsl --busid {busid}",
+            Some("attach wsl connect mount"),
+            0.0,
+            Source::Builtin,
+        );
+        attach.keywords_all = Some("掛載 wsl 連接 アタッチ attach connect mount 연결".into());
+        let entries = vec![entry(1, "git status", Some("status"), 0.0, Source::Builtin), attach];
+
+        let ranked = rank(&entries, "掛載", NOW, 10);
+        assert_eq!(ranked.len(), 1, "英文介面下中文關鍵字仍要搜得到");
+        assert_eq!(ranked[0].id, 2);
+
+        let ranked = rank(&entries, "attach", NOW, 10);
+        assert_eq!(ranked[0].id, 2, "英文關鍵字當然也要搜得到");
+    }
+
+    /// haystack 因為六語言聯集從約 39 字元長到約 110，代價是短查詢會誤命中別筆
+    /// 條目的歐語關鍵字。真命中必須仍然排在前面——誤命中排第一的話，使用者
+    /// 按 Enter 就填錯命令。
+    #[test]
+    fn a_cross_language_keyword_does_not_outrank_a_real_match() {
+        let mut status = entry(1, "git status", None, 0.0, Source::Builtin);
+        status.keywords_all = Some("狀態 status statut zustand 상태".into());
+
+        // 德文的 einstellungen、法文的 statique 這類詞裡都有 st，
+        // 查 "git st" 時會一起被 nucleo 撈進來
+        let mut unrelated = entry(2, "netsh interface ip show config", None, 0.0, Source::Builtin);
+        unrelated.keywords_all = Some("設定 config einstellungen statique 설정".into());
+
+        let entries = vec![unrelated, status];
+        let ranked = rank(&entries, "git st", NOW, 10);
+
+        assert_eq!(
+            ranked[0].id, 1,
+            "跨語言的散落命中不該壓過 template 本身的連續命中"
+        );
+    }
+
+    /// 韓文諺文在 `Normalization::Smart` 下能不能逐音節命中，文件沒有說明。
+    ///
+    /// 如果這條測試失敗，代表韓文使用者只能靠命令本身搜尋，那時韓文的 keywords
+    /// 要補上羅馬字（`yeongyeol`）而不是只靠諺文。這是一條探測，不是門檻。
+    #[test]
+    fn korean_keywords_are_matchable() {
+        let mut attach = entry(1, "usbipd attach --wsl", None, 0.0, Source::Builtin);
+        attach.keywords_all = Some("연결 마운트 attach".into());
+        let entries = vec![
+            entry(2, "git status", Some("상태"), 0.0, Source::Builtin),
+            attach,
+        ];
+
+        let ranked = rank(&entries, "연결", NOW, 10);
+        assert_eq!(ranked.len(), 1, "韓文關鍵字要搜得到");
+        assert_eq!(ranked[0].id, 1);
     }
 
     #[test]

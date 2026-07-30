@@ -3,43 +3,155 @@
   "commands": [
     {
       "template": "winget search {query}",
-      "description": "搜尋可安裝的套件",
-      "keywords": "搜尋"
+      "description": {
+        "zh-Hant": "搜尋可安裝的套件",
+        "ja": "インストールできるパッケージを検索",
+        "en": "Search for installable packages",
+        "fr": "Rechercher des paquets installables",
+        "de": "Nach installierbaren Paketen suchen",
+        "ko": "설치할 수 있는 패키지 검색"
+      },
+      "keywords": {
+        "zh-Hant": "搜尋 尋找",
+        "ja": "検索 探す",
+        "en": "search find",
+        "fr": "rechercher chercher trouver",
+        "de": "suchen finden",
+        "ko": "검색 찾기"
+      }
     },
     {
       "template": "winget install {package}",
-      "description": "安裝套件",
-      "keywords": "安裝"
+      "description": {
+        "zh-Hant": "安裝套件",
+        "ja": "パッケージをインストール",
+        "en": "Install a package",
+        "fr": "Installer un paquet",
+        "de": "Paket installieren",
+        "ko": "패키지 설치"
+      },
+      "keywords": {
+        "zh-Hant": "安裝",
+        "ja": "インストール",
+        "en": "install",
+        "fr": "installer",
+        "de": "installieren",
+        "ko": "설치"
+      }
     },
     {
       "template": "winget list",
-      "description": "列出已安裝的套件",
-      "keywords": "列表 已安裝"
+      "description": {
+        "zh-Hant": "列出已安裝的套件",
+        "ja": "インストール済みのパッケージを一覧表示",
+        "en": "List the installed packages",
+        "fr": "Lister les paquets installés",
+        "de": "Installierte Pakete auflisten",
+        "ko": "설치된 패키지 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "列表 已安裝",
+        "ja": "一覧 インストール済み",
+        "en": "list installed",
+        "fr": "liste installés",
+        "de": "liste installiert",
+        "ko": "목록 설치됨"
+      }
     },
     {
       "template": "winget upgrade",
-      "description": "列出有更新可用的套件",
-      "keywords": "更新 檢查"
+      "description": {
+        "zh-Hant": "列出有更新可用的套件",
+        "ja": "更新があるパッケージを一覧表示",
+        "en": "List the packages with updates available",
+        "fr": "Lister les paquets ayant une mise à jour disponible",
+        "de": "Pakete mit verfügbaren Updates auflisten",
+        "ko": "업데이트가 있는 패키지 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "更新 檢查",
+        "ja": "更新 アップグレード 確認",
+        "en": "upgrade update check outdated",
+        "fr": "mettre à jour vérifier",
+        "de": "aktualisieren update prüfen",
+        "ko": "업그레이드 업데이트 확인"
+      }
     },
     {
       "template": "winget upgrade --all",
-      "description": "更新所有套件",
-      "keywords": "更新 全部"
+      "description": {
+        "zh-Hant": "更新所有套件",
+        "ja": "すべてのパッケージを更新",
+        "en": "Upgrade every package",
+        "fr": "Mettre à jour tous les paquets",
+        "de": "Alle Pakete aktualisieren",
+        "ko": "모든 패키지 업그레이드"
+      },
+      "keywords": {
+        "zh-Hant": "更新 全部",
+        "ja": "更新 アップグレード すべて",
+        "en": "upgrade update all",
+        "fr": "mettre à jour tous tout",
+        "de": "aktualisieren update alle",
+        "ko": "업그레이드 전체 모두"
+      }
     },
     {
       "template": "winget uninstall {package}",
-      "description": "移除套件",
-      "keywords": "移除 解除安裝"
+      "description": {
+        "zh-Hant": "移除套件",
+        "ja": "パッケージをアンインストール",
+        "en": "Uninstall a package",
+        "fr": "Désinstaller un paquet",
+        "de": "Paket deinstallieren",
+        "ko": "패키지 제거"
+      },
+      "keywords": {
+        "zh-Hant": "移除 解除安裝",
+        "ja": "アンインストール 削除",
+        "en": "uninstall remove",
+        "fr": "désinstaller supprimer",
+        "de": "deinstallieren entfernen",
+        "ko": "제거 삭제"
+      }
     },
     {
       "template": "winget show {package}",
-      "description": "顯示套件的詳細資訊",
-      "keywords": "詳情 資訊"
+      "description": {
+        "zh-Hant": "顯示套件的詳細資訊",
+        "ja": "パッケージの詳細を表示",
+        "en": "Show the details of a package",
+        "fr": "Afficher les détails d'un paquet",
+        "de": "Details eines Pakets anzeigen",
+        "ko": "패키지 상세 정보 표시"
+      },
+      "keywords": {
+        "zh-Hant": "詳情 資訊",
+        "ja": "詳細 情報",
+        "en": "show details info",
+        "fr": "détails informations afficher",
+        "de": "details informationen anzeigen",
+        "ko": "상세 정보"
+      }
     },
     {
       "template": "winget source update",
-      "description": "更新套件來源索引",
-      "keywords": "來源 更新"
+      "description": {
+        "zh-Hant": "更新套件來源索引",
+        "ja": "パッケージソースのインデックスを更新",
+        "en": "Refresh the package source index",
+        "fr": "Actualiser l'index des sources de paquets",
+        "de": "Index der Paketquellen aktualisieren",
+        "ko": "패키지 소스 색인 새로 고침"
+      },
+      "keywords": {
+        "zh-Hant": "來源 更新 索引",
+        "ja": "ソース 更新 インデックス",
+        "en": "source update index refresh",
+        "fr": "source mettre à jour index",
+        "de": "quelle aktualisieren index",
+        "ko": "소스 업데이트 색인"
+      }
     }
   ]
 }

@@ -51,6 +51,11 @@ pub struct Entry {
     pub template: String,
     pub description: Option<String>,
     pub keywords: Option<String>,
+    /// 內建目錄六個語言的 keywords 聯集，只給 [`Entry::haystack`] 用。
+    ///
+    /// `keywords` 是給人看的（設定畫面的「搜尋關鍵字」欄位讀它），這一欄是給
+    /// 模糊比對用的。使用者自訂、歷史學來的、以及被編輯過的條目都是 `None`。
+    pub keywords_all: Option<String>,
     pub source: Source,
     pub enabled: bool,
     pub score: f64,
@@ -59,10 +64,19 @@ pub struct Entry {
 }
 
 impl Entry {
-    /// 模糊比對的目標。把中文關鍵字一起併入，
+    /// 模糊比對的目標。把關鍵字一起併入，
     /// 這樣輸入「掛載」也能找到 `usbipd attach --wsl`。
+    ///
+    /// 內建條目用六語言聯集的 `keywords_all`，所以介面切成英文之後，用中文
+    /// 關鍵字一樣找得到——反之亦然。使用者編輯過的條目沒有聯集，就用他自己
+    /// 填的 `keywords`。
+    ///
+    /// 順序是刻意的：template → 目前語言的 keywords → description。
+    /// nucleo 對靠前與連續的命中給較高分，把「使用者這個語言真的會打的字」
+    /// 排在前面，其他語言的關鍵字（在 `keywords_all` 的後段）就落在後面。
     pub fn haystack(&self) -> String {
-        match (&self.keywords, &self.description) {
+        let keywords = self.keywords_all.as_ref().or(self.keywords.as_ref());
+        match (keywords, &self.description) {
             (Some(keywords), Some(description)) => {
                 format!("{} {keywords} {description}", self.template)
             }
@@ -73,14 +87,18 @@ impl Entry {
     }
 }
 
-/// 尚未寫進資料庫的條目，來自內建目錄或設定畫面。
-#[derive(Debug, Clone, Deserialize)]
+/// 尚未寫進資料庫的條目。
+///
+/// 由 `builtin::load_builtin()` 依當前語系從磁碟上的多語目錄組出來，
+/// 不再直接對應 JSON 的形狀——那是 `builtin::CatalogEntry` 的事。
+#[derive(Debug, Clone)]
 pub struct NewEntry {
     pub template: String,
-    #[serde(default)]
     pub description: Option<String>,
-    #[serde(default)]
+    /// 當前語系的關鍵字，會顯示在設定畫面的「搜尋關鍵字」欄位。
     pub keywords: Option<String>,
+    /// 六語言聯集，只給 [`Entry::haystack`] 用。
+    pub keywords_all: Option<String>,
 }
 
 /// 傳給前端的候選項目。

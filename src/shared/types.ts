@@ -1,3 +1,5 @@
+import type { AUTO_LANGUAGE, Language } from "../i18n/languages";
+
 /** 候選項目來源。使用者自訂 > 內建目錄 > 歷史紀錄，同分時依此優先。 */
 export type CandidateSource = "user" | "builtin" | "history";
 
@@ -40,6 +42,12 @@ export interface EntryPatch {
   boost?: number;
 }
 
+/**
+ * 一般設定。
+ *
+ * 欄位名一律 camelCase——後端的 `#[serde(rename_all = "camelCase")]` 會這樣送，
+ * 這邊寫成 snake_case 的話 `cargo build` 與 `tsc` 都不會有意見，執行期才是 undefined。
+ */
 export interface Settings {
   shortcut: string;
   /**
@@ -52,6 +60,12 @@ export interface Settings {
   defaultSecretPattern: string;
   launcherOpacity: number;
   defaultLauncherOpacity: number;
+  /** 語言設定值：`"auto"`（跟隨系統）或某個語系標籤。下拉選單認這一個。 */
+  language: typeof AUTO_LANGUAGE | Language;
+  /** 實際生效的語系。設定值是 `"auto"` 時它就等於 `systemLanguage`。 */
+  activeLanguage: Language;
+  /** 系統顯示語言，讓「跟隨系統」能寫成「跟隨系統（日本語）」。 */
+  systemLanguage: Language;
   poolSize: number;
 }
 
@@ -69,11 +83,11 @@ export interface ImportReport {
   skippedNoise: number;
 }
 
-export const SOURCE_LABELS: Record<CandidateSource, string> = {
-  user: "自訂",
-  builtin: "內建",
-  history: "歷史",
-};
+/*
+ * 來源標籤從前是這裡的一個模組層級常數。它在 import 時就求值，所以拿不到語系
+ * 也不會回應 changeLanguage——改成 `t("common.source.<source>")`，而這個檔案
+ * 回到純型別加上 splitTemplate，符合檔名的承諾。
+ */
 
 /** 把樣板拆成「會送出的前綴」與「留給使用者在終端機自行輸入的提示」。 */
 export function splitTemplate(template: string): { prefix: string; hint: string } {

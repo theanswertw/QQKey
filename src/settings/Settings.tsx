@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AboutPanel from "./AboutPanel";
 import EntriesPanel from "./EntriesPanel";
 import GeneralPanel from "./GeneralPanel";
@@ -11,6 +12,7 @@ interface Toast {
 }
 
 export default function Settings() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("entries");
   const [toast, setToast] = useState<Toast | null>(null);
 
@@ -25,7 +27,7 @@ export default function Settings() {
   return (
     <div className="settings">
       <header className="settings__header">
-        <h1 className="settings__title">QQKey 設定</h1>
+        <h1 className="settings__title">{t("settings.title")}</h1>
         <nav className="tabs" role="tablist">
           <button
             role="tab"
@@ -33,7 +35,7 @@ export default function Settings() {
             className={tab === "entries" ? "tab tab--active" : "tab"}
             onClick={() => setTab("entries")}
           >
-            命令字詞
+            {t("settings.tab.entries")}
           </button>
           <button
             role="tab"
@@ -41,7 +43,7 @@ export default function Settings() {
             className={tab === "general" ? "tab tab--active" : "tab"}
             onClick={() => setTab("general")}
           >
-            一般設定
+            {t("settings.tab.general")}
           </button>
           <button
             role="tab"
@@ -49,7 +51,7 @@ export default function Settings() {
             className={tab === "about" ? "tab tab--active" : "tab"}
             onClick={() => setTab("about")}
           >
-            關於
+            {t("settings.tab.about")}
           </button>
         </nav>
       </header>

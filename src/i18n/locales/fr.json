@@ -1,0 +1,192 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "source": {
+      "user": "Personnalisé",
+      "builtin": "Intégré",
+      "history": "Historique"
+    },
+    "crash": {
+      "title": "Un problème est survenu",
+      "retry": "Recharger"
+    }
+  },
+  "launcher": {
+    "searchLabel": "Rechercher une commande",
+    "placeholder": "Saisissez un mot-clé, par ex. usbipd ou « attacher »",
+    "empty": "Aucune commande correspondante",
+    "prompt": "Saisissez un mot-clé pour lancer la recherche",
+    "searchFailed": "Échec de la recherche : {{reason}}",
+    "injectFailed": "Insertion impossible : {{error}}",
+    "hint": {
+      "move": "↑↓ naviguer",
+      "complete": "Tab compléter",
+      "direct": "Alt+1–9 choisir",
+      "accept": "Entrée insérer",
+      "dismiss": "Échap fermer",
+      "settings": "Alt+Maj+Q paramètres"
+    }
+  },
+  "settings": {
+    "title": "Paramètres QQKey",
+    "tab": {
+      "entries": "Commandes",
+      "general": "Général",
+      "about": "À propos"
+    },
+    "language": {
+      "title": "Langue de l'interface",
+      "note": "S'applique au lanceur, à cette fenêtre, au menu de la zone de notification et aux descriptions des commandes intégrées. Suivre le système signifie utiliser la langue d'affichage de Windows.",
+      "auto": "Suivre le système ({{language}})"
+    },
+    "general": {
+      "loading": "Chargement…",
+      "loadFailed": "Impossible de lire les paramètres",
+      "retry": "Réessayer",
+      "apply": "Appliquer",
+      "restoreDefault": "Rétablir la valeur par défaut",
+      "shortcutTitle": "Raccourci global",
+      "shortcutNote": "Une touche de modification plus un code de touche, par exemple <code>Alt+KeyQ</code> ou <code>Control+Shift+Space</code>. Les touches de lettres s'écrivent sous la forme <code>KeyQ</code>. Évitez <code>Alt+Space</code> : Windows le réserve au menu de la fenêtre.",
+      "shortcutUpdated": "Raccourci mis à jour",
+      "shortcutFellBack": "{{wanted}} n'a pas pu être enregistré, très probablement parce qu'un autre programme l'utilise. C'est {{active}} qui fonctionne actuellement ; choisissez une autre combinaison et appliquez-la de nouveau.",
+      "shortcutNoneActive": "{{wanted}} n'a pas pu être enregistré : aucun raccourci n'ouvre le lanceur pour le moment. Passez par l'icône de la zone de notification, ou choisissez une autre combinaison ici."
+    },
+    "opacity": {
+      "title": "Arrière-plan du lanceur",
+      "note": "Le lanceur flotte au-dessus de la fenêtre dans laquelle vous travaillez. Plus l'opacité est faible, plus le contenu situé en dessous se devine ; le flou d'arrière-plan préserve la lisibilité du texte des commandes. Le lanceur est masqué tant que cette fenêtre est ouverte : l'aperçu ci-dessous montre son apparence réelle.",
+      "preview": "Aperçu",
+      "sliderLabel": "Opacité de l'arrière-plan du lanceur",
+      "percentLabel": "Opacité de l'arrière-plan du lanceur en pourcentage",
+      "minimumHint": "Minimum {{percent}} % — en dessous, le contenu situé derrière rend les commandes illisibles."
+    },
+    "startup": {
+      "title": "Démarrage",
+      "note": "QQKey n'affiche normalement aucune fenêtre : il reste dans la zone de notification. Un clic gauche sur l'icône ouvre le lanceur, un clic droit ouvre le menu.",
+      "label": "Démarrer automatiquement à l'ouverture de session",
+      "enabled": "Démarrera désormais automatiquement",
+      "disabled": "Ne démarrera plus automatiquement"
+    },
+    "history": {
+      "title": "Apprentissage depuis l'historique",
+      "note_one": "Apprend les commandes que vous exécutez réellement depuis votre historique PSReadLine : plus une commande revient, plus elle démarre haut dans le classement. L'import est incrémental et ne lit que ce qui est nouveau depuis la dernière fois. Le pool contient actuellement {{count}} commande.",
+      "note_other": "Apprend les commandes que vous exécutez réellement depuis votre historique PSReadLine : plus une commande revient, plus elle démarre haut dans le classement. L'import est incrémental et ne lit que ce qui est nouveau depuis la dernière fois. Le pool contient actuellement {{count}} commandes.",
+      "autoImport": "Importer au démarrage",
+      "importNow": "Importer maintenant",
+      "enabled": "Apprentissage depuis l'historique activé",
+      "disabled": "Apprentissage depuis l'historique désactivé",
+      "report_one": "{{count}} ligne analysée, {{imported}} importée(s), {{skippedSecret}} ignorée(s) car ressemblant à des identifiants et {{skippedNoise}} comme bruit.",
+      "report_other": "{{count}} lignes analysées, {{imported}} importée(s), {{skippedSecret}} ignorée(s) car ressemblant à des identifiants et {{skippedNoise}} comme bruit.",
+      "reportEmpty": "Aucun nouvel historique à importer."
+    },
+    "secret": {
+      "title": "Filtre des identifiants",
+      "note": "Les lignes d'historique correspondant à cette expression régulière sont entièrement ignorées : elles n'atteignent jamais la base de données et n'apparaissent jamais dans le lanceur. Seul le nombre de lignes ignorées est signalé, jamais leur contenu. Une seconde règle, fixe, bloque également toute suite de 20 caractères ou plus après <code>=</code> ou <code>:</code> ; elle n'est pas affectée par ce réglage.",
+      "updated": "Règle de filtrage mise à jour",
+      "warning": "Avant d'assouplir cette règle : un identifiant qui passe reste dans la base de données locale. Une commande écartée par erreur peut simplement être ajoutée de nouveau depuis l'onglet {{tab}}."
+    },
+    "share": {
+      "title": "Partager vos commandes",
+      "note": "Échange au format JSON via le presse-papiers. Uniquement les commandes que vous avez ajoutées ou modifiées vous-même : le catalogue intégré existe aussi sur l'autre machine, et ce qui a été appris de l'historique peut contenir des éléments de travail, donc ni l'un ni l'autre n'est exporté.",
+      "export": "Copier dans le presse-papiers",
+      "import": "Coller depuis le presse-papiers",
+      "exported_one": "{{count}} commande personnalisée copiée dans le presse-papiers",
+      "exported_other": "{{count}} commandes personnalisées copiées dans le presse-papiers",
+      "clipboardEmpty": "Le fichier du presse-papiers ne contient aucune commande"
+    },
+    "backup": {
+      "title": "Sauvegarde et restauration",
+      "note": "Ce n'est pas la même chose que {{share}} ci-dessus. Une sauvegarde emporte <strong>tout</strong> : les entrées intégrées, ce qui a été appris de l'historique, les statistiques d'utilisation accumulées et tous les réglages de cette page — de quoi remettre une nouvelle machine exactement dans l'état d'origine. Ces milliers d'entrées apprises ne voyagent par aucun autre moyen.",
+      "save": "Sauvegarder dans un fichier",
+      "restore": "Restaurer depuis une sauvegarde",
+      "warning": "La restauration <strong>remplace</strong> toutes les données actuelles, y compris les commandes ajoutées ou modifiées depuis.",
+      "saveTitle": "Sauvegarder les données de QQKey",
+      "openTitle": "Choisir la sauvegarde à restaurer",
+      "saved_one": "{{count}} commande et les réglages actuels sauvegardés",
+      "saved_other": "{{count}} commandes et les réglages actuels sauvegardés"
+    },
+    "import": {
+      "confirmTitle": "Confirmer l'import",
+      "confirm_one": "Ce fichier contient {{count}} commande, qui sera ajoutée.",
+      "confirm_other": "Ce fichier contient {{count}} commandes, qui seront toutes ajoutées.",
+      "confirmOverwrite_one": "Ce fichier contient {{count}} commande : ajout de {{added}}, écrasement de {{overwritten}} déjà présente(s).\n\nLes descriptions et mots-clés écrasés sont remplacés par les versions du fichier, sans possibilité d'annuler.",
+      "confirmOverwrite_other": "Ce fichier contient {{count}} commandes : ajout de {{added}}, écrasement de {{overwritten}} déjà présente(s).\n\nLes descriptions et mots-clés écrasés sont remplacés par les versions du fichier, sans possibilité d'annuler.",
+      "confirmLabel": "Importer",
+      "done_one": "{{count}} commande importée",
+      "done_other": "{{count}} commandes importées"
+    },
+    "restore": {
+      "confirmTitle": "Confirmer la restauration",
+      "confirmMessage": "{{path}}\n\nCette sauvegarde remplacera toutes les données actuelles : les commandes existantes, les statistiques d'utilisation et les réglages seront tous écrasés, sans possibilité d'annuler.",
+      "confirmLabel": "Restaurer",
+      "done": "Restauré depuis la sauvegarde"
+    },
+    "logs": {
+      "title": "Journal de diagnostic",
+      "note": "QQKey n'affiche normalement aucune fenêtre : quand quelque chose ne va pas, le journal est le seul moyen de savoir quelle étape a échoué. Il enregistre jusqu'où sont allés l'ouverture du lanceur, la localisation du curseur et l'insertion du texte, et <strong>n'enregistre ni les titres des fenêtres ni le texte inséré</strong>.",
+      "open": "Ouvrir le dossier des journaux"
+    },
+    "entries": {
+      "searchPlaceholder": "Rechercher dans les commandes, descriptions ou mots-clés",
+      "sourceFilter": "Filtrer par source",
+      "allSources": "Toutes les sources",
+      "selectPage": "Sélectionner cette page",
+      "create": "Nouvelle commande",
+      "selectedCount_one": "{{count}} sélectionnée",
+      "selectedCount_other": "{{count}} sélectionnées",
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "clearSelection": "Annuler la sélection",
+      "resetScore": "Remettre à zéro",
+      "resetScoreHint": "Effacer les statistiques d'utilisation",
+      "scoreHint": "Le score d'utilisation après décroissance — celui-là même sur lequel le lanceur trie",
+      "boostHint": "Pondération manuelle",
+      "lastUsedHint": "Dernière utilisation",
+      "neverUsed": "Jamais utilisée",
+      "empty": "Aucune commande ne correspond à ces filtres",
+      "count_one": "{{count}} commande",
+      "count_other": "{{count}} commandes",
+      "countPaged_one": "{{count}} commande, page {{page}} sur {{pages}}",
+      "countPaged_other": "{{count}} commandes, page {{page}} sur {{pages}}",
+      "previousPage": "Précédent",
+      "nextPage": "Suivant",
+      "deleteOneTitle": "Supprimer cette commande",
+      "deleteManyTitle": "Supprimer les commandes sélectionnées",
+      "deleteOneMessage": "{{template}}\n\nLa suppression est définitive. Si vous voulez seulement qu'elle n'apparaisse plus dans le lanceur, désactivez-la.",
+      "deleteManyMessage_one": "{{count}} commande sera supprimée, sans possibilité d'annuler.\n\nSi vous voulez seulement qu'elle n'apparaisse plus dans le lanceur, désactivez-la.",
+      "deleteManyMessage_other": "{{count}} commandes seront supprimées, sans possibilité d'annuler.\n\nSi vous voulez seulement qu'elles n'apparaissent plus dans le lanceur, désactivez-les."
+    },
+    "entry": {
+      "createTitle": "Nouvelle commande",
+      "editTitle": "Modifier la commande",
+      "template": "Commande",
+      "templateHint": "Marquez les parties que vous remplissez vous-même avec <code>{nom}</code>. À l'insertion, la commande est coupée juste avant le premier paramètre, laissant le curseur exactement là où vous prenez le relais.",
+      "description": "Description",
+      "descriptionPlaceholder": "Attacher un périphérique à WSL",
+      "keywords": "Mots-clés de recherche",
+      "keywordsPlaceholder": "attacher wsl connecter",
+      "keywordsHint": "Séparés par des espaces. Ajoutez des mots dans votre langue et vous retrouverez cette commande dans cette langue.",
+      "keywordsBuiltinHint": "Il s'agit d'une entrée intégrée ; les mots-clés affichés sont ceux de la langue actuelle. Après enregistrement, elle devient votre propre entrée et n'utilise plus que ce que vous saisissez ici.",
+      "boost": "Pondération manuelle",
+      "boostHint": "S'ajoute au score de frecency pour maintenir cette commande en haut. Les valeurs négatives ne sont pas acceptées — pour qu'une commande n'apparaisse pas, désactivez-la.",
+      "save": "Enregistrer"
+    },
+    "about": {
+      "pitch": "Appuyez sur le raccourci depuis n'importe quelle fenêtre pour ouvrir le lanceur, saisissez un mot-clé pour trouver une commande, et elle est <strong>insérée</strong> dans la ligne de commande au lieu d'être exécutée — le curseur se plaçant sur le premier élément à compléter. C'est à vous de décider d'appuyer sur Entrée. Les commandes les plus utilisées remontent d'elles-mêmes grâce à la frecency.",
+      "version": "Version",
+      "license": "Licence",
+      "data": "Données",
+      "dataValue": "Entièrement stockées sur cette machine, jamais transmises",
+      "authorTitle": "Auteur",
+      "origin": "QQKey est écrit et maintenu par {{author}} seul. La raison est simple : les sous-commandes et les options d'outils comme usbipd, git ou netsh ne restaient pas en mémoire, et il fallait chaque fois revenir à <code>--help</code>. D'où un outil qui retrouve les commandes par mots-clés dans sa propre langue, puis les place dans la ligne de commande pour un dernier coup d'œil — au lieu d'appuyer sur la touche à votre place.",
+      "contact": "Questions d'utilisation, commandes à ajouter au catalogue intégré, signalement de bogues : n'importe laquelle des voies ci-dessous me parvient.",
+      "emailCopied": "Adresse e-mail copiée dans le presse-papiers",
+      "sendMail": "Écrire",
+      "copy": "Copier",
+      "repo": "Page du projet",
+      "open": "Ouvrir",
+      "secretWarning": "Lorsque vous signalez un problème, évitez de coller du texte de commande contenant des identifiants ou des chemins internes."
+    }
+  }
+}

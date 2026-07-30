@@ -12,6 +12,7 @@ use crate::catalog::{
     load_builtin, BackupEntry, BackupFile, Candidate, Entry, EntryPage, EntryPatch, EntryView,
     ImportPreview, SharedEntry, SharedFile, Source, BACKUP_FILE_VERSION, SHARED_FILE_VERSION,
 };
+use crate::i18n::{self, Lang};
 use crate::ranking;
 use crate::store::Store;
 
@@ -25,6 +26,8 @@ const META_SHORTCUT: &str = "shortcut";
 const META_SECRET_PATTERN: &str = "secret_pattern";
 /// 候選框背景不透明度，以百分比整數字串存放。
 const META_LAUNCHER_OPACITY: &str = "launcher_opacity";
+/// 介面語言。存 `i18n::AUTO`（跟隨系統顯示語言）或某個 `Lang` 的標籤。
+const META_LANGUAGE: &str = "language";
 
 /// 候選框背景預設不透明度。留一點透視感，又不至於讓命令文字難讀。
 const DEFAULT_LAUNCHER_OPACITY: u8 = 92;
@@ -50,6 +53,13 @@ pub struct Settings {
     pub launcher_opacity: u8,
     /// 讓設定畫面能提供「還原預設」
     pub default_launcher_opacity: u8,
+    /// 語言設定值：`"auto"` 或某個語系標籤。設定畫面的下拉選單認這一個。
+    pub language: String,
+    /// 實際生效的語系。設定值是 `"auto"` 時它就是 `system_language`。
+    pub active_language: Lang,
+    /// 系統顯示語言，讓選單能把「跟隨系統」寫成「跟隨系統（日本語）」——
+    /// 不然使用者選了 auto 卻不知道會得到什麼。
+    pub system_language: Lang,
     pub pool_size: usize,
 }
 
@@ -70,7 +80,7 @@ pub struct AppState {
 impl AppState {
     /// 同步內建目錄後載入候選池。
     pub fn load(store: Store) -> rusqlite::Result<Self> {
-        let written = store.sync_builtin(&load_builtin())?;
+        let written = store.sync_builtin(&load_builtin(i18n::current()))?;
         let pool = store.load_enabled()?;
         crate::trace(
             "目錄",
@@ -97,7 +107,7 @@ impl AppState {
         self.store
             .find_template(id)
             .map_err(|error| error.to_string())?
-            .ok_or_else(|| format!("找不到 id 為 {id} 的命令"))
+            .ok_or_else(|| i18n::entry_not_found(i18n::current(), id))
     }
 
     /// 記下一次使用。記憶體中的候選池也要同步更新，
@@ -311,13 +321,10 @@ impl AppState {
 
     /// 解析並驗證分享檔。預覽與實際匯入走同一段，免得兩邊的判準飄開。
     fn parse_shared(&self, json: &str) -> Result<SharedFile, String> {
-        let file: SharedFile =
-            serde_json::from_str(json).map_err(|error| format!("JSON 格式不正確：{error}"))?;
+        let file: SharedFile = serde_json::from_str(json)
+            .map_err(|error| i18n::invalid_json(i18n::current(), &error.to_string()))?;
         if file.version > SHARED_FILE_VERSION {
-            return Err(format!(
-                "這個檔案是較新的格式（version {}），請先更新 QQKey",
-                file.version
-            ));
+            return Err(i18n::shared_file_newer(i18n::current(), file.version));
         }
 
         // 整批擋掉而不是跳過有問題的那幾筆：匯入是信任邊界，
@@ -402,13 +409,10 @@ impl AppState {
 
     /// 從備份還原。會**取代**目前的全部資料。
     pub fn restore(&self, json: &str) -> Result<usize, String> {
-        let file: BackupFile =
-            serde_json::from_str(json).map_err(|error| format!("不是有效的備份檔：{error}"))?;
+        let file: BackupFile = serde_json::from_str(json)
+            .map_err(|error| i18n::invalid_backup(i18n::current(), &error.to_string()))?;
         if file.version > BACKUP_FILE_VERSION {
-            return Err(format!(
-                "這個備份是較新的格式（version {}），請先更新 QQKey",
-                file.version
-            ));
+            return Err(i18n::backup_newer(i18n::current(), file.version));
         }
         for entry in &file.entries {
             check_template(&entry.template)?;
@@ -434,8 +438,66 @@ impl AppState {
             default_secret_pattern: history::DEFAULT_SECRET_PATTERN.to_string(),
             launcher_opacity: self.launcher_opacity(),
             default_launcher_opacity: DEFAULT_LAUNCHER_OPACITY,
+            language: self.language(),
+            active_language: self.active_language(),
+            system_language: i18n::system_language(),
             pool_size: self.pool_size(),
         }
+    }
+
+    /// 語言設定值：`"auto"` 或某個語系標籤。
+    pub fn language(&self) -> String {
+        self.store
+            .meta(META_LANGUAGE)
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| i18n::AUTO.to_string())
+    }
+
+    /// 實際生效的語系。
+    ///
+    /// 刻意不像 `active_shortcut` 那樣另外存一份：那個會跟設定值分岔是因為
+    /// 作業系統拒絕註冊，是算不回來的外部事實；語系只是「設定值 + 系統語系」
+    /// 的純函數，多存一份就多一個要同步的地方。
+    pub fn active_language(&self) -> Lang {
+        i18n::resolve(self.store.meta(META_LANGUAGE).ok().flatten().as_deref())
+    }
+
+    /// `meta` 與 `i18n` 全域快取的唯一寫入口。
+    ///
+    /// 分開寫的話，某條路徑只更新一邊，症狀會是「重開才生效」或
+    /// 「重開又變回去」，而兩者都很難歸因。
+    pub fn set_language(&self, value: &str) -> Result<(), String> {
+        // 正規化之後才存，免得資料庫裡同時出現 zh-hant 與 zh-Hant
+        let stored = if value == i18n::AUTO {
+            i18n::AUTO
+        } else {
+            Lang::parse(value)
+                .ok_or_else(|| i18n::unsupported_language(i18n::current(), value))?
+                .as_tag()
+        };
+        self.store
+            .set_meta(META_LANGUAGE, stored)
+            .map_err(|error| error.to_string())?;
+        i18n::set_current(self.active_language());
+        Ok(())
+    }
+
+    /// 換語言之後重新同步內建目錄的說明文字。
+    ///
+    /// 只有 `source = 'builtin'` 的條目會被換掉（`sync_builtin()` 的 `WHERE`
+    /// 保護）。使用者編輯過而轉成 user 的那些會**停在他當初寫的內容**，不跟著
+    /// 換語言——那些字是他自己選的，而覆寫等於切一次語言就靜默毀掉他寫的說明，
+    /// 比留下一句舊語言的說明糟得多。想拿回內建版本的話刪掉那一筆，
+    /// 下一次同步會把它重建回來。
+    pub fn resync_builtin(&self) -> Result<(), String> {
+        let written = self
+            .store
+            .sync_builtin(&load_builtin(i18n::current()))
+            .map_err(|error| error.to_string())?;
+        crate::trace("目錄", &format!("換語言後重新同步 {written} 筆"));
+        // 不重載候選池的話，候選框裡的說明文字要等到下次啟動才換得掉
+        self.reload_pool()
     }
 
     pub fn shortcut(&self) -> String {
@@ -472,7 +534,7 @@ impl AppState {
 
     pub fn set_secret_pattern(&self, pattern: &str) -> Result<(), String> {
         SecretFilter::from_pattern(pattern)
-            .map_err(|error| format!("不是有效的正規表示式：{error}"))?;
+            .map_err(|error| i18n::invalid_regex(i18n::current(), &error.to_string()))?;
         self.store
             .set_meta(META_SECRET_PATTERN, pattern)
             .map_err(|error| error.to_string())
@@ -494,8 +556,11 @@ impl AppState {
 
     pub fn set_launcher_opacity(&self, percent: u8) -> Result<(), String> {
         if !(MIN_LAUNCHER_OPACITY..=MAX_LAUNCHER_OPACITY).contains(&percent) {
-            return Err(format!(
-                "不透明度必須介於 {MIN_LAUNCHER_OPACITY}–{MAX_LAUNCHER_OPACITY}%，收到 {percent}%"
+            return Err(i18n::opacity_out_of_range(
+                i18n::current(),
+                MIN_LAUNCHER_OPACITY,
+                MAX_LAUNCHER_OPACITY,
+                percent,
             ));
         }
         self.store
@@ -531,21 +596,19 @@ impl AppState {
 /// 自己在某個欄位填了 -5。想讓命令往後排該用「停用」。
 fn check_boost(boost: f64) -> Result<(), String> {
     if !boost.is_finite() {
-        return Err("手動加權要是一個有限的數字".into());
+        return Err(i18n::boost_not_finite(i18n::current()));
     }
     if boost < 0.0 {
-        return Err(format!(
-            "手動加權不能是負數（收到 {boost}）。想讓某筆命令不要出現，請改用「停用」。"
-        ));
+        return Err(i18n::boost_negative(i18n::current(), boost));
     }
     Ok(())
 }
 
 fn check_template(template: &str) -> Result<(), String> {
     if crate::template::has_control_chars(template) {
-        return Err(format!(
-            "命令裡有換行或 Tab 這類控制字元，不能存下來——送進終端機時換行等同按下 Enter。\n\n{}",
-            template.escape_debug()
+        return Err(i18n::template_has_control_chars(
+            i18n::current(),
+            &template.escape_debug().to_string(),
         ));
     }
     Ok(())
@@ -581,6 +644,8 @@ mod tests {
     }
 
     fn temp_state() -> (AppState, tempfile::TempDir) {
+        // 錯誤訊息的斷言認的是繁中字眼，不釘的話會跟著開發機的顯示語言跑
+        crate::i18n::pin_for_tests();
         let dir = tempfile::tempdir().expect("建立暫存目錄");
         let store = Store::open(&dir.path().join("test.db")).expect("開啟資料庫");
         (AppState::load(store).expect("載入狀態"), dir)
@@ -688,6 +753,7 @@ mod tests {
             template: "qqkey demo".into(),
             description: None,
             keywords: None,
+            keywords_all: None,
             source: Source::User,
             enabled: true,
             score: 0.0,

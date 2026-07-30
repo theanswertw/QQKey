@@ -28,7 +28,9 @@ const EVENT_LAUNCHER_SHOWN: &str = "launcher:shown";
 const EVENT_LAUNCHER_OPACITY: &str = "launcher:opacity";
 
 pub fn parse(value: &str) -> Result<Shortcut, String> {
-    Shortcut::from_str(value).map_err(|error| format!("無法解析快捷鍵 {value:?}：{error}"))
+    Shortcut::from_str(value).map_err(|error| {
+        crate::i18n::shortcut_parse_failed(crate::i18n::current(), value, &error.to_string())
+    })
 }
 
 /// 註冊快捷鍵。回傳 Err 代表該組合已被其他程式佔用。
@@ -40,7 +42,13 @@ pub fn register<R: Runtime>(app: &AppHandle<R>, value: &str) -> Result<(), Strin
                 toggle_launcher(app);
             }
         })
-        .map_err(|error| format!("註冊 {value} 失敗（可能已被其他程式佔用）：{error}"))
+        .map_err(|error| {
+            crate::i18n::shortcut_register_failed(
+                crate::i18n::current(),
+                value,
+                &error.to_string(),
+            )
+        })
 }
 
 /// 註冊開啟設定視窗的快捷鍵。

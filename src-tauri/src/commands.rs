@@ -1,11 +1,12 @@
 //! 前端可呼叫的 IPC 指令。
 
-use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{Emitter, Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::catalog::history::ImportReport;
 use crate::catalog::{Candidate, EntryPage, EntryPatch, ImportPreview, Source};
 use crate::hotkey::LAUNCHER_LABEL;
+use crate::i18n::{self, Lang};
 use crate::state::{AppState, Settings};
 
 const SETTINGS_LABEL: &str = "settings";
@@ -125,16 +126,31 @@ pub fn preview_import(state: State<AppState>, json: String) -> Result<ImportPrev
 #[tauri::command]
 pub fn backup_to_file(state: State<AppState>, path: String) -> Result<usize, String> {
     let (json, count) = state.backup()?;
-    std::fs::write(&path, &json).map_err(|error| format!("寫入 {path} 失敗：{error}"))?;
+    std::fs::write(&path, &json)
+        .map_err(|error| i18n::write_failed(i18n::current(), &path, &error.to_string()))?;
     Ok(count)
 }
 
 /// 從備份檔還原。會取代目前的全部資料，前端負責先取得確認。
 #[tauri::command]
-pub fn restore_from_file(state: State<AppState>, path: String) -> Result<usize, String> {
-    let json =
-        std::fs::read_to_string(&path).map_err(|error| format!("讀取 {path} 失敗：{error}"))?;
-    state.restore(&json)
+pub fn restore_from_file<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    state: State<AppState>,
+    path: String,
+) -> Result<usize, String> {
+    let json = std::fs::read_to_string(&path)
+        .map_err(|error| i18n::read_failed(i18n::current(), &path, &error.to_string()))?;
+    let written = state.restore(&json)?;
+
+    // `restore()` 覆寫的是整張 `meta`，包含 `language`——備份裡的語言設定跟著
+    // 生效了，但系統匣、視窗標題與兩個 webview 都還記著舊的。從前這裡什麼副作用
+    // 都不推，所以還原之後畫面與資料庫要到重新啟動才對得上。
+    i18n::set_current(state.active_language());
+    // 備份裡的條目沒有 keywords_all（衍生資料不進備份檔），這一步同時把它補回來
+    state.resync_builtin()?;
+    apply_language(&app, &state);
+
+    Ok(written)
 }
 
 // ------------------------------------------------------------ 設定畫面：一般設定
@@ -157,7 +173,7 @@ pub fn set_shortcut<R: Runtime>(
     crate::hotkey::rebind(&app, &state.active_shortcut(), &shortcut)?;
     state.set_shortcut(&shortcut)?;
     state.set_active_shortcut(&shortcut);
-    crate::tray::refresh_tooltip(&app, &shortcut);
+    crate::tray::refresh(&app, &shortcut, state.active_language());
     Ok(())
 }
 
@@ -186,16 +202,18 @@ pub fn set_autostart<R: Runtime>(app: tauri::AppHandle<R>, enabled: bool) -> Res
 /// 要使用者自己找不切實際，所以給一個點得到的入口。
 #[tauri::command]
 pub fn open_log_dir<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    let lang = i18n::current();
     let dir = app
         .path()
         .app_log_dir()
-        .map_err(|error| format!("取不到日誌資料夾位置：{error}"))?;
+        .map_err(|error| i18n::no_log_dir(lang, &error.to_string()))?;
     // 資料夾要等第一次寫入才會出現，剛裝好就來點的話得先把它建出來
-    std::fs::create_dir_all(&dir).map_err(|error| format!("建立日誌資料夾失敗：{error}"))?;
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| i18n::create_log_dir_failed(lang, &error.to_string()))?;
     std::process::Command::new("explorer")
         .arg(&dir)
         .spawn()
-        .map_err(|error| format!("開啟日誌資料夾失敗：{error}"))?;
+        .map_err(|error| i18n::open_log_dir_failed(lang, &error.to_string()))?;
     Ok(())
 }
 
@@ -210,12 +228,12 @@ pub fn open_log_dir<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> 
 #[tauri::command]
 pub fn open_external(target: String) -> Result<(), String> {
     if !is_openable(&target) {
-        return Err(format!("不允許開啟這個連結：{target}"));
+        return Err(i18n::link_not_allowed(i18n::current(), &target));
     }
     std::process::Command::new("explorer")
         .arg(&target)
         .spawn()
-        .map_err(|error| format!("開啟連結失敗：{error}"))?;
+        .map_err(|error| i18n::open_link_failed(i18n::current(), &error.to_string()))?;
     Ok(())
 }
 
@@ -259,6 +277,59 @@ pub fn set_launcher_opacity<R: Runtime>(
     Ok(())
 }
 
+/// 兩個視窗掛載時取語系。
+///
+/// 刻意不共用 `get_settings`：這是 i18next 初始化的前置條件，擋在第一次 render
+/// 之前，能少搬一整包 `Settings` 就少搬一包。理由同 `launcher_opacity`。
+#[tauri::command]
+pub fn active_language(state: State<AppState>) -> Lang {
+    state.active_language()
+}
+
+/// 換介面語言。`language` 收 `"auto"` 或某個語系標籤。
+///
+/// 比照 `set_shortcut` 與 `set_launcher_opacity`：先寫進資料庫落地，
+/// 後面每一個副作用都讀新值。
+#[tauri::command]
+pub fn set_language<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    state: State<AppState>,
+    language: String,
+) -> Result<(), String> {
+    state.set_language(&language)?;
+    // 內建目錄換說明文字並重載候選池。放在系統匣之前是因為它是唯一可能失敗的
+    // 一步，失敗時不想留下「選單換了、候選框沒換」的半套狀態。
+    state.resync_builtin()?;
+    apply_language(&app, &state);
+    Ok(())
+}
+
+/// 把當前語系推到所有記著舊語言的地方。
+///
+/// 換語言與從備份還原都走這裡——後者會覆寫整張 `meta`（含 `language`），
+/// 兩件事要做的善後完全一樣，分成兩份遲早有一份漏掉。
+fn apply_language<R: Runtime>(app: &tauri::AppHandle<R>, state: &AppState) {
+    let lang = state.active_language();
+    crate::tray::refresh(app, &state.active_shortcut(), lang);
+    // 設定視窗的標題是建立當下寫進去的，之後只能補一次
+    if let Some(window) = app.get_webview_window(SETTINGS_LABEL) {
+        let _ = window.set_title(&i18n::settings_window_title(lang));
+    }
+    notify_language(app, lang);
+}
+
+/// 把新語系推給兩個 webview。
+///
+/// 跟 `notify_launcher_opacity` 不同，這裡用全域 `emit` 而不是 `emit_to`：
+/// 不透明度只有候選框在意，語系是兩個視窗都在意——**包含發起這次改動的設定
+/// 視窗自己**。讓它也走事件，套用語系就只有一條路徑，兩個視窗不可能顯示成
+/// 不同語言。
+fn notify_language<R: Runtime>(app: &tauri::AppHandle<R>, lang: Lang) {
+    if let Err(error) = app.emit(i18n::EVENT_LANGUAGE, lang) {
+        crate::trace("語系", &format!("推送語系失敗：{error}"));
+    }
+}
+
 /// 手動觸發一次歷史匯入，回傳這次掃描與過濾的統計。
 #[tauri::command]
 pub fn import_history(state: State<AppState>) -> Result<ImportReport, String> {
@@ -294,7 +365,7 @@ pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(),
                 SETTINGS_LABEL,
                 WebviewUrl::App("settings.html".into()),
             )
-            .title("QQKey 設定")
+            .title(i18n::settings_window_title(i18n::current()))
             .inner_size(960.0, 680.0)
             .min_inner_size(720.0, 480.0)
             .build()

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
+import { Trans, useTranslation } from "react-i18next";
 
 /**
  * 作者與聯絡方式。
@@ -24,6 +25,7 @@ export default function AboutPanel({
   onError: (message: string) => void;
   onNotice: (message: string) => void;
 }) {
+  const { t } = useTranslation();
   const [version, setVersion] = useState("");
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function AboutPanel({
   const copyEmail = async () => {
     try {
       await navigator.clipboard.writeText(AUTHOR.email);
-      onNotice("已複製 Email 到剪貼簿");
+      onNotice(t("settings.about.emailCopied"));
     } catch (error) {
       onError(String(error));
     }
@@ -59,39 +61,36 @@ export default function AboutPanel({
       <section className="section">
         <h2 className="section__title">QQKey</h2>
         <p className="section__note">
-          在任何視窗按下快捷鍵叫出候選框，鍵入關鍵字找到命令後
-          <strong>填入</strong>命令列而不執行，游標停在第一個待填參數處。
-          按不按 Enter 由你決定。常用的命令依 frecency 自動上浮。
+          <Trans i18nKey="settings.about.pitch" components={{ strong: <strong /> }} />
         </p>
         <dl className="about">
           <div className="about__row">
-            <dt className="about__label">版本</dt>
+            <dt className="about__label">{t("settings.about.version")}</dt>
             <dd className="about__value">
               <span className="about__mono">{version || "—"}</span>
             </dd>
           </div>
           <div className="about__row">
-            <dt className="about__label">授權</dt>
+            <dt className="about__label">{t("settings.about.license")}</dt>
             <dd className="about__value">MIT License</dd>
           </div>
           <div className="about__row">
-            <dt className="about__label">資料</dt>
-            <dd className="about__value">全部存於本機，不對外傳送</dd>
+            <dt className="about__label">{t("settings.about.data")}</dt>
+            <dd className="about__value">{t("settings.about.dataValue")}</dd>
           </div>
         </dl>
       </section>
 
       <section className="section">
-        <h2 className="section__title">作者</h2>
+        <h2 className="section__title">{t("settings.about.authorTitle")}</h2>
         <p className="section__note">
-          QQKey 由 {AUTHOR.name} 一人開發與維護。起因很單純：usbipd、git、netsh
-          這些工具的子命令與旗標記不住，每次都得回頭翻 <code>--help</code>，
-          所以做了一個能用中文關鍵字找命令的工具，找到之後填進命令列讓自己
-          再看一眼，而不是替你按下去。
+          <Trans
+            i18nKey="settings.about.origin"
+            values={{ author: AUTHOR.name }}
+            components={{ code: <code /> }}
+          />
         </p>
-        <p className="section__note">
-          使用上的問題、想補進內建目錄的命令，或是回報 bug，都歡迎從下面任一條路找我。
-        </p>
+        <p className="section__note">{t("settings.about.contact")}</p>
         <dl className="about">
           <div className="about__row">
             <dt className="about__label">Email</dt>
@@ -101,28 +100,28 @@ export default function AboutPanel({
                 className="button button--ghost"
                 onClick={() => void openExternal(`mailto:${AUTHOR.email}`)}
               >
-                寄信
+                {t("settings.about.sendMail")}
               </button>
               <button className="button button--ghost" onClick={copyEmail}>
-                複製
+                {t("settings.about.copy")}
               </button>
             </dd>
           </div>
           <div className="about__row">
-            <dt className="about__label">專案頁</dt>
+            <dt className="about__label">{t("settings.about.repo")}</dt>
             <dd className="about__value">
               <span className="about__mono">{REPO_LABEL}</span>
               <button
                 className="button button--ghost"
                 onClick={() => void openExternal(AUTHOR.repo)}
               >
-                開啟
+                {t("settings.about.open")}
               </button>
             </dd>
           </div>
         </dl>
         <p className="section__note section__note--warn">
-          回報問題時請避免貼上含有憑證或公司內部路徑的命令內容。
+          {t("settings.about.secretWarning")}
         </p>
       </section>
     </div>

@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
+import { Trans, useTranslation } from "react-i18next";
+import { AUTO_LANGUAGE, LANGUAGES, LANGUAGE_LABELS } from "../i18n/languages";
 import type { ImportPreview, ImportReport, Settings } from "../shared/types";
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -33,6 +35,7 @@ export default function GeneralPanel({
   onError: (message: string) => void;
   onNotice: (message: string) => void;
 }) {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [shortcut, setShortcut] = useState("");
   const [pattern, setPattern] = useState("");
@@ -84,13 +87,13 @@ export default function GeneralPanel({
     return (
       <div className="panel">
         {loadError === null ? (
-          "載入中…"
+          t("settings.general.loading")
         ) : (
           <div className="crash">
-            <p className="crash__title">讀不到設定</p>
+            <p className="crash__title">{t("settings.general.loadFailed")}</p>
             <p className="crash__message">{loadError}</p>
             <button type="button" className="crash__button" onClick={() => void reload()}>
-              重試
+              {t("settings.general.retry")}
             </button>
           </div>
         )}
@@ -133,12 +136,28 @@ export default function GeneralPanel({
     }
   };
 
+  /**
+   * 換介面語言。
+   *
+   * 刻意不走 `run()`——那會跳 toast，而 notice 字串是在語系改變**之前**求值的，
+   * 會用舊語言顯示。而且整個介面當場換掉本身就是最清楚的回饋，
+   * 理由同不透明度滑桿（那裡是「預覽本身就是回饋」）。
+   */
+  const changeLanguage = async (language: string) => {
+    try {
+      await invoke("set_language", { language });
+      await reload();
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
   const exportEntries = async () => {
     try {
       const json = await invoke<string>("export_entries");
       await navigator.clipboard.writeText(json);
       const count = (JSON.parse(json) as { entries: unknown[] }).entries.length;
-      onNotice(`已複製 ${count} 筆自訂命令到剪貼簿`);
+      onNotice(t("settings.share.exported", { count }));
     } catch (error) {
       onError(String(error));
     }
@@ -162,7 +181,7 @@ export default function GeneralPanel({
       const json = await navigator.clipboard.readText();
       const result = await invoke<ImportPreview>("preview_import", { json });
       if (result.total === 0) {
-        onNotice("剪貼簿裡的檔案沒有任何命令");
+        onNotice(t("settings.share.clipboardEmpty"));
         return;
       }
       setPending({ json, preview: result });
@@ -174,7 +193,8 @@ export default function GeneralPanel({
   const backup = async () => {
     try {
       const path = await save({
-        title: "備份 QQKey 資料",
+        // 原生對話框的標題也是使用者看得到的字
+        title: t("settings.backup.saveTitle"),
         defaultPath: "qqkey-backup.json",
         filters: [{ name: "JSON", extensions: ["json"] }],
       });
@@ -182,7 +202,7 @@ export default function GeneralPanel({
         return;
       }
       const count = await invoke<number>("backup_to_file", { path });
-      onNotice(`已備份 ${count} 筆命令與目前的設定`);
+      onNotice(t("settings.backup.saved", { count }));
     } catch (error) {
       onError(String(error));
     }
@@ -191,7 +211,7 @@ export default function GeneralPanel({
   const chooseRestore = async () => {
     try {
       const path = await open({
-        title: "選擇要還原的備份",
+        title: t("settings.backup.openTitle"),
         multiple: false,
         directory: false,
         filters: [{ name: "JSON", extensions: ["json"] }],
@@ -207,12 +227,36 @@ export default function GeneralPanel({
 
   return (
     <div className="panel panel--form">
+      {/* 排在第一個：讀不懂介面的使用者最先要找的就是這一項。 */}
       <section className="section">
-        <h2 className="section__title">全域快捷鍵</h2>
+        <h2 className="section__title">{t("settings.language.title")}</h2>
+        <p className="section__note">{t("settings.language.note")}</p>
+        <div className="section__row">
+          <select
+            className="toolbar__select"
+            aria-label={t("settings.language.title")}
+            value={settings.language}
+            onChange={(event) => void changeLanguage(event.target.value)}
+          >
+            <option value={AUTO_LANGUAGE}>
+              {t("settings.language.auto", {
+                language: LANGUAGE_LABELS[settings.systemLanguage] ?? settings.systemLanguage,
+              })}
+            </option>
+            {/* 語言名稱用該語言自己的寫法，不隨介面語言翻譯 */}
+            {LANGUAGES.map((tag) => (
+              <option key={tag} value={tag}>
+                {LANGUAGE_LABELS[tag]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2 className="section__title">{t("settings.general.shortcutTitle")}</h2>
         <p className="section__note">
-          格式為修飾鍵加按鍵代碼，例如 <code>Alt+KeyQ</code>、
-          <code>Control+Shift+Space</code>。字母鍵要寫成 <code>KeyQ</code> 這種形式。
-          避開 <code>Alt+Space</code>——那是 Windows 系統視窗選單的保留鍵。
+          <Trans i18nKey="settings.general.shortcutNote" components={{ code: <code /> }} />
         </p>
         <div className="section__row">
           <input
@@ -224,29 +268,31 @@ export default function GeneralPanel({
           <button
             className="button button--primary"
             disabled={shortcut === settings.shortcut}
-            onClick={() => void run(() => invoke("set_shortcut", { shortcut }), "快捷鍵已更新")}
+            onClick={() =>
+              void run(
+                () => invoke("set_shortcut", { shortcut }),
+                t("settings.general.shortcutUpdated"),
+              )
+            }
           >
-            套用
+            {t("settings.general.apply")}
           </button>
         </div>
         {settings.activeShortcut !== settings.shortcut && (
           <p className="section__note section__note--warn">
             {settings.activeShortcut
-              ? `${settings.shortcut} 沒有註冊成功，多半是被其他程式佔用了。
-                 目前實際可用的是 ${settings.activeShortcut}，換一組再套用就會生效。`
-              : `${settings.shortcut} 註冊失敗，現在沒有任何快捷鍵可以叫出候選框——
-                 請從系統匣圖示操作，或在這裡換一組。`}
+              ? t("settings.general.shortcutFellBack", {
+                  wanted: settings.shortcut,
+                  active: settings.activeShortcut,
+                })
+              : t("settings.general.shortcutNoneActive", { wanted: settings.shortcut })}
           </p>
         )}
       </section>
 
       <section className="section">
-        <h2 className="section__title">候選框背景</h2>
-        <p className="section__note">
-          候選框浮在你正在用的視窗上。不透明度越低，透出的底下內容越多；
-          背景模糊會維持命令文字的可讀性。設定視窗開著時候選框是隱藏的，
-          下面的預覽就是它實際的樣子。
-        </p>
+        <h2 className="section__title">{t("settings.opacity.title")}</h2>
+        <p className="section__note">{t("settings.opacity.note")}</p>
 
         <div className="preview" aria-hidden="true">
           <pre className="preview__desk">{PREVIEW_DESK}</pre>
@@ -273,14 +319,14 @@ export default function GeneralPanel({
               </div>
             </div>
           </div>
-          <span className="preview__label">預覽</span>
+          <span className="preview__label">{t("settings.opacity.preview")}</span>
         </div>
 
         <div className="section__row">
           <input
             className="slider"
             type="range"
-            aria-label="候選框背景不透明度"
+            aria-label={t("settings.opacity.sliderLabel")}
             min={MIN_OPACITY}
             max={MAX_OPACITY}
             step={1}
@@ -302,7 +348,7 @@ export default function GeneralPanel({
           <input
             className="field__input field__input--mono field__input--tiny"
             type="number"
-            aria-label="候選框背景不透明度百分比"
+            aria-label={t("settings.opacity.percentLabel")}
             min={MIN_OPACITY}
             max={MAX_OPACITY}
             value={Number.isFinite(opacity) ? opacity : ""}
@@ -316,26 +362,26 @@ export default function GeneralPanel({
               }
             }}
           />
+          {/* 緊貼數字輸入框的單位標示，不是文句，所以留字面的 % */}
           <span className="field__unit">%</span>
           <button
             className="button"
             disabled={settings.launcherOpacity === settings.defaultLauncherOpacity}
             onClick={() => void applyOpacity(settings.defaultLauncherOpacity)}
           >
-            還原預設
+            {t("settings.general.restoreDefault")}
           </button>
         </div>
+        {/* 這一句是文句，% 寫在譯文裡（法文的 % 前面有空格，那屬於翻譯）。
+            刻意不用 Intl 的 style: "percent"——它期待 0–1，會把 20 印成 2000%。 */}
         <span className="field__hint">
-          下限 {MIN_OPACITY}%——再低，命令會被底下的內容干擾到讀不出來。
+          {t("settings.opacity.minimumHint", { percent: MIN_OPACITY })}
         </span>
       </section>
 
       <section className="section">
-        <h2 className="section__title">啟動</h2>
-        <p className="section__note">
-          QQKey 平常沒有可見視窗，靠系統匣圖示常駐。左鍵單擊圖示可叫出候選框，
-          右鍵開選單。
-        </p>
+        <h2 className="section__title">{t("settings.startup.title")}</h2>
+        <p className="section__note">{t("settings.startup.note")}</p>
         <label className="switch">
           <input
             type="checkbox"
@@ -343,19 +389,20 @@ export default function GeneralPanel({
             onChange={(event) =>
               void run(
                 () => invoke("set_autostart", { enabled: event.target.checked }),
-                event.target.checked ? "已設為開機自動啟動" : "已取消開機自動啟動",
+                event.target.checked
+                  ? t("settings.startup.enabled")
+                  : t("settings.startup.disabled"),
               )
             }
           />
-          <span>開機時自動啟動</span>
+          <span>{t("settings.startup.label")}</span>
         </label>
       </section>
 
       <section className="section">
-        <h2 className="section__title">歷史紀錄學習</h2>
+        <h2 className="section__title">{t("settings.history.title")}</h2>
         <p className="section__note">
-          從 PSReadLine 歷史學習你實際用過的命令，出現次數越多初始排序越前面。
-          採增量匯入，只讀上次之後新增的部分。目前候選池共 {settings.poolSize} 筆。
+          {t("settings.history.note", { count: settings.poolSize })}
         </p>
         <div className="section__row">
           <label className="switch">
@@ -368,11 +415,13 @@ export default function GeneralPanel({
                     invoke("set_history_import_enabled", {
                       enabled: event.target.checked,
                     }),
-                  event.target.checked ? "已啟用歷史學習" : "已停用歷史學習",
+                  event.target.checked
+                    ? t("settings.history.enabled")
+                    : t("settings.history.disabled"),
                 )
               }
             />
-            <span>啟動時自動匯入</span>
+            <span>{t("settings.history.autoImport")}</span>
           </label>
           <button
             className="button"
@@ -385,25 +434,34 @@ export default function GeneralPanel({
               }
             }}
           >
-            立即匯入
+            {t("settings.history.importNow")}
           </button>
         </div>
 
         {report && (
           <div className="report">
-            掃描 {report.scanned} 行，匯入 {report.imported} 筆，
-            略過 {report.skippedSecret} 筆疑似含憑證、{report.skippedNoise} 筆雜訊。
-            {report.scanned === 0 && "（沒有新增的歷史紀錄）"}
+            {/*
+             * scanned === 0 時另外三個數字必然是 0、毫無資訊，本來就該是另一則
+             * 訊息。從前是把「（沒有新增的歷史紀錄）」附在後面，於是印出
+             * 「掃描 0 行，匯入 0 筆，略過 0 筆…（沒有新增的歷史紀錄）」，
+             * 同一件事講了兩遍。
+             */}
+            {report.scanned === 0
+              ? t("settings.history.reportEmpty")
+              : t("settings.history.report", {
+                  count: report.scanned,
+                  imported: report.imported,
+                  skippedSecret: report.skippedSecret,
+                  skippedNoise: report.skippedNoise,
+                })}
           </div>
         )}
       </section>
 
       <section className="section">
-        <h2 className="section__title">機密過濾規則</h2>
+        <h2 className="section__title">{t("settings.secret.title")}</h2>
         <p className="section__note">
-          命中這個正規表示式的歷史行會整行略過，不會進資料庫也不會出現在候選框。
-          只會回報略過的筆數，內容不會被記錄。另有一條固定規則會擋下
-          <code>=</code> 或 <code>:</code> 後接 20 字元以上的長字串，不受此處影響。
+          <Trans i18nKey="settings.secret.note" components={{ code: <code /> }} />
         </p>
         <textarea
           className="field__textarea"
@@ -417,78 +475,92 @@ export default function GeneralPanel({
             className="button button--primary"
             disabled={pattern === settings.secretPattern}
             onClick={() =>
-              void run(() => invoke("set_secret_pattern", { pattern }), "過濾規則已更新")
+              void run(
+                () => invoke("set_secret_pattern", { pattern }),
+                t("settings.secret.updated"),
+              )
             }
           >
-            套用
+            {t("settings.general.apply")}
           </button>
           <button
             className="button"
             disabled={pattern === settings.defaultSecretPattern}
             onClick={() => setPattern(settings.defaultSecretPattern)}
           >
-            還原預設
+            {t("settings.general.restoreDefault")}
           </button>
         </div>
         <p className="section__note section__note--warn">
-          放寬規則前請先確認：漏放的憑證會一直留在本機資料庫裡。
-          被誤殺的命令可以在「命令字詞」頁自己新增回來。
+          {t("settings.secret.warning", { tab: t("settings.tab.entries") })}
         </p>
       </section>
 
       <section className="section">
-        <h2 className="section__title">分享自訂命令</h2>
-        <p className="section__note">
-          透過剪貼簿以 JSON 交換。只包含你自己新增或編輯過的命令——
-          內建目錄對方也有，歷史學來的可能夾帶工作內容，都不會被匯出。
-        </p>
+        <h2 className="section__title">{t("settings.share.title")}</h2>
+        <p className="section__note">{t("settings.share.note")}</p>
         <div className="section__row">
           <button className="button" onClick={exportEntries}>
-            匯出到剪貼簿
+            {t("settings.share.export")}
           </button>
           <button className="button" onClick={importEntries}>
-            從剪貼簿匯入
+            {t("settings.share.import")}
           </button>
         </div>
       </section>
 
       <section className="section">
-        <h2 className="section__title">備份與還原</h2>
+        <h2 className="section__title">{t("settings.backup.title")}</h2>
         <p className="section__note">
-          跟上面的「分享」是兩件事。備份帶走<strong>全部</strong>——內建、
-          歷史學來的、以及累積的使用統計與這一頁的所有設定，換一台機器能回到原狀。
-          歷史學來的那上千筆只有這條路帶得走。
+          <Trans
+            i18nKey="settings.backup.note"
+            values={{ share: t("settings.share.title") }}
+            components={{ strong: <strong /> }}
+          />
         </p>
         <div className="section__row">
           <button className="button" onClick={backup}>
-            備份到檔案
+            {t("settings.backup.save")}
           </button>
           <button className="button" onClick={chooseRestore}>
-            從備份還原
+            {t("settings.backup.restore")}
           </button>
         </div>
         <p className="section__note section__note--warn">
-          還原會<strong>取代</strong>目前的全部資料，包含你之後新增或編輯過的命令。
+          <Trans i18nKey="settings.backup.warning" components={{ strong: <strong /> }} />
         </p>
       </section>
 
       {pending && (
         <ConfirmDialog
-          title="確認匯入"
+          title={t("settings.import.confirmTitle")}
+          /*
+           * 兩條完整的句子，而不是用 + 串接再讓 else 分支只補一個句號。
+           * ⚠ 這是本應用最難翻的一條：一句話裡有三個數字，而 i18next 的
+           * {{count}} 每個 key 只能驅動一個複數選擇器。added 與 overwritten
+           * 的句式必須在任何數字下都讀得通——英文 "adds 1" 可以，
+           * "1 commands" 不行。
+           */
           message={
-            `這個檔案有 ${pending.preview.total} 筆命令：新增 ${pending.preview.added} 筆` +
-            (pending.preview.overwritten > 0
-              ? `，覆寫 ${pending.preview.overwritten} 筆本機已有的。\n\n被覆寫的說明與關鍵字會換成檔案裡的版本，無法復原。`
-              : "。")
+            pending.preview.overwritten > 0
+              ? t("settings.import.confirmOverwrite", {
+                  count: pending.preview.total,
+                  added: pending.preview.added,
+                  overwritten: pending.preview.overwritten,
+                })
+              : t("settings.import.confirm", {
+                  count: pending.preview.total,
+                  added: pending.preview.added,
+                })
           }
-          confirmLabel="匯入"
+          confirmLabel={t("settings.import.confirmLabel")}
           danger={pending.preview.overwritten > 0}
           onConfirm={() => {
             const { json } = pending;
             setPending(undefined);
             void run(
               () => invoke("import_entries", { json }),
-              `已匯入 ${pending.preview.total} 筆命令`,
+              t("settings.import.done", { count: pending.preview.total }),
             );
           }}
           onCancel={() => setPending(undefined)}
@@ -497,16 +569,16 @@ export default function GeneralPanel({
 
       {restorePath && (
         <ConfirmDialog
-          title="確認還原"
-          message={`${restorePath}\n\n將以這份備份取代目前的全部資料——現有的命令、使用統計與設定都會被蓋掉，無法復原。`}
-          confirmLabel="還原"
+          title={t("settings.restore.confirmTitle")}
+          message={t("settings.restore.confirmMessage", { path: restorePath })}
+          confirmLabel={t("settings.restore.confirmLabel")}
           danger
           onConfirm={() => {
             const path = restorePath;
             setRestorePath(undefined);
             void run(
               () => invoke("restore_from_file", { path }),
-              "已從備份還原",
+              t("settings.restore.done"),
             );
           }}
           onCancel={() => setRestorePath(undefined)}
@@ -514,15 +586,13 @@ export default function GeneralPanel({
       )}
 
       <section className="section">
-        <h2 className="section__title">診斷紀錄</h2>
+        <h2 className="section__title">{t("settings.logs.title")}</h2>
         <p className="section__note">
-          QQKey 平常沒有可見視窗，出問題時只能靠日誌回推是哪一步失敗的。
-          日誌記錄叫出候選框、定位與注入各走到哪裡，
-          <strong>不記錄視窗標題，也不記錄填入的內容</strong>。
+          <Trans i18nKey="settings.logs.note" components={{ strong: <strong /> }} />
         </p>
         <div className="section__row">
           <button className="button" onClick={openLogDir}>
-            開啟日誌資料夾
+            {t("settings.logs.open")}
           </button>
         </div>
       </section>

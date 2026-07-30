@@ -38,7 +38,8 @@ body,
   background: transparent;
   overflow: hidden;
   user-select: none;
-  font-family: "Segoe UI", "Microsoft JhengHei UI", system-ui, sans-serif;
+  /* 不指名 CJK 字型，改讓 Chromium 依 `<html lang>` 挑——理由見 settings.css */
+  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 .launcher {
@@ -213,13 +214,26 @@ body,
 
 .launcher__footer {
   display: flex;
+  /*
+   * 六個提示在 640px 內剛好排得下——中文剛好排得下。德文的
+   * 「Alt+1–9 direkt wählen」「Alt+Umschalt+Q Einstellungen」會溢出，
+   * 而 flex 預設會壓縮各項並讓文字在項目內部折行，footer 就變成斷得很難看的
+   * 兩三行。讓折行發生在提示**之間**（wrap）而不是提示內部（nowrap）。
+   */
+  flex-wrap: wrap;
   gap: 14px;
+  row-gap: 4px;
   padding: 8px 16px;
   border-top: 1px solid var(--qq-border);
   font-size: 11px;
   color: var(--qq-text-dim);
 }
 
+.launcher__footer > * {
+  white-space: nowrap;
+}
+
+/* 換行之後 margin-left: auto 會把它推到那一行的最右邊，仍然是對的 */
 .launcher__footer-end {
   margin-left: auto;
 }

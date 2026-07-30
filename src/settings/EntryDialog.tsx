@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import type { EntryPatch, EntryView } from "../shared/types";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function EntryDialog({ entry, onSave, onCancel }: Props) {
+  const { t } = useTranslation();
   const [template, setTemplate] = useState("");
   const [description, setDescription] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -101,11 +103,11 @@ export default function EntryDialog({ entry, onSave, onCancel }: Props) {
         onSubmit={submit}
       >
         <h2 className="dialog__title" id="entry-dialog-title">
-          {entry ? "編輯命令" : "新增命令"}
+          {entry ? t("settings.entry.editTitle") : t("settings.entry.createTitle")}
         </h2>
 
         <label className="field">
-          <span className="field__label">命令</span>
+          <span className="field__label">{t("settings.entry.template")}</span>
           <input
             className="field__input field__input--mono"
             value={template}
@@ -115,36 +117,46 @@ export default function EntryDialog({ entry, onSave, onCancel }: Props) {
             autoFocus
           />
           <span className="field__hint">
-            以 <code>{"{名稱}"}</code> 標記待填參數。填入命令列時會截斷在第一個
-            佔位符之前，游標剛好停在你要接手輸入的位置。
+            {/*
+             * 譯文裡的 <code>{名稱}</code> 是**佔位符語法的示例**，不是可翻譯的
+             * 文句，也不是插值——單層大括號不會被 i18next 的 {{ }} 碰到。
+             * 不要把它「修正」成 {{name}}，那會讓這整段說明失去意義。
+             */}
+            <Trans i18nKey="settings.entry.templateHint" components={{ code: <code /> }} />
           </span>
         </label>
 
         <label className="field">
-          <span className="field__label">說明</span>
+          <span className="field__label">{t("settings.entry.description")}</span>
           <input
             className="field__input"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="將裝置掛載到 WSL"
+            placeholder={t("settings.entry.descriptionPlaceholder")}
           />
         </label>
 
         <label className="field">
-          <span className="field__label">搜尋關鍵字</span>
+          <span className="field__label">{t("settings.entry.keywords")}</span>
           <input
             className="field__input"
             value={keywords}
             onChange={(event) => setKeywords(event.target.value)}
-            placeholder="掛載 wsl 連接"
+            placeholder={t("settings.entry.keywordsPlaceholder")}
           />
           <span className="field__hint">
-            以空白分隔。加了中文詞就能用中文搜到這筆命令。
+            {t("settings.entry.keywordsHint")}
+            {/*
+             * 內建條目的關鍵字欄位顯示的是「目前介面語言」那一份。存檔之後這筆
+             * 會轉成自訂來源、六語言的搜尋聯集被清掉，從此只吃這裡填的字。
+             * 那是刻意的（編輯過就不該再被內建目錄蓋回），但得先講出來。
+             */}
+            {entry?.source === "builtin" && ` ${t("settings.entry.keywordsBuiltinHint")}`}
           </span>
         </label>
 
         <label className="field">
-          <span className="field__label">手動加權</span>
+          <span className="field__label">{t("settings.entry.boost")}</span>
           <input
             className="field__input field__input--narrow"
             type="number"
@@ -159,22 +171,19 @@ export default function EntryDialog({ entry, onSave, onCancel }: Props) {
               setBoost(Number.isFinite(value) ? Math.max(0, value) : 0);
             }}
           />
-          <span className="field__hint">
-            加到 frecency 分數上，讓這筆命令固定往前排。不收負數——
-            想讓某筆不要出現請用「停用」。
-          </span>
+          <span className="field__hint">{t("settings.entry.boostHint")}</span>
         </label>
 
         <div className="dialog__actions">
           <button type="button" className="button" onClick={onCancel}>
-            取消
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
             className="button button--primary"
             disabled={!template.trim()}
           >
-            儲存
+            {t("settings.entry.save")}
           </button>
         </div>
       </form>

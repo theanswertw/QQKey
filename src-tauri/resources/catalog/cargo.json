@@ -3,78 +3,288 @@
   "commands": [
     {
       "template": "cargo build",
-      "description": "建置除錯版本",
-      "keywords": "建置"
+      "description": {
+        "zh-Hant": "建置除錯版本",
+        "ja": "デバッグビルドを作成",
+        "en": "Build the debug profile",
+        "fr": "Construire en profil debug",
+        "de": "Debug-Profil bauen",
+        "ko": "디버그 빌드 생성"
+      },
+      "keywords": {
+        "zh-Hant": "建置 編譯",
+        "ja": "ビルド コンパイル",
+        "en": "build compile debug",
+        "fr": "construire compiler debug",
+        "de": "bauen build kompilieren debug",
+        "ko": "빌드 컴파일 디버그"
+      }
     },
     {
       "template": "cargo build --release",
-      "description": "建置最佳化的產品版本",
-      "keywords": "建置 發行"
+      "description": {
+        "zh-Hant": "建置最佳化的產品版本",
+        "ja": "最適化したリリースビルドを作成",
+        "en": "Build the optimised release profile",
+        "fr": "Construire en profil release optimisé",
+        "de": "Optimiertes Release-Profil bauen",
+        "ko": "최적화된 릴리스 빌드 생성"
+      },
+      "keywords": {
+        "zh-Hant": "建置 發行 最佳化",
+        "ja": "ビルド リリース 最適化",
+        "en": "build release optimised production",
+        "fr": "construire release optimisé production",
+        "de": "bauen release optimiert produktion",
+        "ko": "빌드 릴리스 최적화"
+      }
     },
     {
       "template": "cargo run",
-      "description": "建置並執行",
-      "keywords": "執行"
+      "description": {
+        "zh-Hant": "建置並執行",
+        "ja": "ビルドして実行",
+        "en": "Build and run",
+        "fr": "Construire et exécuter",
+        "de": "Bauen und ausführen",
+        "ko": "빌드하고 실행"
+      },
+      "keywords": {
+        "zh-Hant": "執行 運行",
+        "ja": "実行 起動",
+        "en": "run execute",
+        "fr": "exécuter lancer",
+        "de": "ausführen starten",
+        "ko": "실행"
+      }
     },
     {
       "template": "cargo test",
-      "description": "執行所有測試",
-      "keywords": "測試"
+      "description": {
+        "zh-Hant": "執行所有測試",
+        "ja": "すべてのテストを実行",
+        "en": "Run every test",
+        "fr": "Exécuter tous les tests",
+        "de": "Alle Tests ausführen",
+        "ko": "모든 테스트 실행"
+      },
+      "keywords": {
+        "zh-Hant": "測試",
+        "ja": "テスト",
+        "en": "test",
+        "fr": "tests tester",
+        "de": "test testen",
+        "ko": "테스트"
+      }
     },
     {
       "template": "cargo check",
-      "description": "只做型別檢查，不產生執行檔",
-      "keywords": "檢查 編譯"
+      "description": {
+        "zh-Hant": "只做型別檢查，不產生執行檔",
+        "ja": "型チェックのみ行い、実行ファイルは作らない",
+        "en": "Type-check only, without producing a binary",
+        "fr": "Vérifier les types sans produire de binaire",
+        "de": "Nur Typprüfung, ohne Binärdatei zu erzeugen",
+        "ko": "실행 파일을 만들지 않고 타입만 검사"
+      },
+      "keywords": {
+        "zh-Hant": "檢查 編譯 型別",
+        "ja": "チェック 検査 型",
+        "en": "check typecheck",
+        "fr": "vérifier contrôler types",
+        "de": "prüfen check typen",
+        "ko": "검사 확인 타입"
+      }
     },
     {
       "template": "cargo clippy",
-      "description": "執行 lint 檢查",
-      "keywords": "lint 檢查"
+      "description": {
+        "zh-Hant": "執行 lint 檢查",
+        "ja": "lint チェックを実行",
+        "en": "Run the linter",
+        "fr": "Exécuter l'analyse statique (lint)",
+        "de": "Linter ausführen",
+        "ko": "린트 검사 실행"
+      },
+      "keywords": {
+        "zh-Hant": "lint 檢查 靜態",
+        "ja": "lint チェック 静的解析",
+        "en": "lint clippy check",
+        "fr": "lint analyse statique",
+        "de": "lint prüfen statisch",
+        "ko": "린트 검사 정적"
+      }
     },
     {
       "template": "cargo fmt",
-      "description": "格式化程式碼",
-      "keywords": "格式化"
+      "description": {
+        "zh-Hant": "格式化程式碼",
+        "ja": "コードを整形",
+        "en": "Format the code",
+        "fr": "Formater le code",
+        "de": "Code formatieren",
+        "ko": "코드 서식 정리"
+      },
+      "keywords": {
+        "zh-Hant": "格式化 排版",
+        "ja": "整形 フォーマット",
+        "en": "format fmt",
+        "fr": "formater mise en forme",
+        "de": "formatieren format",
+        "ko": "서식 포맷"
+      }
     },
     {
       "template": "cargo add {crate}",
-      "description": "加入相依套件",
-      "keywords": "新增 相依"
+      "description": {
+        "zh-Hant": "加入相依套件",
+        "ja": "依存クレートを追加",
+        "en": "Add a dependency",
+        "fr": "Ajouter une dépendance",
+        "de": "Abhängigkeit hinzufügen",
+        "ko": "의존성 추가"
+      },
+      "keywords": {
+        "zh-Hant": "新增 相依",
+        "ja": "追加 依存関係 クレート",
+        "en": "add dependency crate",
+        "fr": "ajouter dépendance crate",
+        "de": "hinzufügen abhängigkeit crate",
+        "ko": "추가 의존성 크레이트"
+      }
     },
     {
       "template": "cargo remove {crate}",
-      "description": "移除相依套件",
-      "keywords": "移除 相依"
+      "description": {
+        "zh-Hant": "移除相依套件",
+        "ja": "依存クレートを削除",
+        "en": "Remove a dependency",
+        "fr": "Supprimer une dépendance",
+        "de": "Abhängigkeit entfernen",
+        "ko": "의존성 제거"
+      },
+      "keywords": {
+        "zh-Hant": "移除 相依",
+        "ja": "削除 依存関係 クレート",
+        "en": "remove dependency crate",
+        "fr": "supprimer dépendance crate",
+        "de": "entfernen abhängigkeit crate",
+        "ko": "제거 의존성 크레이트"
+      }
     },
     {
       "template": "cargo update",
-      "description": "更新 Cargo.lock 中的相依版本",
-      "keywords": "更新"
+      "description": {
+        "zh-Hant": "更新 Cargo.lock 中的相依版本",
+        "ja": "Cargo.lock の依存バージョンを更新",
+        "en": "Update the dependency versions in Cargo.lock",
+        "fr": "Mettre à jour les versions des dépendances dans Cargo.lock",
+        "de": "Abhängigkeitsversionen in Cargo.lock aktualisieren",
+        "ko": "Cargo.lock의 의존성 버전 업데이트"
+      },
+      "keywords": {
+        "zh-Hant": "更新 版本",
+        "ja": "更新 バージョン",
+        "en": "update versions lock",
+        "fr": "mettre à jour versions lock",
+        "de": "aktualisieren update versionen lock",
+        "ko": "업데이트 버전"
+      }
     },
     {
       "template": "cargo tree",
-      "description": "以樹狀檢視相依關係",
-      "keywords": "相依 樹狀"
+      "description": {
+        "zh-Hant": "以樹狀檢視相依關係",
+        "ja": "依存関係をツリー表示",
+        "en": "View the dependency graph as a tree",
+        "fr": "Afficher les dépendances sous forme d'arbre",
+        "de": "Abhängigkeiten als Baum anzeigen",
+        "ko": "의존성을 트리로 보기"
+      },
+      "keywords": {
+        "zh-Hant": "相依 樹狀",
+        "ja": "依存関係 ツリー 樹形",
+        "en": "tree dependencies graph",
+        "fr": "arbre dépendances graphe",
+        "de": "baum abhängigkeiten graph",
+        "ko": "트리 의존성"
+      }
     },
     {
       "template": "cargo clean",
-      "description": "清除建置產物",
-      "keywords": "清理"
+      "description": {
+        "zh-Hant": "清除建置產物",
+        "ja": "ビルド成果物を削除",
+        "en": "Remove the build artefacts",
+        "fr": "Supprimer les artefacts de compilation",
+        "de": "Build-Artefakte entfernen",
+        "ko": "빌드 산출물 삭제"
+      },
+      "keywords": {
+        "zh-Hant": "清理 清除 空間",
+        "ja": "整理 削除 クリーン 容量",
+        "en": "clean remove artefacts disk",
+        "fr": "nettoyer supprimer artefacts espace",
+        "de": "aufräumen bereinigen artefakte speicherplatz",
+        "ko": "정리 삭제 클린 공간"
+      }
     },
     {
       "template": "cargo doc --open",
-      "description": "產生並開啟文件",
-      "keywords": "文件"
+      "description": {
+        "zh-Hant": "產生並開啟文件",
+        "ja": "ドキュメントを生成して開く",
+        "en": "Generate the documentation and open it",
+        "fr": "Générer la documentation et l'ouvrir",
+        "de": "Dokumentation erzeugen und öffnen",
+        "ko": "문서를 생성하고 열기"
+      },
+      "keywords": {
+        "zh-Hant": "文件 說明",
+        "ja": "ドキュメント 文書",
+        "en": "doc docs documentation",
+        "fr": "documentation doc",
+        "de": "dokumentation doku",
+        "ko": "문서"
+      }
     },
     {
       "template": "cargo tauri dev",
-      "description": "啟動 Tauri 開發模式",
-      "keywords": "tauri 開發"
+      "description": {
+        "zh-Hant": "啟動 Tauri 開發模式",
+        "ja": "Tauri の開発モードを起動",
+        "en": "Start Tauri in development mode",
+        "fr": "Démarrer Tauri en mode développement",
+        "de": "Tauri im Entwicklungsmodus starten",
+        "ko": "Tauri 개발 모드 시작"
+      },
+      "keywords": {
+        "zh-Hant": "tauri 開發 啟動",
+        "ja": "tauri 開発 起動",
+        "en": "tauri dev development start",
+        "fr": "tauri développement démarrer",
+        "de": "tauri entwicklung starten",
+        "ko": "tauri 개발 시작"
+      }
     },
     {
       "template": "cargo tauri build",
-      "description": "建置 Tauri 安裝檔",
-      "keywords": "tauri 建置 打包"
+      "description": {
+        "zh-Hant": "建置 Tauri 安裝檔",
+        "ja": "Tauri のインストーラーをビルド",
+        "en": "Build the Tauri installer",
+        "fr": "Construire l'installateur Tauri",
+        "de": "Tauri-Installationsprogramm bauen",
+        "ko": "Tauri 설치 파일 빌드"
+      },
+      "keywords": {
+        "zh-Hant": "tauri 建置 打包 安裝檔",
+        "ja": "tauri ビルド パッケージ インストーラー",
+        "en": "tauri build package installer bundle",
+        "fr": "tauri construire paquet installateur",
+        "de": "tauri bauen paket installer",
+        "ko": "tauri 빌드 패키지 설치 파일"
+      }
     }
   ]
 }

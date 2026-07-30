@@ -2,6 +2,18 @@ import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
+  /**
+   * 由 `main.tsx` 傳入已翻譯的字串。
+   *
+   * 這個元件**刻意不 import i18n**：它攔的就是 render 期間的例外，其中包含
+   * i18n 自己出問題的情況，所以它必須是最後一道、不能再依賴任何會壞的東西。
+   * 預設值寫死英文，i18n 初始化失敗時至少還講得出話。
+   *
+   * 已知取捨：這兩條字串在 bootstrap 時就固定，切換語言不會更新。可以接受——
+   * 它只在崩潰後出現，而使用者接著就會按重新載入。
+   */
+  title?: string;
+  retryLabel?: string;
 }
 
 interface State {
@@ -33,14 +45,14 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="crash" role="alert">
-        <p className="crash__title">畫面出了問題</p>
+        <p className="crash__title">{this.props.title ?? "Something went wrong"}</p>
         <p className="crash__message">{this.state.message}</p>
         <button
           type="button"
           className="crash__button"
           onClick={() => window.location.reload()}
         >
-          重新載入
+          {this.props.retryLabel ?? "Reload"}
         </button>
       </div>
     );

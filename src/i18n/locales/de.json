@@ -1,0 +1,192 @@
+{
+  "common": {
+    "cancel": "Abbrechen",
+    "source": {
+      "user": "Eigene",
+      "builtin": "Integriert",
+      "history": "Verlauf"
+    },
+    "crash": {
+      "title": "Etwas ist schiefgelaufen",
+      "retry": "Neu laden"
+    }
+  },
+  "launcher": {
+    "searchLabel": "Befehle suchen",
+    "placeholder": "Stichwort eingeben, z. B. usbipd oder „anhängen“",
+    "empty": "Kein passender Befehl",
+    "prompt": "Stichwort eingeben, um zu suchen",
+    "searchFailed": "Suche fehlgeschlagen: {{reason}}",
+    "injectFailed": "Einfügen nicht möglich: {{error}}",
+    "hint": {
+      "move": "↑↓ bewegen",
+      "complete": "Tab vervollständigen",
+      "direct": "Alt+1–9 direkt wählen",
+      "accept": "Enter einfügen",
+      "dismiss": "Esc schließen",
+      "settings": "Alt+Umschalt+Q Einstellungen"
+    }
+  },
+  "settings": {
+    "title": "QQKey-Einstellungen",
+    "tab": {
+      "entries": "Befehle",
+      "general": "Allgemein",
+      "about": "Über"
+    },
+    "language": {
+      "title": "Sprache der Oberfläche",
+      "note": "Gilt für das Auswahlfenster, dieses Fenster, das Menü im Infobereich und die Beschreibungen der integrierten Befehle. „Dem System folgen“ verwendet die Windows-Anzeigesprache.",
+      "auto": "Dem System folgen ({{language}})"
+    },
+    "general": {
+      "loading": "Wird geladen…",
+      "loadFailed": "Die Einstellungen konnten nicht gelesen werden",
+      "retry": "Erneut versuchen",
+      "apply": "Übernehmen",
+      "restoreDefault": "Standard wiederherstellen",
+      "shortcutTitle": "Globales Tastenkürzel",
+      "shortcutNote": "Eine Modifikatortaste plus ein Tastencode, zum Beispiel <code>Alt+KeyQ</code> oder <code>Control+Shift+Space</code>. Buchstabentasten werden als <code>KeyQ</code> geschrieben. Vermeiden Sie <code>Alt+Space</code> — Windows reserviert es für das Fenstermenü.",
+      "shortcutUpdated": "Tastenkürzel aktualisiert",
+      "shortcutFellBack": "{{wanted}} konnte nicht registriert werden, höchstwahrscheinlich weil ein anderes Programm es belegt. Aktuell funktioniert {{active}}; wählen Sie eine andere Kombination und übernehmen Sie sie erneut.",
+      "shortcutNoneActive": "{{wanted}} konnte nicht registriert werden, daher öffnet derzeit kein Tastenkürzel das Auswahlfenster — nutzen Sie das Symbol im Infobereich, oder wählen Sie hier eine andere Kombination."
+    },
+    "opacity": {
+      "title": "Hintergrund des Auswahlfensters",
+      "note": "Das Auswahlfenster schwebt über dem Fenster, in dem Sie arbeiten. Je geringer die Deckkraft, desto mehr scheint darunter durch; die Hintergrundunschärfe hält den Befehlstext lesbar. Solange dieses Fenster offen ist, bleibt das Auswahlfenster verborgen — die Vorschau unten zeigt daher, wie es tatsächlich aussieht.",
+      "preview": "Vorschau",
+      "sliderLabel": "Deckkraft des Auswahlfenster-Hintergrunds",
+      "percentLabel": "Deckkraft des Auswahlfenster-Hintergrunds in Prozent",
+      "minimumHint": "Minimum {{percent}} % — darunter stört der Inhalt dahinter so stark, dass die Befehle nicht mehr lesbar sind."
+    },
+    "startup": {
+      "title": "Start",
+      "note": "QQKey hat normalerweise kein sichtbares Fenster, sondern lebt im Infobereich. Ein Linksklick auf das Symbol öffnet das Auswahlfenster, ein Rechtsklick das Menü.",
+      "label": "Bei der Anmeldung automatisch starten",
+      "enabled": "Startet künftig automatisch",
+      "disabled": "Startet nicht mehr automatisch"
+    },
+    "history": {
+      "title": "Aus dem Verlauf lernen",
+      "note_one": "Lernt aus dem PSReadLine-Verlauf, welche Befehle Sie wirklich ausführen; je häufiger einer vorkommt, desto weiter oben startet er. Der Import erfolgt inkrementell und liest nur, was seit dem letzten Mal neu ist. Der Pool umfasst derzeit {{count}} Befehl.",
+      "note_other": "Lernt aus dem PSReadLine-Verlauf, welche Befehle Sie wirklich ausführen; je häufiger einer vorkommt, desto weiter oben startet er. Der Import erfolgt inkrementell und liest nur, was seit dem letzten Mal neu ist. Der Pool umfasst derzeit {{count}} Befehle.",
+      "autoImport": "Beim Start importieren",
+      "importNow": "Jetzt importieren",
+      "enabled": "Lernen aus dem Verlauf aktiviert",
+      "disabled": "Lernen aus dem Verlauf deaktiviert",
+      "report_one": "{{count}} Zeile geprüft, {{imported}} importiert, {{skippedSecret}} als mögliche Zugangsdaten und {{skippedNoise}} als Rauschen übersprungen.",
+      "report_other": "{{count}} Zeilen geprüft, {{imported}} importiert, {{skippedSecret}} als mögliche Zugangsdaten und {{skippedNoise}} als Rauschen übersprungen.",
+      "reportEmpty": "Kein neuer Verlauf zum Importieren."
+    },
+    "secret": {
+      "title": "Filter für Zugangsdaten",
+      "note": "Verlaufszeilen, die auf diesen regulären Ausdruck passen, werden vollständig übersprungen — sie erreichen die Datenbank nie und erscheinen nie im Auswahlfenster. Gemeldet wird nur die Anzahl übersprungener Zeilen, nie ihr Inhalt. Eine zweite, feste Regel blockiert außerdem jede Folge von 20 oder mehr Zeichen nach <code>=</code> oder <code>:</code> und wird von dieser Einstellung nicht berührt.",
+      "updated": "Filterregel aktualisiert",
+      "warning": "Bevor Sie die Regel lockern: Zugangsdaten, die durchrutschen, bleiben in der lokalen Datenbank. Ein versehentlich verworfener Befehl lässt sich im Tab {{tab}} einfach wieder hinzufügen."
+    },
+    "share": {
+      "title": "Eigene Befehle teilen",
+      "note": "Austausch als JSON über die Zwischenablage. Enthalten sind nur Befehle, die Sie selbst hinzugefügt oder bearbeitet haben — der integrierte Katalog liegt auf der anderen Maschine ebenfalls vor, und aus dem Verlauf Gelerntes kann Arbeitsinhalte enthalten; beides wird nicht exportiert.",
+      "export": "In die Zwischenablage kopieren",
+      "import": "Aus der Zwischenablage einfügen",
+      "exported_one": "{{count}} eigener Befehl in die Zwischenablage kopiert",
+      "exported_other": "{{count}} eigene Befehle in die Zwischenablage kopiert",
+      "clipboardEmpty": "Die Datei in der Zwischenablage enthält keine Befehle"
+    },
+    "backup": {
+      "title": "Sichern und wiederherstellen",
+      "note": "Nicht dasselbe wie {{share}} weiter oben. Eine Sicherung nimmt <strong>alles</strong> mit — integrierte Einträge, aus dem Verlauf Gelerntes, die angesammelten Nutzungsstatistiken und jede Einstellung dieser Seite —, sodass eine neue Maschine genau in den alten Zustand zurückkehrt. Diese Tausenden gelernten Einträge reisen auf keinem anderen Weg.",
+      "save": "In eine Datei sichern",
+      "restore": "Aus einer Sicherung wiederherstellen",
+      "warning": "Das Wiederherstellen <strong>ersetzt</strong> alle aktuellen Daten, auch die Befehle, die Sie seither hinzugefügt oder bearbeitet haben.",
+      "saveTitle": "QQKey-Daten sichern",
+      "openTitle": "Sicherung zum Wiederherstellen auswählen",
+      "saved_one": "{{count}} Befehl und die aktuellen Einstellungen gesichert",
+      "saved_other": "{{count}} Befehle und die aktuellen Einstellungen gesichert"
+    },
+    "import": {
+      "confirmTitle": "Import bestätigen",
+      "confirm_one": "Diese Datei enthält {{count}} Befehl, der hinzugefügt wird.",
+      "confirm_other": "Diese Datei enthält {{count}} Befehle, die alle hinzugefügt werden.",
+      "confirmOverwrite_one": "Diese Datei enthält {{count}} Befehl: {{added}} werden hinzugefügt, {{overwritten}} hier bereits vorhandene werden überschrieben.\n\nDie überschriebenen Beschreibungen und Stichwörter werden durch die Fassungen aus der Datei ersetzt; das lässt sich nicht rückgängig machen.",
+      "confirmOverwrite_other": "Diese Datei enthält {{count}} Befehle: {{added}} werden hinzugefügt, {{overwritten}} hier bereits vorhandene werden überschrieben.\n\nDie überschriebenen Beschreibungen und Stichwörter werden durch die Fassungen aus der Datei ersetzt; das lässt sich nicht rückgängig machen.",
+      "confirmLabel": "Importieren",
+      "done_one": "{{count}} Befehl importiert",
+      "done_other": "{{count}} Befehle importiert"
+    },
+    "restore": {
+      "confirmTitle": "Wiederherstellen bestätigen",
+      "confirmMessage": "{{path}}\n\nDiese Sicherung ersetzt alle aktuellen Daten — vorhandene Befehle, Nutzungsstatistiken und Einstellungen werden alle überschrieben, und das lässt sich nicht rückgängig machen.",
+      "confirmLabel": "Wiederherstellen",
+      "done": "Aus der Sicherung wiederhergestellt"
+    },
+    "logs": {
+      "title": "Diagnoseprotokoll",
+      "note": "QQKey hat normalerweise kein sichtbares Fenster; geht etwas schief, ist das Protokoll der einzige Weg herauszufinden, welcher Schritt fehlgeschlagen ist. Es hält fest, wie weit das Öffnen des Auswahlfensters, das Ermitteln der Eingabemarke und das Einfügen des Textes jeweils gekommen sind, und <strong>protokolliert weder Fenstertitel noch den eingefügten Text</strong>.",
+      "open": "Protokollordner öffnen"
+    },
+    "entries": {
+      "searchPlaceholder": "Befehle, Beschreibungen oder Stichwörter suchen",
+      "sourceFilter": "Nach Quelle filtern",
+      "allSources": "Alle Quellen",
+      "selectPage": "Diese Seite auswählen",
+      "create": "Neuer Befehl",
+      "selectedCount_one": "{{count}} ausgewählt",
+      "selectedCount_other": "{{count}} ausgewählt",
+      "enable": "Aktivieren",
+      "disable": "Deaktivieren",
+      "delete": "Löschen",
+      "edit": "Bearbeiten",
+      "clearSelection": "Auswahl aufheben",
+      "resetScore": "Zurücksetzen",
+      "resetScoreHint": "Nutzungsstatistik löschen",
+      "scoreHint": "Der abgeklungene Nutzungswert — genau der, nach dem das Auswahlfenster sortiert",
+      "boostHint": "Manuelle Gewichtung",
+      "lastUsedHint": "Zuletzt verwendet",
+      "neverUsed": "Nie verwendet",
+      "empty": "Kein Befehl passt zu diesen Filtern",
+      "count_one": "{{count}} Befehl",
+      "count_other": "{{count}} Befehle",
+      "countPaged_one": "{{count}} Befehl, Seite {{page}} von {{pages}}",
+      "countPaged_other": "{{count}} Befehle, Seite {{page}} von {{pages}}",
+      "previousPage": "Zurück",
+      "nextPage": "Weiter",
+      "deleteOneTitle": "Diesen Befehl löschen",
+      "deleteManyTitle": "Ausgewählte Befehle löschen",
+      "deleteOneMessage": "{{template}}\n\nLöschen lässt sich nicht rückgängig machen. Wenn er nur nicht mehr im Auswahlfenster erscheinen soll, deaktivieren Sie ihn stattdessen.",
+      "deleteManyMessage_one": "{{count}} Befehl wird gelöscht, und das lässt sich nicht rückgängig machen.\n\nWenn er nur nicht mehr im Auswahlfenster erscheinen soll, deaktivieren Sie ihn stattdessen.",
+      "deleteManyMessage_other": "{{count}} Befehle werden gelöscht, und das lässt sich nicht rückgängig machen.\n\nWenn sie nur nicht mehr im Auswahlfenster erscheinen sollen, deaktivieren Sie sie stattdessen."
+    },
+    "entry": {
+      "createTitle": "Neuer Befehl",
+      "editTitle": "Befehl bearbeiten",
+      "template": "Befehl",
+      "templateHint": "Kennzeichnen Sie die Stellen, die Sie selbst ausfüllen, mit <code>{name}</code>. Beim Einfügen wird der Befehl direkt vor dem ersten Platzhalter abgeschnitten, sodass die Eingabemarke genau dort steht, wo Sie übernehmen.",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Gerät an WSL anhängen",
+      "keywords": "Suchstichwörter",
+      "keywordsPlaceholder": "anhängen wsl verbinden",
+      "keywordsHint": "Durch Leerzeichen getrennt. Ergänzen Sie Wörter in Ihrer Sprache, dann finden Sie diesen Befehl auch in dieser Sprache.",
+      "keywordsBuiltinHint": "Dies ist ein integrierter Eintrag; angezeigt werden die Stichwörter der aktuellen Sprache. Nach dem Speichern wird er zu Ihrem eigenen Eintrag und verwendet nur noch, was Sie hier eingeben.",
+      "boost": "Manuelle Gewichtung",
+      "boostHint": "Wird zum Frecency-Wert addiert, damit dieser Befehl dauerhaft oben bleibt. Negative Werte werden nicht angenommen — soll ein Befehl nicht erscheinen, deaktivieren Sie ihn.",
+      "save": "Speichern"
+    },
+    "about": {
+      "pitch": "Drücken Sie das Tastenkürzel in einem beliebigen Fenster, um das Auswahlfenster zu öffnen, tippen Sie ein Stichwort, um einen Befehl zu finden — und er wird in die Befehlszeile <strong>eingefügt</strong> statt ausgeführt, mit der Eingabemarke an der ersten auszufüllenden Stelle. Ob Sie Enter drücken, entscheiden Sie. Häufig genutzte Befehle steigen durch Frecency von selbst nach oben.",
+      "version": "Version",
+      "license": "Lizenz",
+      "data": "Daten",
+      "dataValue": "Vollständig auf diesem Rechner gespeichert, wird nie versendet",
+      "authorTitle": "Autor",
+      "origin": "QQKey wird von {{author}} allein entwickelt und gepflegt. Der Anlass war einfach: Die Unterbefehle und Optionen von Werkzeugen wie usbipd, git und netsh blieben nicht im Kopf, und jedes Mal ging es zurück zu <code>--help</code>. Daher ein Werkzeug, das Befehle über Stichwörter in der eigenen Sprache findet und sie dann in die Befehlszeile setzt — für einen letzten Blick, statt die Taste für Sie zu drücken.",
+      "contact": "Fragen zur Benutzung, Befehle für den integrierten Katalog oder Fehlerberichte — jeder der Wege unten erreicht mich.",
+      "emailCopied": "E-Mail-Adresse in die Zwischenablage kopiert",
+      "sendMail": "E-Mail schreiben",
+      "copy": "Kopieren",
+      "repo": "Projektseite",
+      "open": "Öffnen",
+      "secretWarning": "Bitte fügen Sie in Fehlerberichten keinen Befehlstext ein, der Zugangsdaten oder interne Pfade enthält."
+    }
+  }
+}

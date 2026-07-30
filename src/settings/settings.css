@@ -36,7 +36,17 @@ body,
   height: 100%;
   background: var(--qq-bg);
   color: var(--qq-text);
-  font-family: "Segoe UI", "Microsoft JhengHei UI", system-ui, sans-serif;
+  /*
+   * 刻意**不**指名 CJK 字型。從前這裡列著 Microsoft JhengHei UI，那是繁中字型：
+   * 日文使用者遇到 Segoe UI 沒有的漢字時會落到它，得到中文字形（直、次、骨、令
+   * 在 ja 與 zh-Hant 下明顯不同），韓文諺文則兩者都沒有。
+   *
+   * 拿掉之後改由 Chromium 依 `<html lang>` 做語言感知的 fallback
+   * （lang="ja" → Yu Gothic UI、zh-Hant → Microsoft JhengHei UI、ko → Malgun Gothic），
+   * 而那個 lang 是 src/i18n 的 applyLanguage() 設的。少一個具名字型看起來像退步，
+   * 實際上是把選字型的工作交給唯一知道語言的那一層。
+   */
+  font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
 }
 
@@ -114,11 +124,15 @@ code {
 .toolbar {
   flex: none;
   display: flex;
+  /* 德文的按鈕文字約為中文兩倍寬，擠不下時要換行而不是把搜尋框壓成一條縫 */
+  flex-wrap: wrap;
   gap: 10px;
 }
 
 .toolbar__search {
   flex: 1;
+  /* 沒有下限的話 flex: 1 會一路被壓到看不見 */
+  min-width: 160px;
   padding: 8px 12px;
   border: 1px solid var(--qq-border);
   border-radius: 8px;
@@ -139,6 +153,7 @@ code {
 .bulk {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -232,8 +247,16 @@ code {
 
 .row__used {
   flex: none;
-  width: 64px;
+  /*
+   * 64px 夠放「未用過」「3 天前」，但放不下德文的 vor 3 Monaten（約 90px）
+   * 或法文的 il y a 11 mois。讓出的寬度由 .row__main 的 flex: 1 吸收。
+   * 真的還是太長就切掉——hover 有 title 看得到全文。
+   */
+  width: 96px;
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 12px;
   color: var(--qq-text-dim);
 }
@@ -348,6 +371,8 @@ code {
 
 .section__row {
   display: flex;
+  /* 德文按鈕文字約為中文兩倍寬，擠不下時換行而不是把輸入框壓扁 */
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }
@@ -741,21 +766,38 @@ code {
 
 /* ------------------------------------------------------------ 關於 */
 
+/*
+ * 兩欄的 grid，欄位名共用一個自動寬度欄。
+ *
+ * 從前是每列各自 flex 加上 .about__label 固定 68px，為的是讓「版本」與「專案頁」
+ * 兩列的值不左右錯開——但 68px 只在中文下成立，德文的 Projektseite 約 85px、
+ * 日文的「プロジェクトページ」約 110px 都會被截掉。grid 在六種語言下都達成
+ * 原本的目的，而不是只在中文下達成。
+ */
 .about {
   margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  row-gap: 2px;
+  column-gap: 10px;
 }
 
+/*
+ * 讓 dt/dd 直接落進外層 grid 的兩欄，包裝的 div 本身不佔格線。
+ * 用 display: contents 而不是 subgrid——效果一樣，但支援門檻低得多，
+ * 而這種東西壞掉的時候是版面靜靜地錯位，不會有任何錯誤。
+ */
 .about__row {
+  display: contents;
+}
+
+/* 列高改由兩個格子各自撐起：display: contents 的元素沒有自己的盒子 */
+.about__label {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-height: 30px;
-}
-
-/* 欄位名固定寬度。跟著文字伸縮的話，「版本」與「專案頁」兩列的值會左右錯開 */
-.about__label {
-  flex: none;
-  width: 68px;
+  white-space: nowrap;
   font-size: 13px;
   color: var(--qq-text-dim);
 }
@@ -763,6 +805,7 @@ code {
 .about__value {
   display: flex;
   align-items: center;
+  min-height: 30px;
   gap: 6px;
   margin: 0;
   font-size: 13px;

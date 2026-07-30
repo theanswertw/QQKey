@@ -3,103 +3,383 @@
   "commands": [
     {
       "template": "git status",
-      "description": "顯示工作區狀態",
-      "keywords": "狀態"
+      "description": {
+        "zh-Hant": "顯示工作區狀態",
+        "ja": "ワークツリーの状態を表示",
+        "en": "Show the working tree status",
+        "fr": "Afficher l'état de la copie de travail",
+        "de": "Status des Arbeitsverzeichnisses anzeigen",
+        "ko": "작업 트리 상태 표시"
+      },
+      "keywords": {
+        "zh-Hant": "狀態",
+        "ja": "状態 ステータス",
+        "en": "status",
+        "fr": "état statut",
+        "de": "status zustand",
+        "ko": "상태"
+      }
     },
     {
       "template": "git switch {branch}",
-      "description": "切換到指定分支",
-      "keywords": "切換 分支"
+      "description": {
+        "zh-Hant": "切換到指定分支",
+        "ja": "指定したブランチに切り替え",
+        "en": "Switch to a branch",
+        "fr": "Basculer vers une branche",
+        "de": "Zu einem Branch wechseln",
+        "ko": "지정한 브랜치로 전환"
+      },
+      "keywords": {
+        "zh-Hant": "切換 分支",
+        "ja": "切り替え ブランチ",
+        "en": "switch branch checkout",
+        "fr": "basculer branche",
+        "de": "wechseln branch zweig",
+        "ko": "전환 브랜치"
+      }
     },
     {
       "template": "git switch -c {branch}",
-      "description": "建立並切換到新分支",
-      "keywords": "新增 分支"
+      "description": {
+        "zh-Hant": "建立並切換到新分支",
+        "ja": "新しいブランチを作成して切り替え",
+        "en": "Create a new branch and switch to it",
+        "fr": "Créer une nouvelle branche et y basculer",
+        "de": "Neuen Branch anlegen und dorthin wechseln",
+        "ko": "새 브랜치를 만들고 전환"
+      },
+      "keywords": {
+        "zh-Hant": "新增 分支 建立",
+        "ja": "新規 作成 ブランチ",
+        "en": "create new branch",
+        "fr": "créer nouvelle branche",
+        "de": "erstellen neuer branch zweig",
+        "ko": "생성 새 브랜치"
+      }
     },
     {
       "template": "git add -A",
-      "description": "暫存所有變更",
-      "keywords": "暫存"
+      "description": {
+        "zh-Hant": "暫存所有變更",
+        "ja": "すべての変更をステージング",
+        "en": "Stage every change",
+        "fr": "Indexer toutes les modifications",
+        "de": "Alle Änderungen zum Commit vormerken",
+        "ko": "모든 변경 사항 스테이징"
+      },
+      "keywords": {
+        "zh-Hant": "暫存 加入",
+        "ja": "ステージ 追加",
+        "en": "stage add all",
+        "fr": "indexer ajouter tout",
+        "de": "vormerken hinzufügen alle",
+        "ko": "스테이징 추가 전체"
+      }
     },
     {
       "template": "git commit -m \"{message}\"",
-      "description": "提交暫存的變更",
-      "keywords": "提交"
+      "description": {
+        "zh-Hant": "提交暫存的變更",
+        "ja": "ステージした変更をコミット",
+        "en": "Commit the staged changes",
+        "fr": "Valider les modifications indexées",
+        "de": "Vorgemerkte Änderungen committen",
+        "ko": "스테이징한 변경 사항 커밋"
+      },
+      "keywords": {
+        "zh-Hant": "提交",
+        "ja": "コミット",
+        "en": "commit",
+        "fr": "valider commit",
+        "de": "committen einchecken",
+        "ko": "커밋"
+      }
     },
     {
       "template": "git commit --amend",
-      "description": "修改最近一次提交",
-      "keywords": "提交 修改"
+      "description": {
+        "zh-Hant": "修改最近一次提交",
+        "ja": "直前のコミットを修正",
+        "en": "Amend the most recent commit",
+        "fr": "Modifier le dernier commit",
+        "de": "Letzten Commit ändern",
+        "ko": "가장 최근 커밋 수정"
+      },
+      "keywords": {
+        "zh-Hant": "提交 修改",
+        "ja": "コミット 修正 アメンド",
+        "en": "commit amend fix",
+        "fr": "commit modifier corriger",
+        "de": "commit ändern korrigieren",
+        "ko": "커밋 수정"
+      }
     },
     {
       "template": "git push",
-      "description": "推送到遠端",
-      "keywords": "推送"
+      "description": {
+        "zh-Hant": "推送到遠端",
+        "ja": "リモートにプッシュ",
+        "en": "Push to the remote",
+        "fr": "Pousser vers le dépôt distant",
+        "de": "Zum Remote pushen",
+        "ko": "원격에 푸시"
+      },
+      "keywords": {
+        "zh-Hant": "推送 上傳",
+        "ja": "プッシュ 送信",
+        "en": "push upload remote",
+        "fr": "pousser envoyer distant",
+        "de": "pushen senden remote",
+        "ko": "푸시 업로드 원격"
+      }
     },
     {
       "template": "git pull --rebase",
-      "description": "拉取並以 rebase 併入",
-      "keywords": "拉取 更新"
+      "description": {
+        "zh-Hant": "拉取並以 rebase 併入",
+        "ja": "プルして rebase で取り込む",
+        "en": "Pull and integrate with rebase",
+        "fr": "Tirer et intégrer avec rebase",
+        "de": "Pullen und mit Rebase integrieren",
+        "ko": "풀 후 rebase로 통합"
+      },
+      "keywords": {
+        "zh-Hant": "拉取 更新",
+        "ja": "プル 取得 更新",
+        "en": "pull rebase update",
+        "fr": "tirer récupérer mettre à jour",
+        "de": "pullen holen aktualisieren",
+        "ko": "풀 가져오기 업데이트"
+      }
     },
     {
       "template": "git fetch --all --prune",
-      "description": "抓取所有遠端並清掉已刪除的分支",
-      "keywords": "抓取 清理"
+      "description": {
+        "zh-Hant": "抓取所有遠端並清掉已刪除的分支",
+        "ja": "すべてのリモートを取得し、削除済みブランチを整理",
+        "en": "Fetch every remote and prune deleted branches",
+        "fr": "Récupérer tous les dépôts distants et nettoyer les branches supprimées",
+        "de": "Alle Remotes abrufen und gelöschte Branches aufräumen",
+        "ko": "모든 원격을 가져오고 삭제된 브랜치 정리"
+      },
+      "keywords": {
+        "zh-Hant": "抓取 清理",
+        "ja": "フェッチ 取得 整理 プルーン",
+        "en": "fetch prune clean remote",
+        "fr": "récupérer nettoyer élaguer distant",
+        "de": "abrufen aufräumen bereinigen remote",
+        "ko": "페치 가져오기 정리"
+      }
     },
     {
       "template": "git log --oneline --graph --decorate -20",
-      "description": "以圖形檢視最近 20 筆提交",
-      "keywords": "歷史 紀錄"
+      "description": {
+        "zh-Hant": "以圖形檢視最近 20 筆提交",
+        "ja": "直近 20 件のコミットをグラフで表示",
+        "en": "View the last 20 commits as a graph",
+        "fr": "Afficher les 20 derniers commits sous forme de graphe",
+        "de": "Die letzten 20 Commits als Graph anzeigen",
+        "ko": "최근 커밋 20개를 그래프로 보기"
+      },
+      "keywords": {
+        "zh-Hant": "歷史 紀錄 圖形",
+        "ja": "履歴 ログ グラフ",
+        "en": "log history graph",
+        "fr": "journal historique graphe",
+        "de": "log verlauf historie graph",
+        "ko": "로그 이력 그래프"
+      }
     },
     {
       "template": "git diff",
-      "description": "檢視尚未暫存的變更",
-      "keywords": "差異 比對"
+      "description": {
+        "zh-Hant": "檢視尚未暫存的變更",
+        "ja": "まだステージしていない変更を表示",
+        "en": "View the unstaged changes",
+        "fr": "Afficher les modifications non indexées",
+        "de": "Nicht vorgemerkte Änderungen anzeigen",
+        "ko": "스테이징하지 않은 변경 사항 보기"
+      },
+      "keywords": {
+        "zh-Hant": "差異 比對",
+        "ja": "差分 ディフ 比較",
+        "en": "diff changes compare",
+        "fr": "différences comparer",
+        "de": "unterschiede vergleichen diff",
+        "ko": "차이 비교 diff"
+      }
     },
     {
       "template": "git diff --staged",
-      "description": "檢視已暫存的變更",
-      "keywords": "差異 暫存"
+      "description": {
+        "zh-Hant": "檢視已暫存的變更",
+        "ja": "ステージ済みの変更を表示",
+        "en": "View the staged changes",
+        "fr": "Afficher les modifications indexées",
+        "de": "Vorgemerkte Änderungen anzeigen",
+        "ko": "스테이징한 변경 사항 보기"
+      },
+      "keywords": {
+        "zh-Hant": "差異 暫存",
+        "ja": "差分 ステージ済み",
+        "en": "diff staged cached",
+        "fr": "différences indexées",
+        "de": "unterschiede vorgemerkt diff",
+        "ko": "차이 스테이징 diff"
+      }
     },
     {
       "template": "git restore {path}",
-      "description": "捨棄檔案的工作區變更",
-      "keywords": "還原 捨棄"
+      "description": {
+        "zh-Hant": "捨棄檔案的工作區變更",
+        "ja": "ファイルのワークツリーの変更を破棄",
+        "en": "Discard a file's working tree changes",
+        "fr": "Abandonner les modifications d'un fichier dans la copie de travail",
+        "de": "Änderungen einer Datei im Arbeitsverzeichnis verwerfen",
+        "ko": "파일의 작업 트리 변경 사항 버리기"
+      },
+      "keywords": {
+        "zh-Hant": "還原 捨棄",
+        "ja": "復元 破棄 リストア",
+        "en": "restore discard revert",
+        "fr": "restaurer abandonner annuler",
+        "de": "wiederherstellen verwerfen zurücksetzen",
+        "ko": "복원 버리기 되돌리기"
+      }
     },
     {
       "template": "git restore --staged {path}",
-      "description": "把檔案移出暫存區",
-      "keywords": "取消暫存"
+      "description": {
+        "zh-Hant": "把檔案移出暫存區",
+        "ja": "ファイルをステージから外す",
+        "en": "Unstage a file",
+        "fr": "Retirer un fichier de l'index",
+        "de": "Datei aus dem Staging entfernen",
+        "ko": "파일을 스테이징에서 제외"
+      },
+      "keywords": {
+        "zh-Hant": "取消暫存",
+        "ja": "ステージ解除 アンステージ",
+        "en": "unstage reset",
+        "fr": "désindexer retirer",
+        "de": "unstage entfernen zurücknehmen",
+        "ko": "스테이징 취소"
+      }
     },
     {
       "template": "git stash",
-      "description": "暫存目前的變更",
-      "keywords": "擱置"
+      "description": {
+        "zh-Hant": "暫存目前的變更",
+        "ja": "現在の変更を一時退避",
+        "en": "Stash the current changes",
+        "fr": "Mettre de côté les modifications actuelles",
+        "de": "Aktuelle Änderungen zwischenspeichern",
+        "ko": "현재 변경 사항을 임시 보관"
+      },
+      "keywords": {
+        "zh-Hant": "擱置 暫放",
+        "ja": "スタッシュ 退避",
+        "en": "stash shelve",
+        "fr": "remiser mettre de côté",
+        "de": "stash zwischenspeichern",
+        "ko": "스태시 임시 보관"
+      }
     },
     {
       "template": "git stash pop",
-      "description": "取回最近一次擱置的變更",
-      "keywords": "擱置 取回"
+      "description": {
+        "zh-Hant": "取回最近一次擱置的變更",
+        "ja": "直前に退避した変更を取り出す",
+        "en": "Reapply the most recently stashed changes",
+        "fr": "Réappliquer les dernières modifications remisées",
+        "de": "Zuletzt zwischengespeicherte Änderungen zurückholen",
+        "ko": "가장 최근에 보관한 변경 사항 되가져오기"
+      },
+      "keywords": {
+        "zh-Hant": "擱置 取回",
+        "ja": "スタッシュ 復元 取り出す",
+        "en": "stash pop apply",
+        "fr": "remise appliquer récupérer",
+        "de": "stash zurückholen anwenden",
+        "ko": "스태시 되가져오기 적용"
+      }
     },
     {
       "template": "git branch -vv",
-      "description": "列出分支與其追蹤的遠端",
-      "keywords": "分支 列表"
+      "description": {
+        "zh-Hant": "列出分支與其追蹤的遠端",
+        "ja": "ブランチと追跡先のリモートを一覧表示",
+        "en": "List branches with their tracked remotes",
+        "fr": "Lister les branches et leurs dépôts distants suivis",
+        "de": "Branches mit ihren verfolgten Remotes auflisten",
+        "ko": "브랜치와 추적 중인 원격 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "分支 列表 追蹤",
+        "ja": "ブランチ 一覧 追跡",
+        "en": "branch list tracking",
+        "fr": "branche liste suivi",
+        "de": "branch zweig liste verfolgen",
+        "ko": "브랜치 목록 추적"
+      }
     },
     {
       "template": "git reset --hard origin/{branch}",
-      "description": "捨棄本機變更並對齊遠端分支",
-      "keywords": "重設 對齊"
+      "description": {
+        "zh-Hant": "捨棄本機變更並對齊遠端分支",
+        "ja": "ローカルの変更を破棄してリモートブランチに合わせる",
+        "en": "Discard local changes and match the remote branch",
+        "fr": "Abandonner les modifications locales et s'aligner sur la branche distante",
+        "de": "Lokale Änderungen verwerfen und dem Remote-Branch entsprechen",
+        "ko": "로컬 변경 사항을 버리고 원격 브랜치에 맞추기"
+      },
+      "keywords": {
+        "zh-Hant": "重設 對齊 捨棄",
+        "ja": "リセット 破棄 合わせる",
+        "en": "reset hard discard match",
+        "fr": "réinitialiser abandonner aligner",
+        "de": "zurücksetzen verwerfen abgleichen",
+        "ko": "리셋 버리기 맞추기"
+      }
     },
     {
       "template": "git cherry-pick {commit}",
-      "description": "套用指定提交",
-      "keywords": "挑選 提交"
+      "description": {
+        "zh-Hant": "套用指定提交",
+        "ja": "指定したコミットを取り込む",
+        "en": "Apply a specific commit",
+        "fr": "Appliquer un commit précis",
+        "de": "Einen bestimmten Commit anwenden",
+        "ko": "지정한 커밋 적용"
+      },
+      "keywords": {
+        "zh-Hant": "挑選 提交 套用",
+        "ja": "チェリーピック コミット 適用",
+        "en": "cherry pick commit apply",
+        "fr": "picorer commit appliquer",
+        "de": "cherry pick commit anwenden",
+        "ko": "체리픽 커밋 적용"
+      }
     },
     {
       "template": "git rebase -i HEAD~{n}",
-      "description": "互動式重整最近 n 筆提交",
-      "keywords": "重整 互動"
+      "description": {
+        "zh-Hant": "互動式重整最近 n 筆提交",
+        "ja": "直近 n 件のコミットを対話的に整理",
+        "en": "Interactively rebase the last n commits",
+        "fr": "Rebaser interactivement les n derniers commits",
+        "de": "Die letzten n Commits interaktiv rebasen",
+        "ko": "최근 커밋 n개를 대화식으로 정리"
+      },
+      "keywords": {
+        "zh-Hant": "重整 互動 壓縮",
+        "ja": "リベース 対話 整理 スカッシュ",
+        "en": "rebase interactive squash",
+        "fr": "rebaser interactif fusionner",
+        "de": "rebase interaktiv zusammenfassen",
+        "ko": "리베이스 대화식 정리"
+      }
     }
   ]
 }

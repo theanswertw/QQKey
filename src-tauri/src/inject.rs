@@ -110,14 +110,16 @@ pub fn inject_text(text: &str) -> Result<(), String> {
         return Ok(());
     }
 
+    let lang = crate::i18n::current();
+
     let target = TARGET_WINDOW
         .lock()
         .unwrap()
-        .ok_or("沒有記錄到要送回的視窗")?;
+        .ok_or_else(|| crate::i18n::no_target_window(lang))?;
     let hwnd = HWND(target as *mut c_void);
 
     if !restore_focus(hwnd) {
-        return Err("無法把焦點還原到原視窗".into());
+        return Err(crate::i18n::restore_focus_failed(lang));
     }
 
     // 焦點切換不是同步完成的，太快送出會落到還沒失去焦點的候選框上
@@ -126,7 +128,7 @@ pub fn inject_text(text: &str) -> Result<(), String> {
     let expected = text.encode_utf16().count() as u32 * 2;
     let sent = send_text(text);
     if sent != expected {
-        return Err(format!("鍵盤事件只送出 {sent}/{expected} 個，可能被攔截"));
+        return Err(crate::i18n::input_partially_sent(lang, sent, expected));
     }
     Ok(())
 }

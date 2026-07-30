@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   title: string;
@@ -24,6 +25,7 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const { t } = useTranslation();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   // 初始焦點放在「取消」——按 Enter 的直覺反應不該是執行破壞性動作
@@ -57,7 +59,7 @@ export default function ConfirmDialog({
         <p className="dialog__message">{message}</p>
         <div className="dialog__actions">
           <button ref={cancelRef} type="button" className="button" onClick={onCancel}>
-            取消
+            {t("common.cancel")}
           </button>
           <button
             type="button"

@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { useTranslation } from "react-i18next";
 import { splitTemplate, type Candidate } from "../shared/types";
 
 export default function Launcher() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState(0);
@@ -79,7 +81,7 @@ export default function Launcher() {
         if (!cancelled) {
           setCandidates([]);
           // 不要讓查詢失敗長得跟「查無結果」一樣——那會讓人一直改關鍵字重試
-          setError(`搜尋失敗：${reason}`);
+          setError(t("launcher.searchFailed", { reason: String(reason) }));
         }
       });
     return () => {
@@ -123,7 +125,11 @@ export default function Launcher() {
     invoke("accept_candidate", { id: candidate.id }).catch((reason) => {
       // 注入失敗時後端會把候選框重新顯示，訊息就落在這裡——
       // 從前這裡只寫 console，而 release 版根本沒有 console 可看
-      setError(String(reason));
+      //
+      // 存的是**完整的一句話**而不是後端的原始訊息。從前 JSX 那端固定加上
+      // 「填不進去：」前綴，而搜尋失敗走的是同一個 state，於是搜尋失敗會顯示成
+      // 「填不進去：搜尋失敗：…」。兩種失敗各自把話講完整才不會再撞。
+      setError(t("launcher.injectFailed", { error: String(reason) }));
       focusInput();
     });
   };
@@ -218,7 +224,7 @@ export default function Launcher() {
           ref={inputRef}
           className="launcher__input"
           role="combobox"
-          aria-label="搜尋命令"
+          aria-label={t("launcher.searchLabel")}
           aria-expanded={candidates.length > 0}
           aria-controls="launcher-list"
           aria-activedescendant={
@@ -230,7 +236,7 @@ export default function Launcher() {
             setError(null);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="輸入命令關鍵字，例如 usbipd 或「掛載」"
+          placeholder={t("launcher.placeholder")}
           spellCheck={false}
           autoComplete="off"
         />
@@ -280,22 +286,22 @@ export default function Launcher() {
         </ul>
       ) : (
         <div className="launcher__empty">
-          {query.trim() ? "沒有相符的命令" : "輸入關鍵字開始搜尋"}
+          {query.trim() ? t("launcher.empty") : t("launcher.prompt")}
         </div>
       )}
 
       {error && (
         <div className="launcher__error" role="alert">
-          填不進去：{error}
+          {error}
         </div>
       )}
 
       <div className="launcher__footer">
-        <span>↑↓ 移動</span>
-        <span>Tab 補完</span>
-        <span>Alt+1–9 直選</span>
-        <span>Enter 填入</span>
-        <span>Esc 取消</span>
+        <span>{t("launcher.hint.move")}</span>
+        <span>{t("launcher.hint.complete")}</span>
+        <span>{t("launcher.hint.direct")}</span>
+        <span>{t("launcher.hint.accept")}</span>
+        <span>{t("launcher.hint.dismiss")}</span>
         {/* 從前這裡只是靜態文字，滑鼠沒有辦法從候選框進到設定畫面——
             而 open_settings 這支 IPC 早就註冊好了卻沒有人呼叫 */}
         <button
@@ -303,7 +309,7 @@ export default function Launcher() {
           className="launcher__footer-end launcher__link"
           onClick={() => void invoke("open_settings")}
         >
-          Alt+Shift+Q 設定
+          {t("launcher.hint.settings")}
         </button>
       </div>
     </div>

@@ -3,63 +3,231 @@
   "commands": [
     {
       "template": "npm install",
-      "description": "依 package.json 安裝相依套件",
-      "keywords": "安裝 相依"
+      "description": {
+        "zh-Hant": "依 package.json 安裝相依套件",
+        "ja": "package.json に従って依存関係をインストール",
+        "en": "Install the dependencies from package.json",
+        "fr": "Installer les dépendances depuis package.json",
+        "de": "Abhängigkeiten aus package.json installieren",
+        "ko": "package.json에 따라 의존성 설치"
+      },
+      "keywords": {
+        "zh-Hant": "安裝 相依",
+        "ja": "インストール 依存関係",
+        "en": "install dependencies",
+        "fr": "installer dépendances",
+        "de": "installieren abhängigkeiten",
+        "ko": "설치 의존성"
+      }
     },
     {
       "template": "npm install {package}",
-      "description": "安裝並加入 dependencies",
-      "keywords": "安裝 新增"
+      "description": {
+        "zh-Hant": "安裝並加入 dependencies",
+        "ja": "インストールして dependencies に追加",
+        "en": "Install a package and add it to dependencies",
+        "fr": "Installer un paquet et l'ajouter aux dependencies",
+        "de": "Paket installieren und zu dependencies hinzufügen",
+        "ko": "패키지를 설치하고 dependencies에 추가"
+      },
+      "keywords": {
+        "zh-Hant": "安裝 新增",
+        "ja": "インストール 追加",
+        "en": "install add package",
+        "fr": "installer ajouter paquet",
+        "de": "installieren hinzufügen paket",
+        "ko": "설치 추가 패키지"
+      }
     },
     {
       "template": "npm install -D {package}",
-      "description": "安裝並加入 devDependencies",
-      "keywords": "安裝 開發"
+      "description": {
+        "zh-Hant": "安裝並加入 devDependencies",
+        "ja": "インストールして devDependencies に追加",
+        "en": "Install a package and add it to devDependencies",
+        "fr": "Installer un paquet et l'ajouter aux devDependencies",
+        "de": "Paket installieren und zu devDependencies hinzufügen",
+        "ko": "패키지를 설치하고 devDependencies에 추가"
+      },
+      "keywords": {
+        "zh-Hant": "安裝 開發",
+        "ja": "インストール 開発 dev",
+        "en": "install dev development",
+        "fr": "installer développement dev",
+        "de": "installieren entwicklung dev",
+        "ko": "설치 개발 dev"
+      }
     },
     {
       "template": "npm uninstall {package}",
-      "description": "移除套件",
-      "keywords": "移除"
+      "description": {
+        "zh-Hant": "移除套件",
+        "ja": "パッケージをアンインストール",
+        "en": "Uninstall a package",
+        "fr": "Désinstaller un paquet",
+        "de": "Paket deinstallieren",
+        "ko": "패키지 제거"
+      },
+      "keywords": {
+        "zh-Hant": "移除 解除安裝",
+        "ja": "アンインストール 削除",
+        "en": "uninstall remove",
+        "fr": "désinstaller supprimer",
+        "de": "deinstallieren entfernen",
+        "ko": "제거 삭제"
+      }
     },
     {
       "template": "npm ci",
-      "description": "依 lock 檔乾淨安裝（CI 用）",
-      "keywords": "安裝 乾淨 ci"
+      "description": {
+        "zh-Hant": "依 lock 檔乾淨安裝（CI 用）",
+        "ja": "lock ファイルに従ってクリーンインストール（CI 用）",
+        "en": "Clean install from the lock file (for CI)",
+        "fr": "Installation propre depuis le fichier lock (pour la CI)",
+        "de": "Saubere Installation aus der Lock-Datei (für CI)",
+        "ko": "lock 파일에 따라 클린 설치(CI용)"
+      },
+      "keywords": {
+        "zh-Hant": "安裝 乾淨 ci",
+        "ja": "インストール クリーン ci",
+        "en": "install clean ci lock",
+        "fr": "installer propre ci lock",
+        "de": "installieren sauber ci lock",
+        "ko": "설치 클린 ci"
+      }
     },
     {
       "template": "npm run {script}",
-      "description": "執行 package.json 中的 script",
-      "keywords": "執行 腳本"
+      "description": {
+        "zh-Hant": "執行 package.json 中的 script",
+        "ja": "package.json の script を実行",
+        "en": "Run a script from package.json",
+        "fr": "Exécuter un script de package.json",
+        "de": "Ein Skript aus package.json ausführen",
+        "ko": "package.json의 script 실행"
+      },
+      "keywords": {
+        "zh-Hant": "執行 腳本",
+        "ja": "実行 スクリプト",
+        "en": "run script",
+        "fr": "exécuter lancer script",
+        "de": "ausführen starten skript",
+        "ko": "실행 스크립트"
+      }
     },
     {
       "template": "npm run dev",
-      "description": "啟動開發模式",
-      "keywords": "開發 啟動"
+      "description": {
+        "zh-Hant": "啟動開發模式",
+        "ja": "開発モードを起動",
+        "en": "Start development mode",
+        "fr": "Démarrer le mode développement",
+        "de": "Entwicklungsmodus starten",
+        "ko": "개발 모드 시작"
+      },
+      "keywords": {
+        "zh-Hant": "開發 啟動",
+        "ja": "開発 起動 dev",
+        "en": "dev development start serve",
+        "fr": "développement démarrer dev",
+        "de": "entwicklung starten dev",
+        "ko": "개발 시작 dev"
+      }
     },
     {
       "template": "npm run build",
-      "description": "建置產品版本",
-      "keywords": "建置"
+      "description": {
+        "zh-Hant": "建置產品版本",
+        "ja": "本番用にビルド",
+        "en": "Build for production",
+        "fr": "Construire pour la production",
+        "de": "Für die Produktion bauen",
+        "ko": "프로덕션용으로 빌드"
+      },
+      "keywords": {
+        "zh-Hant": "建置 編譯",
+        "ja": "ビルド 構築",
+        "en": "build production compile",
+        "fr": "construire compiler production",
+        "de": "bauen build kompilieren",
+        "ko": "빌드 컴파일"
+      }
     },
     {
       "template": "npm test",
-      "description": "執行測試",
-      "keywords": "測試"
+      "description": {
+        "zh-Hant": "執行測試",
+        "ja": "テストを実行",
+        "en": "Run the tests",
+        "fr": "Exécuter les tests",
+        "de": "Tests ausführen",
+        "ko": "테스트 실행"
+      },
+      "keywords": {
+        "zh-Hant": "測試",
+        "ja": "テスト",
+        "en": "test",
+        "fr": "tests tester",
+        "de": "test testen",
+        "ko": "테스트"
+      }
     },
     {
       "template": "npm outdated",
-      "description": "列出有新版本的套件",
-      "keywords": "過期 更新 檢查"
+      "description": {
+        "zh-Hant": "列出有新版本的套件",
+        "ja": "新しいバージョンがあるパッケージを一覧表示",
+        "en": "List the packages with newer versions",
+        "fr": "Lister les paquets ayant une version plus récente",
+        "de": "Pakete mit neueren Versionen auflisten",
+        "ko": "새 버전이 있는 패키지 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "過期 更新 檢查",
+        "ja": "古い 更新 確認",
+        "en": "outdated update check",
+        "fr": "obsolète mise à jour vérifier",
+        "de": "veraltet update prüfen",
+        "ko": "구버전 업데이트 확인"
+      }
     },
     {
       "template": "npm list --depth=0",
-      "description": "列出直接相依的套件",
-      "keywords": "列表 相依"
+      "description": {
+        "zh-Hant": "列出直接相依的套件",
+        "ja": "直接の依存関係を一覧表示",
+        "en": "List the direct dependencies",
+        "fr": "Lister les dépendances directes",
+        "de": "Direkte Abhängigkeiten auflisten",
+        "ko": "직접 의존성 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "列表 相依",
+        "ja": "一覧 依存関係",
+        "en": "list dependencies direct",
+        "fr": "liste dépendances directes",
+        "de": "liste abhängigkeiten direkt",
+        "ko": "목록 의존성"
+      }
     },
     {
       "template": "npx {command}",
-      "description": "直接執行套件提供的指令",
-      "keywords": "執行"
+      "description": {
+        "zh-Hant": "直接執行套件提供的指令",
+        "ja": "パッケージが提供するコマンドを直接実行",
+        "en": "Run a command provided by a package directly",
+        "fr": "Exécuter directement une commande fournie par un paquet",
+        "de": "Einen von einem Paket bereitgestellten Befehl direkt ausführen",
+        "ko": "패키지가 제공하는 명령을 바로 실행"
+      },
+      "keywords": {
+        "zh-Hant": "執行 npx",
+        "ja": "実行 npx",
+        "en": "run execute npx",
+        "fr": "exécuter lancer npx",
+        "de": "ausführen starten npx",
+        "ko": "실행 npx"
+      }
     }
   ]
 }

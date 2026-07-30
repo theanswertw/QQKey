@@ -1,7 +1,10 @@
 [package]
 name = "qqkey"
 version = "0.1.0"
-description = "全域快速指令選取工具"
+# 這一行會進 MSI/NSIS 安裝程式與 exe 的檔案屬性，是**打包期**決定的，
+# 不隨執行期的介面語言變。所以用語言中性的英文，別試著跟 i18n 同步——
+# 安裝程式的語言與應用程式的語言是兩件事。
+description = "QQKey — global quick command launcher"
 authors = ["Jeremy Wen <jeremy@jeremywen.com>"]
 edition = "2021"
 license = "MIT"
@@ -40,7 +43,10 @@ tauri-plugin-single-instance = "2.4.3"
 tauri-plugin-dialog = "2.7.2"
 
 [target."cfg(windows)".dependencies]
-windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Threading", "Win32_System_Com", "Win32_System_Ole", "Win32_System_Variant", "Win32_UI_Accessibility", "Win32_Graphics_Gdi"] }
+# Win32_Globalization 只為了取系統顯示語言。刻意不引入 tauri-plugin-os：
+# 它的 locale() 內部就是同一個 Win32 呼叫，而附帶的 JS API 這裡用不到，
+# 且語系要在 plugin 與資料庫都還沒起來的 fatal_dialog 路徑上就取得。
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Globalization", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Threading", "Win32_System_Com", "Win32_System_Ole", "Win32_System_Variant", "Win32_UI_Accessibility", "Win32_Graphics_Gdi"] }
 
 [dev-dependencies]
 tempfile = "3.27.0"

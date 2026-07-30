@@ -3,63 +3,231 @@
   "commands": [
     {
       "template": "wsl --list --verbose",
-      "description": "列出所有發行版與其狀態、WSL 版本",
-      "keywords": "列表 發行版 狀態"
+      "description": {
+        "zh-Hant": "列出所有發行版與其狀態、WSL 版本",
+        "ja": "すべてのディストリビューションと状態、WSL バージョンを一覧表示",
+        "en": "List all distributions with their state and WSL version",
+        "fr": "Lister toutes les distributions avec leur état et version WSL",
+        "de": "Alle Distributionen mit Status und WSL-Version auflisten",
+        "ko": "모든 배포판과 상태, WSL 버전 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "列表 發行版 狀態",
+        "ja": "一覧 リスト ディストリビューション 状態",
+        "en": "list distributions distro state",
+        "fr": "liste lister distributions état",
+        "de": "liste auflisten distributionen status",
+        "ko": "목록 배포판 상태"
+      }
     },
     {
       "template": "wsl --status",
-      "description": "顯示 WSL 整體設定與預設發行版",
-      "keywords": "狀態 設定"
+      "description": {
+        "zh-Hant": "顯示 WSL 整體設定與預設發行版",
+        "ja": "WSL 全体の設定と既定のディストリビューションを表示",
+        "en": "Show the overall WSL configuration and default distribution",
+        "fr": "Afficher la configuration WSL globale et la distribution par défaut",
+        "de": "WSL-Gesamtkonfiguration und Standarddistribution anzeigen",
+        "ko": "WSL 전체 설정과 기본 배포판 표시"
+      },
+      "keywords": {
+        "zh-Hant": "狀態 設定",
+        "ja": "状態 ステータス 設定",
+        "en": "status configuration settings",
+        "fr": "statut configuration paramètres",
+        "de": "status konfiguration einstellungen",
+        "ko": "상태 설정"
+      }
     },
     {
       "template": "wsl -d {distro}",
-      "description": "進入指定的發行版",
-      "keywords": "進入 啟動"
+      "description": {
+        "zh-Hant": "進入指定的發行版",
+        "ja": "指定したディストリビューションに入る",
+        "en": "Enter a specific distribution",
+        "fr": "Entrer dans une distribution précise",
+        "de": "Eine bestimmte Distribution betreten",
+        "ko": "지정한 배포판으로 들어가기"
+      },
+      "keywords": {
+        "zh-Hant": "進入 啟動",
+        "ja": "入る 起動 開く",
+        "en": "enter open launch shell",
+        "fr": "entrer ouvrir lancer",
+        "de": "betreten öffnen starten",
+        "ko": "들어가기 실행 열기"
+      }
     },
     {
       "template": "wsl --shutdown",
-      "description": "關閉所有發行版與虛擬機（網路異常時常用）",
-      "keywords": "關閉 重啟 網路"
+      "description": {
+        "zh-Hant": "關閉所有發行版與虛擬機（網路異常時常用）",
+        "ja": "すべてのディストリビューションと仮想マシンを停止（ネットワーク異常時によく使う）",
+        "en": "Shut down every distribution and the VM (common fix for network issues)",
+        "fr": "Arrêter toutes les distributions et la machine virtuelle (utile en cas de problème réseau)",
+        "de": "Alle Distributionen und die VM herunterfahren (häufig bei Netzwerkproblemen)",
+        "ko": "모든 배포판과 가상 머신 종료(네트워크 문제 시 자주 사용)"
+      },
+      "keywords": {
+        "zh-Hant": "關閉 重啟 網路",
+        "ja": "停止 シャットダウン 再起動 ネットワーク",
+        "en": "shutdown restart network",
+        "fr": "arrêter redémarrer réseau",
+        "de": "herunterfahren neustarten netzwerk",
+        "ko": "종료 재시작 네트워크"
+      }
     },
     {
       "template": "wsl --terminate {distro}",
-      "description": "只關閉指定的發行版",
-      "keywords": "關閉 終止"
+      "description": {
+        "zh-Hant": "只關閉指定的發行版",
+        "ja": "指定したディストリビューションのみを停止",
+        "en": "Stop just one distribution",
+        "fr": "Arrêter une seule distribution",
+        "de": "Nur eine Distribution beenden",
+        "ko": "지정한 배포판만 종료"
+      },
+      "keywords": {
+        "zh-Hant": "關閉 終止",
+        "ja": "停止 終了 ターミネート",
+        "en": "terminate stop kill",
+        "fr": "arrêter terminer",
+        "de": "beenden stoppen",
+        "ko": "종료 중지"
+      }
     },
     {
       "template": "wsl --set-default {distro}",
-      "description": "設定預設發行版",
-      "keywords": "預設"
+      "description": {
+        "zh-Hant": "設定預設發行版",
+        "ja": "既定のディストリビューションを設定",
+        "en": "Set the default distribution",
+        "fr": "Définir la distribution par défaut",
+        "de": "Standarddistribution festlegen",
+        "ko": "기본 배포판 설정"
+      },
+      "keywords": {
+        "zh-Hant": "預設",
+        "ja": "既定 デフォルト",
+        "en": "default set",
+        "fr": "défaut définir",
+        "de": "standard festlegen",
+        "ko": "기본 설정"
+      }
     },
     {
       "template": "wsl --install -d {distro}",
-      "description": "安裝指定的發行版",
-      "keywords": "安裝"
+      "description": {
+        "zh-Hant": "安裝指定的發行版",
+        "ja": "指定したディストリビューションをインストール",
+        "en": "Install a specific distribution",
+        "fr": "Installer une distribution précise",
+        "de": "Eine bestimmte Distribution installieren",
+        "ko": "지정한 배포판 설치"
+      },
+      "keywords": {
+        "zh-Hant": "安裝",
+        "ja": "インストール",
+        "en": "install",
+        "fr": "installer",
+        "de": "installieren",
+        "ko": "설치"
+      }
     },
     {
       "template": "wsl --list --online",
-      "description": "列出可安裝的發行版",
-      "keywords": "列表 線上 可安裝"
+      "description": {
+        "zh-Hant": "列出可安裝的發行版",
+        "ja": "インストール可能なディストリビューションを一覧表示",
+        "en": "List the distributions available to install",
+        "fr": "Lister les distributions disponibles à l'installation",
+        "de": "Installierbare Distributionen auflisten",
+        "ko": "설치할 수 있는 배포판 목록 표시"
+      },
+      "keywords": {
+        "zh-Hant": "列表 線上 可安裝",
+        "ja": "一覧 オンライン インストール可能",
+        "en": "list online available install",
+        "fr": "liste en ligne disponible installer",
+        "de": "liste online verfügbar installieren",
+        "ko": "목록 온라인 설치 가능"
+      }
     },
     {
       "template": "wsl --update",
-      "description": "更新 WSL 核心",
-      "keywords": "更新"
+      "description": {
+        "zh-Hant": "更新 WSL 核心",
+        "ja": "WSL カーネルを更新",
+        "en": "Update the WSL kernel",
+        "fr": "Mettre à jour le noyau WSL",
+        "de": "WSL-Kernel aktualisieren",
+        "ko": "WSL 커널 업데이트"
+      },
+      "keywords": {
+        "zh-Hant": "更新 核心",
+        "ja": "更新 アップデート カーネル",
+        "en": "update kernel upgrade",
+        "fr": "mettre à jour noyau",
+        "de": "aktualisieren update kernel",
+        "ko": "업데이트 커널"
+      }
     },
     {
       "template": "wsl --export {distro} {path}",
-      "description": "把發行版匯出成 tar 檔備份",
-      "keywords": "匯出 備份"
+      "description": {
+        "zh-Hant": "把發行版匯出成 tar 檔備份",
+        "ja": "ディストリビューションを tar ファイルにエクスポートしてバックアップ",
+        "en": "Export a distribution to a tar file as a backup",
+        "fr": "Exporter une distribution vers un fichier tar comme sauvegarde",
+        "de": "Distribution als Sicherung in eine tar-Datei exportieren",
+        "ko": "배포판을 tar 파일로 내보내 백업"
+      },
+      "keywords": {
+        "zh-Hant": "匯出 備份",
+        "ja": "エクスポート バックアップ",
+        "en": "export backup tar",
+        "fr": "exporter sauvegarde tar",
+        "de": "exportieren sicherung backup tar",
+        "ko": "내보내기 백업 tar"
+      }
     },
     {
       "template": "wsl --import {distro} {installPath} {tarball}",
-      "description": "從 tar 檔還原發行版",
-      "keywords": "匯入 還原"
+      "description": {
+        "zh-Hant": "從 tar 檔還原發行版",
+        "ja": "tar ファイルからディストリビューションを復元",
+        "en": "Restore a distribution from a tar file",
+        "fr": "Restaurer une distribution depuis un fichier tar",
+        "de": "Distribution aus einer tar-Datei wiederherstellen",
+        "ko": "tar 파일에서 배포판 복원"
+      },
+      "keywords": {
+        "zh-Hant": "匯入 還原",
+        "ja": "インポート 復元 リストア",
+        "en": "import restore tar",
+        "fr": "importer restaurer tar",
+        "de": "importieren wiederherstellen tar",
+        "ko": "가져오기 복원 tar"
+      }
     },
     {
       "template": "wsl --unregister {distro}",
-      "description": "移除發行版與其所有資料",
-      "keywords": "移除 刪除"
+      "description": {
+        "zh-Hant": "移除發行版與其所有資料",
+        "ja": "ディストリビューションとそのすべてのデータを削除",
+        "en": "Remove a distribution and all of its data",
+        "fr": "Supprimer une distribution et toutes ses données",
+        "de": "Distribution und alle ihre Daten entfernen",
+        "ko": "배포판과 모든 데이터 삭제"
+      },
+      "keywords": {
+        "zh-Hant": "移除 刪除 註銷",
+        "ja": "削除 登録解除 アンレジスター",
+        "en": "unregister remove delete",
+        "fr": "supprimer désinscrire retirer",
+        "de": "entfernen löschen abmelden",
+        "ko": "삭제 제거 등록 해제"
+      }
     }
   ]
 }
