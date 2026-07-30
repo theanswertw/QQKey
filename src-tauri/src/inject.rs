@@ -62,7 +62,8 @@ unsafe extern "system" fn on_foreground_changed(
     if hwnd.0.is_null() {
         return;
     }
-    crate::trace("焦點", &format!("前景切換到 {:?}", window_title(hwnd)));
+    // 這裡刻意不做診斷輸出：每次切換視窗都會觸發，記錄標題等於把使用者
+    // 一整天開過什麼全寫進 log。真正要用到目標視窗時再記錄就夠了。
     *TARGET_WINDOW.lock().unwrap() = Some(hwnd.0 as isize);
 }
 

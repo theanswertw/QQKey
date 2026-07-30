@@ -150,3 +150,7 @@ body,
   font-size: 11px;
   color: var(--qq-text-dim);
 }
+
+.launcher__footer-end {
+  margin-left: auto;
+}

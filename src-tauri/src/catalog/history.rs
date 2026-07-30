@@ -11,6 +11,7 @@ use serde::Serialize;
 
 /// 一次匯入的結果，供設定畫面顯示。
 #[derive(Debug, Default, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ImportReport {
     /// 這次讀到的行數
     pub scanned: usize,
@@ -44,6 +45,18 @@ pub struct SecretFilter {
     long_value: Regex,
 }
 
+/// 預設的關鍵字樣式。
+///
+/// 刻意不加 `\b`：環境變數慣例是 `GITHUB_TOKEN`、`DB_PASSWORD` 這種底線命名，
+/// 而底線算 word character，加了邊界反而會讓它們漏網。誤殺一筆普通命令只是
+/// 少個候選，可以在設定畫面自己加回來；漏放的憑證卻會一直留在資料庫裡。
+pub const DEFAULT_SECRET_PATTERN: &str =
+    r"(?i)(password|passwd|secret|token|credential|api[-_]?key|bearer|[-/]pwd\b|-AsPlainText|ConvertTo-SecureString)";
+
+/// `=` 或 `:` 後接一長串，多半是金鑰、連線字串或 base64 內容。
+/// 這條規則不開放修改——它擋的是關鍵字列不出來的形態。
+const LONG_VALUE_PATTERN: &str = r"[=:]\s*[A-Za-z0-9+/_-]{20,}";
+
 impl Default for SecretFilter {
     fn default() -> Self {
         Self::new()
@@ -52,18 +65,16 @@ impl Default for SecretFilter {
 
 impl SecretFilter {
     pub fn new() -> Self {
-        Self {
-            // 刻意不加 \b：環境變數慣例是 GITHUB_TOKEN、DB_PASSWORD 這種底線命名，
-            // 而底線算 word character，加了邊界反而會讓它們漏網。
-            // 誤殺一筆普通命令只是少個候選，漏放的憑證卻會一直留在資料庫裡。
-            keywords: Regex::new(
-                r"(?i)(password|passwd|secret|token|credential|api[-_]?key|bearer|[-/]pwd\b|-AsPlainText|ConvertTo-SecureString)",
-            )
-            .expect("內建的機密比對樣式應該要能編譯"),
-            // key=<一長串> 這種賦值，多半是金鑰、連線字串或 base64 內容
-            long_value: Regex::new(r"[=:]\s*[A-Za-z0-9+/_-]{20,}")
+        Self::from_pattern(DEFAULT_SECRET_PATTERN).expect("內建的機密比對樣式應該要能編譯")
+    }
+
+    /// 以自訂的關鍵字樣式建立。樣式無效時回傳錯誤，呼叫端應退回預設值。
+    pub fn from_pattern(pattern: &str) -> Result<Self, regex::Error> {
+        Ok(Self {
+            keywords: Regex::new(pattern)?,
+            long_value: Regex::new(LONG_VALUE_PATTERN)
                 .expect("內建的機密比對樣式應該要能編譯"),
-        }
+        })
     }
 
     pub fn is_sensitive(&self, line: &str) -> bool {
@@ -198,6 +209,21 @@ mod tests {
         assert_eq!(report.skipped_noise, 1);
         assert_eq!(report.skipped_secret, 1);
         assert_eq!(entries.len(), 1, "被過濾的內容不該出現在結果裡");
+    }
+
+    #[test]
+    fn custom_pattern_replaces_the_keyword_list() {
+        let filter = super::SecretFilter::from_pattern(r"(?i)(內部代號)").unwrap();
+        assert!(filter.is_sensitive("git commit -m 內部代號X"));
+        // 換掉關鍵字列之後，預設的那些就不再攔截
+        assert!(!filter.is_sensitive("az login --password hunter2"));
+        // 但長字串那條規則是固定的，仍然生效
+        assert!(filter.is_sensitive("setx FOO=abcdefghijklmnopqrstuvwxyz"));
+    }
+
+    #[test]
+    fn invalid_pattern_is_rejected_rather_than_panicking() {
+        assert!(super::SecretFilter::from_pattern(r"(未閉合").is_err());
     }
 
     #[test]

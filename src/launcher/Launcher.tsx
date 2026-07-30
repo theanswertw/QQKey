@@ -12,16 +12,28 @@ export default function Launcher() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    focusInput();
     const unlisten = listen("launcher:shown", () => {
       setQuery("");
       setRefreshToken((token) => token + 1);
-      inputRef.current?.focus();
+      focusInput();
     });
     return () => {
       unlisten.then((dispose) => dispose());
     };
   }, []);
+
+  /**
+   * 視窗拿到焦點不代表 webview 拿到焦點，webview 拿到也不代表輸入框拿到。
+   * 三層都要點名，而且要等這一幀畫完——`show()` 之後立刻 focus 會落空。
+   */
+  function focusInput() {
+    requestAnimationFrame(() => {
+      window.focus();
+      document.body.focus();
+      inputRef.current?.focus();
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -152,6 +164,7 @@ export default function Launcher() {
         <span>1–9 直選</span>
         <span>Enter 填入</span>
         <span>Esc 取消</span>
+        <span className="launcher__footer-end">Alt+Shift+Q 設定</span>
       </div>
     </div>
   );

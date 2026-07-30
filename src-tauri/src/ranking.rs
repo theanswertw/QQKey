@@ -100,6 +100,7 @@ mod tests {
             description: None,
             keywords: keywords.map(str::to_string),
             source,
+            enabled: true,
             score,
             last_used: if score > 0.0 { Some(NOW) } else { None },
             boost: 0.0,

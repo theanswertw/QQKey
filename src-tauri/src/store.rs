@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use rusqlite::{params, Connection, OptionalExtension};
 
-use crate::catalog::{Entry, NewEntry, Source};
+use crate::catalog::{Entry, EntryPatch, NewEntry, SharedEntry, Source};
 
 pub struct Store {
     connection: Mutex<Connection>,
@@ -53,11 +53,20 @@ impl Store {
     /// 載入所有啟用中的條目。候選池不大，一次全讀進記憶體，
     /// 之後每次敲鍵的搜尋就不必再碰資料庫。
     pub fn load_enabled(&self) -> rusqlite::Result<Vec<Entry>> {
+        self.load_where("WHERE enabled = 1")
+    }
+
+    /// 載入所有條目，含停用中的。設定畫面才需要。
+    pub fn load_all(&self) -> rusqlite::Result<Vec<Entry>> {
+        self.load_where("")
+    }
+
+    fn load_where(&self, filter: &str) -> rusqlite::Result<Vec<Entry>> {
         let connection = self.connection.lock().unwrap();
-        let mut statement = connection.prepare(
-            "SELECT id, template, description, keywords, source, score, last_used, boost
-             FROM entry WHERE enabled = 1",
-        )?;
+        let mut statement = connection.prepare(&format!(
+            "SELECT id, template, description, keywords, source, enabled, score, last_used, boost
+             FROM entry {filter}"
+        ))?;
         let rows = statement.query_map([], |row| {
             let source: String = row.get(4)?;
             Ok(Entry {
@@ -66,12 +75,86 @@ impl Store {
                 description: row.get(2)?,
                 keywords: row.get(3)?,
                 source: Source::parse(&source),
-                score: row.get(5)?,
-                last_used: row.get(6)?,
-                boost: row.get(7)?,
+                enabled: row.get::<_, i64>(5)? != 0,
+                score: row.get(6)?,
+                last_used: row.get(7)?,
+                boost: row.get(8)?,
             })
         })?;
         rows.collect()
+    }
+
+    /// 新增使用者自訂條目。回傳新條目的 id。
+    pub fn create_entry(&self, patch: &EntryPatch) -> rusqlite::Result<i64> {
+        let connection = self.connection.lock().unwrap();
+        connection.execute(
+            "INSERT INTO entry (template, description, keywords, source, enabled, boost)
+             VALUES (?1, ?2, ?3, 'user', 1, ?4)",
+            params![
+                patch.template,
+                patch.description,
+                patch.keywords,
+                patch.boost.unwrap_or(0.0)
+            ],
+        )?;
+        Ok(connection.last_insert_rowid())
+    }
+
+    /// 更新條目。使用者改過的內建條目會轉為 user 來源，
+    /// 之後同步內建目錄時才不會把他的修改蓋回去。
+    pub fn update_entry(&self, id: i64, patch: &EntryPatch) -> rusqlite::Result<()> {
+        let connection = self.connection.lock().unwrap();
+        connection.execute(
+            "UPDATE entry SET
+               template    = ?1,
+               description = ?2,
+               keywords    = ?3,
+               enabled     = COALESCE(?4, enabled),
+               boost       = COALESCE(?5, boost),
+               source      = CASE source WHEN 'builtin' THEN 'user' ELSE source END
+             WHERE id = ?6",
+            params![
+                patch.template,
+                patch.description,
+                patch.keywords,
+                patch.enabled,
+                patch.boost,
+                id
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_entry(&self, id: i64) -> rusqlite::Result<()> {
+        let connection = self.connection.lock().unwrap();
+        connection.execute("DELETE FROM entry WHERE id = ?1", [id])?;
+        Ok(())
+    }
+
+    /// 批次啟用／停用。用來一次關掉整批歷史雜訊。
+    pub fn set_enabled(&self, ids: &[i64], enabled: bool) -> rusqlite::Result<usize> {
+        let mut connection = self.connection.lock().unwrap();
+        let transaction = connection.transaction()?;
+        let mut changed = 0;
+        {
+            let mut statement =
+                transaction.prepare("UPDATE entry SET enabled = ?1 WHERE id = ?2")?;
+            for id in ids {
+                changed += statement.execute(params![enabled as i64, id])?;
+            }
+        }
+        transaction.commit()?;
+        Ok(changed)
+    }
+
+    /// 清掉單筆的使用統計，讓它回到從未用過的狀態。
+    pub fn reset_score(&self, id: i64) -> rusqlite::Result<()> {
+        let connection = self.connection.lock().unwrap();
+        connection.execute(
+            "UPDATE entry SET score = 0, last_used = NULL WHERE id = ?1",
+            [id],
+        )?;
+        Ok(())
     }
 
     pub fn find_template(&self, id: i64) -> rusqlite::Result<Option<String>> {
@@ -104,6 +187,36 @@ impl Store {
                 written += statement.execute(params![
                     template,
                     crate::catalog::history::initial_score(*count)
+                ])?;
+            }
+        }
+        transaction.commit()?;
+        Ok(written)
+    }
+
+    /// 寫入從 JSON 匯入的使用者條目。同 template 者覆寫，並一律標記為 user 來源。
+    pub fn upsert_user(&self, entries: &[SharedEntry]) -> rusqlite::Result<usize> {
+        let mut connection = self.connection.lock().unwrap();
+        let transaction = connection.transaction()?;
+        let mut written = 0;
+        {
+            let mut statement = transaction.prepare(
+                "INSERT INTO entry (template, description, keywords, source, enabled, boost)
+                 VALUES (?1, ?2, ?3, 'user', ?4, ?5)
+                 ON CONFLICT(template) DO UPDATE SET
+                   description = excluded.description,
+                   keywords    = excluded.keywords,
+                   enabled     = excluded.enabled,
+                   boost       = excluded.boost,
+                   source      = 'user'",
+            )?;
+            for entry in entries {
+                written += statement.execute(params![
+                    entry.template,
+                    entry.description,
+                    entry.keywords,
+                    entry.enabled as i64,
+                    entry.boost
                 ])?;
             }
         }

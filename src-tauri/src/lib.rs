@@ -32,10 +32,20 @@ pub fn run() {
             commands::search_candidates,
             commands::hide_launcher,
             commands::accept_candidate,
+            commands::open_settings,
+            commands::list_entries,
+            commands::create_entry,
+            commands::update_entry,
+            commands::delete_entry,
+            commands::set_entries_enabled,
+            commands::reset_entry_score,
+            commands::export_entries,
+            commands::import_entries,
+            commands::get_settings,
+            commands::set_shortcut,
+            commands::set_secret_pattern,
             commands::import_history,
-            commands::history_import_enabled,
-            commands::set_history_import_enabled,
-            commands::open_settings
+            commands::set_history_import_enabled
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -61,15 +71,25 @@ pub fn run() {
                 }
             }
 
-            app.manage(state);
-
             inject::watch_foreground();
 
-            if let Err(error) = hotkey::register(handle, hotkey::default_shortcut()) {
-                // 快捷鍵被其他程式佔用時不該讓整個應用起不來，
-                // M6 的設定畫面會提供重新綁定的入口。
-                eprintln!("[QQKey] 全域快捷鍵註冊失敗（可能已被其他程式佔用）：{error}");
+            if let Err(error) = hotkey::register_settings(handle) {
+                eprintln!("[QQKey] {error}");
             }
+
+            let shortcut = state.shortcut();
+            if let Err(error) = hotkey::register(handle, &shortcut) {
+                // 快捷鍵被佔用時不該讓整個應用起不來——設定畫面可以改綁，
+                // 但那扇門也得打得開，所以這裡只記錄不中止。
+                eprintln!("[QQKey] {error}");
+                if shortcut != hotkey::DEFAULT_SHORTCUT {
+                    if let Err(error) = hotkey::register(handle, hotkey::DEFAULT_SHORTCUT) {
+                        eprintln!("[QQKey] 退回預設快捷鍵也失敗：{error}");
+                    }
+                }
+            }
+
+            app.manage(state);
 
             if let Some(launcher) = app.get_webview_window(hotkey::LAUNCHER_LABEL) {
                 let window = launcher.clone();

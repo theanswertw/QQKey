@@ -13,6 +13,54 @@ export interface Candidate {
   score: number;
 }
 
+/** 對應後端 `catalog::EntryView`。設定畫面用，含停用中的條目。 */
+export interface EntryView {
+  id: number;
+  template: string;
+  description: string | null;
+  keywords: string | null;
+  source: CandidateSource;
+  enabled: boolean;
+  score: number;
+  boost: number;
+  lastUsed: number | null;
+}
+
+export interface EntryPage {
+  total: number;
+  entries: EntryView[];
+}
+
+/** 條目的可編輯欄位，對應後端 `catalog::EntryPatch`。 */
+export interface EntryPatch {
+  template: string;
+  description: string | null;
+  keywords: string | null;
+  enabled?: boolean;
+  boost?: number;
+}
+
+export interface Settings {
+  shortcut: string;
+  historyImport: boolean;
+  secretPattern: string;
+  defaultSecretPattern: string;
+  poolSize: number;
+}
+
+export interface ImportReport {
+  scanned: number;
+  imported: number;
+  skippedSecret: number;
+  skippedNoise: number;
+}
+
+export const SOURCE_LABELS: Record<CandidateSource, string> = {
+  user: "自訂",
+  builtin: "內建",
+  history: "歷史",
+};
+
 /** 把樣板拆成「會送出的前綴」與「留給使用者在終端機自行輸入的提示」。 */
 export function splitTemplate(template: string): { prefix: string; hint: string } {
   const index = template.search(/\{[^}]*\}/);

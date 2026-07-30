@@ -3,29 +3,77 @@
 //! 預設使用 Alt+Q。刻意避開 Alt+Space —— 那是 Windows 系統視窗選單的保留鍵，
 //! 在 Windows Terminal 中需要額外改設定才能傳遞給應用程式。
 
+use std::str::FromStr;
+
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, Runtime, WebviewWindow};
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use crate::caret::{self, Area};
 
 pub const LAUNCHER_LABEL: &str = "launcher";
 
+/// 預設快捷鍵。格式是 `keyboard-types` 的 code 名稱，`Q` 要寫成 `KeyQ`。
+pub const DEFAULT_SHORTCUT: &str = "Alt+KeyQ";
+
+/// 開啟設定視窗的快捷鍵。
+///
+/// 刻意做成全域快捷鍵而不是候選框裡的按鍵：中文輸入法會攔截 `Ctrl+,`
+/// 這類組合，把修飾鍵吃掉只留下一個全形逗號，經過 webview 的快捷鍵並不可靠。
+pub const SETTINGS_SHORTCUT: &str = "Alt+Shift+KeyQ";
+
 /// 候選框顯示時通知前端重設查詢字串與輸入焦點。
 const EVENT_LAUNCHER_SHOWN: &str = "launcher:shown";
 
-pub fn default_shortcut() -> Shortcut {
-    Shortcut::new(Some(Modifiers::ALT), Code::KeyQ)
+pub fn parse(value: &str) -> Result<Shortcut, String> {
+    Shortcut::from_str(value).map_err(|error| format!("無法解析快捷鍵 {value:?}：{error}"))
 }
 
-/// 註冊快捷鍵。回傳 Err 代表該組合已被其他程式佔用，呼叫端應提示使用者改綁。
-pub fn register<R: Runtime>(app: &AppHandle<R>, shortcut: Shortcut) -> tauri::Result<()> {
+/// 註冊快捷鍵。回傳 Err 代表該組合已被其他程式佔用。
+pub fn register<R: Runtime>(app: &AppHandle<R>, value: &str) -> Result<(), String> {
+    let shortcut = parse(value)?;
     app.global_shortcut()
         .on_shortcut(shortcut, move |app, _shortcut, event| {
             if event.state() == ShortcutState::Pressed {
                 toggle_launcher(app);
             }
         })
-        .map_err(|error| tauri::Error::Anyhow(error.into()))
+        .map_err(|error| format!("註冊 {value} 失敗（可能已被其他程式佔用）：{error}"))
+}
+
+/// 註冊開啟設定視窗的快捷鍵。
+pub fn register_settings<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let shortcut = parse(SETTINGS_SHORTCUT)?;
+    app.global_shortcut()
+        .on_shortcut(shortcut, move |app, _shortcut, event| {
+            if event.state() == ShortcutState::Pressed {
+                if let Err(error) = crate::commands::show_settings_window(app) {
+                    crate::trace("設定", &format!("開啟失敗：{error}"));
+                }
+            }
+        })
+        .map_err(|error| format!("註冊 {SETTINGS_SHORTCUT} 失敗：{error}"))
+}
+
+pub fn unregister<R: Runtime>(app: &AppHandle<R>, value: &str) {
+    if let Ok(shortcut) = parse(value) {
+        let _ = app.global_shortcut().unregister(shortcut);
+    }
+}
+
+/// 換綁快捷鍵。新的註冊失敗時會把舊的補回去，
+/// 免得使用者輸入一個被佔用的組合之後就再也叫不出候選框。
+pub fn rebind<R: Runtime>(app: &AppHandle<R>, old: &str, new: &str) -> Result<(), String> {
+    // 先確認新的解析得過，免得白白解除舊的綁定
+    parse(new)?;
+
+    unregister(app, old);
+    match register(app, new) {
+        Ok(()) => Ok(()),
+        Err(error) => {
+            let _ = register(app, old);
+            Err(error)
+        }
+    }
 }
 
 /// 已顯示就收起，未顯示就叫出。快捷鍵按第二次可取消，不必伸手去按 Esc。

@@ -3,9 +3,9 @@
 use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
 use crate::catalog::history::ImportReport;
-use crate::catalog::Candidate;
+use crate::catalog::{Candidate, EntryPage, EntryPatch, Source};
 use crate::hotkey::LAUNCHER_LABEL;
-use crate::state::AppState;
+use crate::state::{AppState, Settings};
 
 const SETTINGS_LABEL: &str = "settings";
 
@@ -40,15 +40,86 @@ pub fn accept_candidate<R: Runtime>(
     state.record_use(id)
 }
 
+// ------------------------------------------------------------ 設定畫面：條目
+
+/// 列出條目供編輯，含停用中的。`source` 傳 null 表示不篩選。
+#[tauri::command]
+pub fn list_entries(
+    state: State<AppState>,
+    query: String,
+    source: Option<Source>,
+    offset: usize,
+    limit: usize,
+) -> Result<EntryPage, String> {
+    state.list_entries(&query, source, offset, limit)
+}
+
+#[tauri::command]
+pub fn create_entry(state: State<AppState>, patch: EntryPatch) -> Result<i64, String> {
+    state.create_entry(&patch)
+}
+
+#[tauri::command]
+pub fn update_entry(state: State<AppState>, id: i64, patch: EntryPatch) -> Result<(), String> {
+    state.update_entry(id, &patch)
+}
+
+#[tauri::command]
+pub fn delete_entry(state: State<AppState>, id: i64) -> Result<(), String> {
+    state.delete_entry(id)
+}
+
+#[tauri::command]
+pub fn set_entries_enabled(
+    state: State<AppState>,
+    ids: Vec<i64>,
+    enabled: bool,
+) -> Result<usize, String> {
+    state.set_enabled(&ids, enabled)
+}
+
+#[tauri::command]
+pub fn reset_entry_score(state: State<AppState>, id: i64) -> Result<(), String> {
+    state.reset_score(id)
+}
+
+#[tauri::command]
+pub fn export_entries(state: State<AppState>) -> Result<String, String> {
+    state.export_entries()
+}
+
+#[tauri::command]
+pub fn import_entries(state: State<AppState>, json: String) -> Result<usize, String> {
+    state.import_entries(&json)
+}
+
+// ------------------------------------------------------------ 設定畫面：一般設定
+
+#[tauri::command]
+pub fn get_settings(state: State<AppState>) -> Settings {
+    state.settings()
+}
+
+/// 換綁全域快捷鍵。註冊失敗時舊的會被補回去，設定也不會被寫入。
+#[tauri::command]
+pub fn set_shortcut<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    state: State<AppState>,
+    shortcut: String,
+) -> Result<(), String> {
+    crate::hotkey::rebind(&app, &state.shortcut(), &shortcut)?;
+    state.set_shortcut(&shortcut)
+}
+
+#[tauri::command]
+pub fn set_secret_pattern(state: State<AppState>, pattern: String) -> Result<(), String> {
+    state.set_secret_pattern(&pattern)
+}
+
 /// 手動觸發一次歷史匯入，回傳這次掃描與過濾的統計。
 #[tauri::command]
 pub fn import_history(state: State<AppState>) -> Result<ImportReport, String> {
     state.import_history()
-}
-
-#[tauri::command]
-pub fn history_import_enabled(state: State<AppState>) -> bool {
-    state.history_import_enabled()
 }
 
 #[tauri::command]
@@ -63,6 +134,11 @@ pub fn set_history_import_enabled(state: State<AppState>, enabled: bool) -> Resu
 /// 害候選框把它誤認為要注入的目標。
 #[tauri::command]
 pub fn open_settings<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    show_settings_window(&app)
+}
+
+/// 顯示設定視窗，沒有就建立一個。全域快捷鍵與 IPC 都走這裡。
+pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(), String> {
     match app.get_webview_window(SETTINGS_LABEL) {
         Some(window) => {
             let _ = window.unminimize();
@@ -71,7 +147,7 @@ pub fn open_settings<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String>
         }
         None => {
             WebviewWindowBuilder::new(
-                &app,
+                app,
                 SETTINGS_LABEL,
                 WebviewUrl::App("settings.html".into()),
             )

@@ -1,14 +1,60 @@
-/**
- * 字詞設定畫面。M6 才會填入條目 CRUD、匯入匯出與一般設定，
- * 目前僅提供骨架以確認雙視窗載入正常。
- */
+import { useEffect, useState } from "react";
+import EntriesPanel from "./EntriesPanel";
+import GeneralPanel from "./GeneralPanel";
+
+type Tab = "entries" | "general";
+
+interface Toast {
+  kind: "error" | "notice";
+  message: string;
+}
+
 export default function Settings() {
+  const [tab, setTab] = useState<Tab>("entries");
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   return (
     <div className="settings">
-      <h1 className="settings__title">QQKey 設定</h1>
-      <p className="settings__note">
-        字詞管理、快捷鍵與歷史匯入設定將於 M6 實作。
-      </p>
+      <header className="settings__header">
+        <h1 className="settings__title">QQKey 設定</h1>
+        <nav className="tabs">
+          <button
+            className={tab === "entries" ? "tab tab--active" : "tab"}
+            onClick={() => setTab("entries")}
+          >
+            命令字詞
+          </button>
+          <button
+            className={tab === "general" ? "tab tab--active" : "tab"}
+            onClick={() => setTab("general")}
+          >
+            一般設定
+          </button>
+        </nav>
+      </header>
+
+      {tab === "entries" ? (
+        <EntriesPanel onError={(message) => setToast({ kind: "error", message })} />
+      ) : (
+        <GeneralPanel
+          onError={(message) => setToast({ kind: "error", message })}
+          onNotice={(message) => setToast({ kind: "notice", message })}
+        />
+      )}
+
+      {toast && (
+        <div className={`toast toast--${toast.kind}`} onClick={() => setToast(null)}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

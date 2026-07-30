@@ -3,7 +3,9 @@
 //!
 //! 用法：
 //!   `cargo run -- --alt-q`              送出 Alt+Q，回報 QQKey 候選框是否因此顯示
+//!   `cargo run -- --settings`           送出 Alt+Shift+Q，回報設定視窗是否開啟
 //!   `cargo run -- --find <關鍵字>`      列出標題含關鍵字的可見視窗
+//!   `cargo run -- --focus <關鍵字>`     把符合的視窗設為前景
 //!   `cargo run -- --type <文字>`        以 Unicode 逐字送出文字到目前前景視窗
 
 use std::mem::size_of;
@@ -16,13 +18,13 @@ use windows::Win32::UI::HiDpi::{
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP,
-    KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_LMENU, VK_Q,
+    KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_LMENU, VK_LSHIFT, VK_Q,
 };
 use windows::Win32::Foundation::RECT;
 use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible,
-    SetForegroundWindow,
+    EnumWindows, GetWindowRect, GetWindowTextW, GetWindowThreadProcessId,
+    IsWindowVisible, SetForegroundWindow,
 };
 
 fn main() {
@@ -39,6 +41,7 @@ fn main() {
                 println!("  {:?}  {title}", hwnd.0);
             }
         }
+        Some("--settings") => test_settings_shortcut(),
         Some("--focus") => {
             let keyword = args.get(1).map(String::as_str).unwrap_or("");
             match find_windows(keyword).first() {
@@ -57,7 +60,9 @@ fn main() {
             println!("送出 {sent} 個事件");
         }
         _ => {
-            eprintln!("用法：--alt-q | --find <關鍵字> | --focus <關鍵字> | --type <文字>");
+            eprintln!(
+                "用法：--alt-q | --settings | --find <關鍵字> | --focus <關鍵字> | --type <文字>"
+            );
         }
     }
 }
@@ -119,6 +124,34 @@ fn test_alt_q() {
     } else {
         println!("\n結果：全域快捷鍵生效，候選框已收起。");
     }
+}
+
+/// 送出 Alt+Shift+Q 開啟設定視窗，確認整條路徑通得了。
+fn test_settings_shortcut() {
+    const SETTINGS_TITLE: &str = "QQKey 設定";
+
+    send_alt_shift_q();
+    thread::sleep(Duration::from_millis(1500));
+
+    let opened = find_windows(SETTINGS_TITLE)
+        .iter()
+        .any(|(_, title)| title == SETTINGS_TITLE);
+    println!(
+        "設定視窗：{}",
+        if opened { "已開啟" } else { "沒有開啟" }
+    );
+}
+
+fn send_alt_shift_q() -> u32 {
+    let inputs = [
+        key_event(VK_LMENU, KEYBD_EVENT_FLAGS(0)),
+        key_event(VK_LSHIFT, KEYBD_EVENT_FLAGS(0)),
+        key_event(VK_Q, KEYBD_EVENT_FLAGS(0)),
+        key_event(VK_Q, KEYEVENTF_KEYUP),
+        key_event(VK_LSHIFT, KEYEVENTF_KEYUP),
+        key_event(VK_LMENU, KEYEVENTF_KEYUP),
+    ];
+    unsafe { SendInput(&inputs, size_of::<INPUT>() as i32) }
 }
 
 /// 把指定視窗設為前景，用來觸發 QQKey 的前景追蹤 hook。
