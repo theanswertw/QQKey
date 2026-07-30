@@ -1,6 +1,7 @@
 //! 候選命令的資料型別與內建目錄。
 
 mod builtin;
+pub mod history;
 
 pub use builtin::load_builtin;
 

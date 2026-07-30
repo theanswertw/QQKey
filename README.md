@@ -14,12 +14,15 @@
 | M2 | ✅ | 焦點還原與 `SendInput` 文字注入 |
 | M3 | ✅ | 候選框貼齊輸入游標 |
 | M4 | ✅ | 命令目錄、模糊搜尋、frecency 排序 |
-| M5 | ⬜ | PSReadLine 歷史學習與機密過濾 |
+| M5 | ✅ | PSReadLine 歷史學習與機密過濾 |
 | M6 | ⬜ | 字詞設定畫面 |
 | M7 | ⬜ | 系統匣、開機自啟、封裝 |
 
 內建目錄涵蓋 **usbipd、git、wsl、netsh、docker、winget、npm、cargo** 共 104 筆命令，
 全附繁體中文說明。搜尋支援中文關鍵字——輸入「掛載」也能找到 `usbipd attach --wsl`。
+
+啟動時會從 PSReadLine 歷史學習你實際用過的命令，出現次數越多初始排序越前面。
+匯入採增量方式，只讀上次之後新增的部分。
 
 ## 技術架構
 
@@ -42,7 +45,7 @@ src-tauri/
    ├─ caret.rs     游標定位（三層 fallback）與螢幕邊界夾制
    ├─ inject.rs    前景追蹤、焦點還原 + SendInput 注入
    ├─ template.rs  `{佔位符}` 截斷
-   ├─ catalog/     候選命令型別與內建目錄載入
+   ├─ catalog/     候選命令型別、內建目錄與歷史學習
    ├─ store.rs     SQLite 儲存與 frecency 持久化
    ├─ ranking.rs   模糊比對 × frecency 排序
    ├─ state.rs     資料庫與記憶體候選池
@@ -84,5 +87,10 @@ cargo test             # 後端單元測試
 
 - QQKey 使用 `SendInput` 與 UI Automation，行為近似自動化工具。
   部署前請自行審查程式碼，並確認符合公司資安政策；如遭 EDR 攔截，請洽 IT 部門。
-- M5 會讀取 PowerShell 歷史紀錄以學習常用命令。歷史中可能夾帶憑證，
-  匯入前會以規則過濾，且設定畫面提供逐筆檢視與刪除。所有資料僅存於本機。
+- QQKey 會讀取 PowerShell 歷史紀錄以學習常用命令。歷史中可能夾帶憑證，
+  匯入前一律以規則過濾——命中 `password`、`token`、`secret`、`credential`、
+  `ConvertTo-SecureString` 等樣式，或 `=`／`:` 後接 20 字元以上長字串的行，
+  整行略過，不會進資料庫也不會出現在候選框。略過的**筆數**會回報，內容不會被記錄。
+  過濾採寧可誤殺的策略：誤殺的命令可以自己補回來，漏放的憑證會一直留在資料庫裡。
+- 所有資料僅存於本機 `%APPDATA%\com.example.qqkey\`，不對外傳送。
+  歷史匯入可在設定畫面關閉（M6）。

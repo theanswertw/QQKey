@@ -2363,6 +2363,7 @@ name = "qqkey"
 version = "0.1.0"
 dependencies = [
  "nucleo-matcher",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",

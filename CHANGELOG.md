@@ -33,6 +33,16 @@
 - **M4**：候選框改為向後端查詢真實資料；空查詢時只列出用過的命令，
   而不是塞一串沒用過的當噪音。
 
+- **M5**：從 PSReadLine 歷史學習實際用過的命令。以檔案位移做增量匯入，
+  只讀上次之後新增的部分；PSReadLine 重寫歷史檔導致檔案變短時自動從頭讀。
+- **M5**：匯入前的機密過濾。命中 `password`、`token`、`secret`、`credential`、
+  `ConvertTo-SecureString` 等樣式，或 `=`／`:` 後接 20 字元以上長字串的行整行略過。
+  略過筆數會回報，內容不會被記錄。
+- **M5**：歷史條目依出現次數換算初始 frecency（取對數壓縮），
+  且不會覆寫內建目錄的同名條目，也不會把實際使用累積的分數回沖。
+- **M5**：`meta` 資料表與 `import_history`／`history_import_enabled` 等 IPC，
+  供 M6 的設定畫面使用。
+
 ### Fixed
 
 - **M3**：`settings` 視窗即使設為 `visible: false`，在啟動時仍會被 Windows

@@ -83,6 +83,53 @@ impl Store {
             .optional()
     }
 
+    /// 寫入從歷史紀錄學到的命令。
+    ///
+    /// 已存在的條目只在來源同為 history 時更新分數，且取較大值——
+    /// 內建目錄整理過的條目不該被歷史裡的同名命令蓋掉，
+    /// 使用者實際累積的使用分數也不該被匯入回沖。
+    pub fn import_history(&self, entries: &[(String, usize)]) -> rusqlite::Result<usize> {
+        let mut connection = self.connection.lock().unwrap();
+        let transaction = connection.transaction()?;
+        let mut written = 0;
+        {
+            let mut statement = transaction.prepare(
+                "INSERT INTO entry (template, source, score)
+                 VALUES (?1, 'history', ?2)
+                 ON CONFLICT(template) DO UPDATE SET
+                   score = MAX(entry.score, excluded.score)
+                 WHERE entry.source = 'history'",
+            )?;
+            for (template, count) in entries {
+                written += statement.execute(params![
+                    template,
+                    crate::catalog::history::initial_score(*count)
+                ])?;
+            }
+        }
+        transaction.commit()?;
+        Ok(written)
+    }
+
+    pub fn meta(&self, key: &str) -> rusqlite::Result<Option<String>> {
+        let connection = self.connection.lock().unwrap();
+        connection
+            .query_row("SELECT value FROM meta WHERE key = ?1", [key], |row| {
+                row.get(0)
+            })
+            .optional()
+    }
+
+    pub fn set_meta(&self, key: &str, value: &str) -> rusqlite::Result<()> {
+        let connection = self.connection.lock().unwrap();
+        connection.execute(
+            "INSERT INTO meta (key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            params![key, value],
+        )?;
+        Ok(())
+    }
+
     /// 記錄一次使用並更新 frecency，回傳新的分數。
     ///
     /// 衰減在 Rust 端算——SQLite 的數學函式要編譯時另外開啟，不能假設有。
@@ -119,7 +166,12 @@ fn migrate(connection: &Connection) -> rusqlite::Result<()> {
            boost       REAL NOT NULL DEFAULT 0
          );
 
-         CREATE INDEX IF NOT EXISTS idx_entry_enabled ON entry(enabled);",
+         CREATE INDEX IF NOT EXISTS idx_entry_enabled ON entry(enabled);
+
+         CREATE TABLE IF NOT EXISTS meta (
+           key   TEXT PRIMARY KEY,
+           value TEXT NOT NULL
+         );",
     )
 }
 
@@ -190,5 +242,66 @@ mod tests {
     fn find_template_returns_none_for_unknown_id() {
         let (store, _dir) = temp_store();
         assert_eq!(store.find_template(999).unwrap(), None);
+    }
+
+    #[test]
+    fn history_import_does_not_overwrite_builtin_entries() {
+        let (store, _dir) = temp_store();
+        store
+            .sync_builtin(&[new_entry("usbipd list", "列出裝置")])
+            .unwrap();
+        store
+            .import_history(&[("usbipd list".to_string(), 50)])
+            .unwrap();
+
+        let loaded = store.load_enabled().unwrap();
+        assert_eq!(loaded.len(), 1);
+        assert_eq!(loaded[0].source, Source::Builtin, "來源不該被歷史蓋掉");
+        assert_eq!(loaded[0].score, 0.0, "內建條目的分數不該被匯入回沖");
+        assert_eq!(loaded[0].description.as_deref(), Some("列出裝置"));
+    }
+
+    #[test]
+    fn history_import_does_not_reset_accumulated_usage() {
+        let (store, _dir) = temp_store();
+        store
+            .import_history(&[("usbipd attach --wsl --busid 2-3".to_string(), 2)])
+            .unwrap();
+        let id = store.load_enabled().unwrap()[0].id;
+
+        let now = 1_800_000_000;
+        for _ in 0..10 {
+            store.record_use(id, now).unwrap();
+        }
+        let accumulated = store.load_enabled().unwrap()[0].score;
+
+        // 再匯入一次，次數不變
+        store
+            .import_history(&[("usbipd attach --wsl --busid 2-3".to_string(), 2)])
+            .unwrap();
+
+        assert_eq!(
+            store.load_enabled().unwrap()[0].score,
+            accumulated,
+            "重複匯入不該把實際使用累積的分數壓回去"
+        );
+    }
+
+    #[test]
+    fn meta_round_trips() {
+        let (store, _dir) = temp_store();
+        assert_eq!(store.meta("history_offset").unwrap(), None);
+
+        store.set_meta("history_offset", "1024").unwrap();
+        assert_eq!(
+            store.meta("history_offset").unwrap().as_deref(),
+            Some("1024")
+        );
+
+        store.set_meta("history_offset", "2048").unwrap();
+        assert_eq!(
+            store.meta("history_offset").unwrap().as_deref(),
+            Some("2048")
+        );
     }
 }

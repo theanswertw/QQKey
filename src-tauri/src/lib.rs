@@ -32,13 +32,36 @@ pub fn run() {
             commands::search_candidates,
             commands::hide_launcher,
             commands::accept_candidate,
+            commands::import_history,
+            commands::history_import_enabled,
+            commands::set_history_import_enabled,
             commands::open_settings
         ])
         .setup(|app| {
             let handle = app.handle();
 
             let database = app.path().app_data_dir()?.join("qqkey.db");
-            app.manage(AppState::load(Store::open(&database)?)?);
+            let state = AppState::load(Store::open(&database)?)?;
+
+            if state.history_import_enabled() {
+                match state.import_history() {
+                    Ok(report) => trace(
+                        "歷史",
+                        &format!(
+                            "掃描 {} 行，匯入 {} 筆，略過 {} 筆疑似含憑證、{} 筆雜訊；候選池共 {} 筆",
+                            report.scanned,
+                            report.imported,
+                            report.skipped_secret,
+                            report.skipped_noise,
+                            state.pool_size()
+                        ),
+                    ),
+                    // 匯入失敗不該擋住整個應用，內建目錄仍然可用
+                    Err(error) => trace("歷史", &format!("匯入失敗：{error}")),
+                }
+            }
+
+            app.manage(state);
 
             inject::watch_foreground();
 

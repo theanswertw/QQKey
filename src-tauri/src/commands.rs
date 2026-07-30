@@ -2,6 +2,7 @@
 
 use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
+use crate::catalog::history::ImportReport;
 use crate::catalog::Candidate;
 use crate::hotkey::LAUNCHER_LABEL;
 use crate::state::AppState;
@@ -37,6 +38,22 @@ pub fn accept_candidate<R: Runtime>(
 
     // 注入成功才算數，免得把失敗的嘗試也拉高排序
     state.record_use(id)
+}
+
+/// 手動觸發一次歷史匯入，回傳這次掃描與過濾的統計。
+#[tauri::command]
+pub fn import_history(state: State<AppState>) -> Result<ImportReport, String> {
+    state.import_history()
+}
+
+#[tauri::command]
+pub fn history_import_enabled(state: State<AppState>) -> bool {
+    state.history_import_enabled()
+}
+
+#[tauri::command]
+pub fn set_history_import_enabled(state: State<AppState>, enabled: bool) -> Result<(), String> {
+    state.set_history_import_enabled(enabled)
 }
 
 /// 由系統匣或設定入口開啟設定視窗。
