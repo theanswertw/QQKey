@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { splitTemplate, type Candidate } from "../shared/types";
@@ -13,6 +13,8 @@ export default function Launcher() {
   const [refreshToken, setRefreshToken] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  /** Tab 補完剛改寫過輸入框，這一輪 render 後要把游標推到尾端 */
+  const caretToEnd = useRef(false);
 
   useEffect(() => {
     focusInput();
@@ -94,6 +96,20 @@ export default function Launcher() {
     itemRefs.current[selected]?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
+  /*
+   * 受控輸入框被程式改寫後，游標未必跟著移到新值的尾端；停在原處的話，
+   * 補完後接著打的字會插進命令中間。補完是唯一從外部改寫輸入框的路徑，
+   * 所以只在補完那一輪校正，不干擾使用者自己編輯時的游標位置。
+   */
+  useLayoutEffect(() => {
+    if (!caretToEnd.current) {
+      return;
+    }
+    caretToEnd.current = false;
+    const input = inputRef.current;
+    input?.setSelectionRange(input.value.length, input.value.length);
+  });
+
   const dismiss = () => {
     void invoke("hide_launcher");
   };
@@ -110,6 +126,31 @@ export default function Launcher() {
       setError(String(reason));
       focusInput();
     });
+  };
+
+  /**
+   * 把選取項目補進搜尋框。補的是會送出的那段前綴（截在第一個佔位符之前），
+   * 跟注入的內容一致——把 `{busid}` 也補進查詢字串只會讓下一次搜尋找不到東西。
+   *
+   * 補完不注入：使用者按 Tab 通常是要接著縮小範圍，或改成同系列的另一個命令。
+   */
+  const complete = (index: number) => {
+    const candidate = candidates[index];
+    if (!candidate) {
+      return;
+    }
+    const { prefix } = splitTemplate(candidate.template);
+    /*
+     * 前綴為空的樣板（`{cmd} --help`）補完等於清空查詢，候選框會換成一串
+     * 常用命令；已經補到底時再補一次則會白白把選取跳回第一筆。
+     * 兩種情況都是往回退，不如什麼都不做。
+     */
+    if (!prefix || prefix === query) {
+      return;
+    }
+    setQuery(prefix);
+    setError(null);
+    caretToEnd.current = true;
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -138,6 +179,16 @@ export default function Launcher() {
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setSelected((index) => Math.max(index - 1, 0));
+      return;
+    }
+    /*
+     * Tab 一律吃掉，連沒有候選時也是。候選框只有輸入框該拿焦點，讓 Tab
+     * 把焦點送到頁尾那顆設定按鈕上，接下來打的字就不會進搜尋框，
+     * 而畫面上完全看不出焦點跑到哪裡去了。
+     */
+    if (event.key === "Tab") {
+      event.preventDefault();
+      complete(selected);
       return;
     }
     if (event.key === "Enter") {
@@ -241,6 +292,7 @@ export default function Launcher() {
 
       <div className="launcher__footer">
         <span>↑↓ 移動</span>
+        <span>Tab 補完</span>
         <span>Alt+1–9 直選</span>
         <span>Enter 填入</span>
         <span>Esc 取消</span>
