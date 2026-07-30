@@ -199,6 +199,37 @@ pub fn open_log_dir<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> 
     Ok(())
 }
 
+/// 開啟外部連結——關於頁的 Email 與專案頁。
+///
+/// 比照 `open_log_dir` 交給 explorer，它會把連結轉給系統預設的處理程式
+/// （瀏覽器、郵件軟體），不必為了兩個連結多帶一個 plugin 進來。
+///
+/// 收的是前端傳進來的字串，所以放行條件要自己守：explorer 拿到本機路徑會開
+/// 檔案總管、拿到檔案會執行關聯程式，不設限等於在網頁那一端開了一道
+/// 「開啟任意本機東西」的門。關於頁需要的只有 `https://` 與 `mailto:`。
+#[tauri::command]
+pub fn open_external(target: String) -> Result<(), String> {
+    if !is_openable(&target) {
+        return Err(format!("不允許開啟這個連結：{target}"));
+    }
+    std::process::Command::new("explorer")
+        .arg(&target)
+        .spawn()
+        .map_err(|error| format!("開啟連結失敗：{error}"))?;
+    Ok(())
+}
+
+/// `open_external` 的放行條件。抽出來是為了測得到——真正開起來的那一步會叫出
+/// 瀏覽器，測不了。
+fn is_openable(target: &str) -> bool {
+    // 控制字元一律擋。夾了換行的參數 explorer 會怎麼解讀不好說，
+    // 而合法的連結裡本來就不該有。
+    if target.chars().any(char::is_control) {
+        return false;
+    }
+    target.starts_with("https://") || target.starts_with("mailto:")
+}
+
 #[tauri::command]
 pub fn set_secret_pattern(state: State<AppState>, pattern: String) -> Result<(), String> {
     state.set_secret_pattern(&pattern)
@@ -286,4 +317,39 @@ pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(),
         let _ = launcher.hide();
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_openable;
+
+    #[test]
+    fn allows_https_and_mailto() {
+        assert!(
+            is_openable("https://github.com/theanswertw/QQKey"),
+            "專案頁應該開得起來"
+        );
+        assert!(
+            is_openable("mailto:jeremy@jeremywen.com"),
+            "Email 應該開得起來"
+        );
+    }
+
+    #[test]
+    fn rejects_local_paths_and_other_schemes() {
+        assert!(
+            !is_openable(r"C:\Windows\System32\cmd.exe"),
+            "本機路徑不該經由這條路開啟"
+        );
+        assert!(!is_openable("file:///C:/"), "file: 不在放行名單內");
+        assert!(!is_openable("http://example.com"), "未加密的 http 不放行");
+    }
+
+    #[test]
+    fn rejects_control_chars_inside_an_allowed_scheme() {
+        assert!(
+            !is_openable("https://example.com\nC:\\Windows"),
+            "開頭合法但夾帶控制字元的連結不該放行"
+        );
+    }
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import AboutPanel from "./AboutPanel";
 import EntriesPanel from "./EntriesPanel";
 import GeneralPanel from "./GeneralPanel";
 
-type Tab = "entries" | "general";
+type Tab = "entries" | "general" | "about";
 
 interface Toast {
   kind: "error" | "notice";
@@ -42,13 +43,28 @@ export default function Settings() {
           >
             一般設定
           </button>
+          <button
+            role="tab"
+            aria-selected={tab === "about"}
+            className={tab === "about" ? "tab tab--active" : "tab"}
+            onClick={() => setTab("about")}
+          >
+            關於
+          </button>
         </nav>
       </header>
 
-      {tab === "entries" ? (
+      {tab === "entries" && (
         <EntriesPanel onError={(message) => setToast({ kind: "error", message })} />
-      ) : (
+      )}
+      {tab === "general" && (
         <GeneralPanel
+          onError={(message) => setToast({ kind: "error", message })}
+          onNotice={(message) => setToast({ kind: "notice", message })}
+        />
+      )}
+      {tab === "about" && (
+        <AboutPanel
           onError={(message) => setToast({ kind: "error", message })}
           onNotice={(message) => setToast({ kind: "notice", message })}
         />

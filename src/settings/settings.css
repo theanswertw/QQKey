@@ -738,3 +738,37 @@ code {
 .toast--notice {
   border-left: 3px solid var(--qq-accent);
 }
+
+/* ------------------------------------------------------------ 關於 */
+
+.about {
+  margin: 0;
+}
+
+.about__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+}
+
+/* 欄位名固定寬度。跟著文字伸縮的話，「版本」與「專案頁」兩列的值會左右錯開 */
+.about__label {
+  flex: none;
+  width: 68px;
+  font-size: 13px;
+  color: var(--qq-text-dim);
+}
+
+.about__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.about__mono {
+  font-family: var(--qq-mono);
+  font-size: 13px;
+}

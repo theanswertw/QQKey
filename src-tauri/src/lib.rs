@@ -172,7 +172,8 @@ pub fn run() {
             commands::set_history_import_enabled,
             commands::autostart_enabled,
             commands::set_autostart,
-            commands::open_log_dir
+            commands::open_log_dir,
+            commands::open_external
         ])
         .setup(|app| {
             let handle = app.handle();
