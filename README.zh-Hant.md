@@ -27,42 +27,21 @@ Windows 上的鍵盤啟動器——把命令**填入**你的命令列，而不�
 
 它從不幫你按 Enter。這正是重點：命令跑之前，你還是自己看過一遍。
 
-<!--
-  截圖 — 把圖片放進來之後，刪掉下面那段文字示意圖。
-  建議拍這幾張（見 docs/images/README.md）：
-    docs/images/launcher.png           候選框浮在 Windows Terminal 上
-    docs/images/settings-commands.png  設定 → 命令字詞
-    docs/images/settings-general.png   設定 → 一般設定
-  然後把這一行的註解解掉：
+<p align="center">
+  <img src="docs/images/launcher.zh-Hant.png" width="802"
+       alt="候選框貼齊 PowerShell 提示字元的輸入游標下方，列出三筆 usbipd 命令，{busid} 佔位符以灰字顯示">
+</p>
 
-  <p align="center"><img src="docs/images/launcher.png" alt="候選框貼齊 Windows Terminal 的輸入游標" width="720"></p>
--->
+在提示字元前按下 `Alt+Q`，打「掛載」，候選框就貼在游標下方。`{busid}` 是灰字提示，
+表示那裡要你自己填。
+
+對第一筆按 Enter，文字落進提示字元，截在佔位符之前：
 
 ```
-1 ─ 你正在任何一個視窗裡，話講到一半。
-
-      PS C:\> ▮
-
-2 ─ Alt+Q，打「掛載」。
-
-      ┌──────────────────────────────────────────────────────┐
-      │ ⌕  掛載                                              │
-      ├──────────────────────────────────────────────────────┤
-      │ 1  usbipd attach --wsl --busid {busid}         ★7    │
-      │    把 USB 裝置掛載到 WSL                             │
-      │ 2  usbipd bind --busid {busid}                 ★3    │
-      │    掛載前先共用裝置                                  │
-      │ 3  docker attach {container}                         │
-      ├──────────────────────────────────────────────────────┤
-      │ ↑↓ 移動 · Tab 補完 · Alt+1–9 直選 · Enter 填入       │
-      └──────────────────────────────────────────────────────┘
-
-3 ─ Enter。文字落進你的提示字元，截在佔位符之前。
-
-      PS C:\> usbipd attach --wsl --busid ▮
-
-    什麼都還沒執行。游標就在你該接手的地方。
+PS C:\> usbipd attach --wsl --busid ▮
 ```
+
+什麼都還沒執行。游標就在你該接手的地方，要不要按 Enter 是你的事。
 
 ## 特色
 

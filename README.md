@@ -28,42 +28,21 @@ you have to take over.
 
 It never presses Enter for you. That is the whole point: you still read the command before it runs.
 
-<!--
-  SCREENSHOTS — drop the images in and delete the sketch below.
-  Suggested shots (see docs/images/README.md):
-    docs/images/launcher.png           the launcher over a Windows Terminal window
-    docs/images/settings-commands.png  Settings → Commands
-    docs/images/settings-general.png   Settings → General
-  Then uncomment:
+<p align="center">
+  <img src="docs/images/launcher.png" width="802"
+       alt="The QQKey launcher pinned just under the caret of a PowerShell prompt, listing two usbipd commands with their {busid} placeholders greyed out">
+</p>
 
-  <p align="center"><img src="docs/images/launcher.png" alt="The QQKey launcher pinned to the caret in Windows Terminal" width="720"></p>
--->
+The interface above is in English and the query is `掛載`. Search keywords are the union of
+all six languages, so switching the interface never shrinks what you can find.
+
+Press Enter on that first entry and the text lands in the prompt, cut off before the placeholder:
 
 ```
-1 ─ You are mid-thought, in any window.
-
-      PS C:\> ▮
-
-2 ─ Alt+Q, and type "attach".
-
-      ┌──────────────────────────────────────────────────────┐
-      │ ⌕  attach                                            │
-      ├──────────────────────────────────────────────────────┤
-      │ 1  usbipd attach --wsl --busid {busid}         ★7    │
-      │    Attach a USB device to WSL                        │
-      │ 2  usbipd bind --busid {busid}                 ★3    │
-      │    Share a device before attaching                   │
-      │ 3  docker attach {container}                         │
-      ├──────────────────────────────────────────────────────┤
-      │ ↑↓ move · Tab complete · Alt+1–9 pick · Enter insert │
-      └──────────────────────────────────────────────────────┘
-
-3 ─ Enter. The text lands in your prompt, cut off before the placeholder.
-
-      PS C:\> usbipd attach --wsl --busid ▮
-
-    Nothing has run. The caret is where you take over.
+PS C:\> usbipd attach --wsl --busid ▮
 ```
+
+Nothing has run. The caret is where you take over, and whether to press Enter is up to you.
 
 ## Highlights
 
