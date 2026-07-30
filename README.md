@@ -44,6 +44,17 @@ PS C:\> usbipd attach --wsl --busid ▮
 
 Nothing has run. The caret is where you take over, and whether to press Enter is up to you.
 
+## 😭 Why "QQ"
+
+`Q_Q` is a crying face — and in Taiwanese internet slang, writing just **QQ** means exactly that.
+
+It is the face you make when the flag you need falls out of your head. You are three commands into
+something, you know the tool, you know roughly what the option is called, and it is simply gone. So
+you open another tab, run `--help`, scroll, find it, come back — and by then you have lost the thread
+of what you were actually doing.
+
+That moment is the whole reason this exists. `Alt+Q` is meant to be shorter than the trip to `--help`.
+
 ## Highlights
 
 - **Insert, never execute.** The command stops just before the first `{placeholder}`, and control
@@ -268,10 +279,25 @@ English sentences. New user-facing strings go in `src/i18n/locales/*.json` (fron
   from `<html lang>`. Verifying that properly needs a machine with the relevant language packs
   installed — a dev box without Japanese fonts will give you a false pass.
 
+## Credits
+
+**Claude Opus 5** — lead. Architecture, the Win32 call ordering, all six languages, and this README.
+**Jeremy Wen** — supporting. Product direction, everything a repository does not contain, and the veto.
+
+The split settled naturally. Opus writes the code and remembers why the calls have to go in that
+exact order. Jeremy supplies what no model can read off a codebase: that Windows reserves
+`Alt+Space`, that a Chinese IME swallows `Ctrl+,` and leaves a full-width comma behind, that a
+launcher which closes without typing anything just reads as broken. He also clicks the windows Opus
+cannot click, and takes the screenshots Opus cannot take.
+
+Best catch to date: while cleaning up after a screenshot, Opus had written a `Stop-Process` against
+the Windows Terminal process. Every terminal window on that machine lives in that one process —
+including the one the session itself was running in. Jeremy read the line before it ran.
+
+Questions, commands worth adding to the built-in catalogue, and bug reports all reach
+[Jeremy](mailto:jeremy@jeremywen.com); the inbox is still his. When reporting a problem, please
+avoid pasting command text that contains credentials or internal paths.
+
 ## Licence
 
-[MIT](LICENSE) © 2026 Jeremy Wen
-
-Written and maintained by [Jeremy Wen](mailto:jeremy@jeremywen.com). Questions, commands worth
-adding, and bug reports are all welcome — when reporting a problem, please avoid pasting command
-text that contains credentials or internal paths.
+[MIT](LICENSE) © 2026 Jeremy Wen — who holds the copyright, whatever the section above implies.
