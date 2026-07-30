@@ -13,6 +13,7 @@ export default function GeneralPanel({
   const [shortcut, setShortcut] = useState("");
   const [pattern, setPattern] = useState("");
   const [report, setReport] = useState<ImportReport | null>(null);
+  const [autostart, setAutostart] = useState(false);
 
   const reload = async () => {
     try {
@@ -20,6 +21,7 @@ export default function GeneralPanel({
       setSettings(result);
       setShortcut(result.shortcut);
       setPattern(result.secretPattern);
+      setAutostart(await invoke<boolean>("autostart_enabled"));
     } catch (error) {
       onError(String(error));
     }
@@ -88,6 +90,27 @@ export default function GeneralPanel({
             套用
           </button>
         </div>
+      </section>
+
+      <section className="section">
+        <h2 className="section__title">啟動</h2>
+        <p className="section__note">
+          QQKey 平常沒有可見視窗，靠系統匣圖示常駐。左鍵單擊圖示可叫出候選框，
+          右鍵開選單。
+        </p>
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={autostart}
+            onChange={(event) =>
+              void run(
+                () => invoke("set_autostart", { enabled: event.target.checked }),
+                event.target.checked ? "已設為開機自動啟動" : "已取消開機自動啟動",
+              )
+            }
+          />
+          <span>開機時自動啟動</span>
+        </label>
       </section>
 
       <section className="section">

@@ -1,6 +1,7 @@
 //! 前端可呼叫的 IPC 指令。
 
 use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri_plugin_autostart::ManagerExt;
 
 use crate::catalog::history::ImportReport;
 use crate::catalog::{Candidate, EntryPage, EntryPatch, Source};
@@ -108,7 +109,28 @@ pub fn set_shortcut<R: Runtime>(
     shortcut: String,
 ) -> Result<(), String> {
     crate::hotkey::rebind(&app, &state.shortcut(), &shortcut)?;
-    state.set_shortcut(&shortcut)
+    state.set_shortcut(&shortcut)?;
+    crate::tray::refresh_tooltip(&app, &shortcut);
+    Ok(())
+}
+
+/// 是否已設定開機自動啟動。
+#[tauri::command]
+pub fn autostart_enabled<R: Runtime>(app: tauri::AppHandle<R>) -> Result<bool, String> {
+    app.autolaunch()
+        .is_enabled()
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn set_autostart<R: Runtime>(app: tauri::AppHandle<R>, enabled: bool) -> Result<(), String> {
+    let manager = app.autolaunch();
+    if enabled {
+        manager.enable()
+    } else {
+        manager.disable()
+    }
+    .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -146,7 +168,7 @@ pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(),
             let _ = window.set_focus();
         }
         None => {
-            WebviewWindowBuilder::new(
+            let window = WebviewWindowBuilder::new(
                 app,
                 SETTINGS_LABEL,
                 WebviewUrl::App("settings.html".into()),
@@ -156,6 +178,16 @@ pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(),
             .min_inner_size(720.0, 480.0)
             .build()
             .map_err(|error| error.to_string())?;
+
+            // 關掉設定視窗只是收起來。QQKey 是常駐工具，關窗不等於結束，
+            // 保留視窗也省得下次開啟又重新載入一次。
+            let handle = window.clone();
+            window.on_window_event(move |event| {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = handle.hide();
+                }
+            });
         }
     }
 

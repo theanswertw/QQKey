@@ -7,6 +7,7 @@ mod ranking;
 mod state;
 mod store;
 mod template;
+mod tray;
 
 use tauri::{Manager, WindowEvent};
 
@@ -28,6 +29,10 @@ pub(crate) fn trace(scope: &str, message: &str) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .invoke_handler(tauri::generate_handler![
             commands::search_candidates,
             commands::hide_launcher,
@@ -45,7 +50,9 @@ pub fn run() {
             commands::set_shortcut,
             commands::set_secret_pattern,
             commands::import_history,
-            commands::set_history_import_enabled
+            commands::set_history_import_enabled,
+            commands::autostart_enabled,
+            commands::set_autostart
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -78,6 +85,11 @@ pub fn run() {
             }
 
             let shortcut = state.shortcut();
+            if let Err(error) = tray::setup(handle, &shortcut) {
+                // 系統匣是唯一的常駐入口，建不起來要讓使用者知道
+                eprintln!("[QQKey] 系統匣建立失敗：{error}");
+            }
+
             if let Err(error) = hotkey::register(handle, &shortcut) {
                 // 快捷鍵被佔用時不該讓整個應用起不來——設定畫面可以改綁，
                 // 但那扇門也得打得開，所以這裡只記錄不中止。
