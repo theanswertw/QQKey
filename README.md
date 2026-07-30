@@ -1,169 +1,298 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128.png" width="96" alt="QQKey">
+
 # QQKey
 
-在任何視窗按下 **Alt+Q** 叫出候選框，鍵入關鍵字即列出對應命令，以方向鍵或 `Alt+數字` 選取後，
-命令會**填入**原本的命令列（不執行），游標停在第一個待填參數處。常用命令依 frecency 自動上浮。
+**Find the command. Have it typed for you. Press Enter yourself.**
 
-為的是不必再為了 `usbipd`、`git`、`netsh` 這些工具的子命令與旗標去翻 `--help`。
+A keyboard launcher for Windows that *inserts* commands into your prompt instead of running them.
 
-## 現況
+<img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-3da639">
+<img alt="Platform: Windows 10 / 11" src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?logo=windows&logoColor=white">
+<img alt="Tauri v2" src="https://img.shields.io/badge/Tauri-v2-24c8db?logo=tauri&logoColor=white">
+<img alt="Rust 1.92" src="https://img.shields.io/badge/Rust-1.92-dea584?logo=rust&logoColor=white">
+<img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
+<img alt="UI in 6 languages" src="https://img.shields.io/badge/UI-6%20languages-8957e5">
 
-| 里程碑 | 狀態 | 內容 |
-|---|---|---|
-| M0 | ✅ | caret 定位驗證（Windows Terminal 可精準定位） |
-| M1 | ✅ | Tauri 骨架、雙視窗、全域快捷鍵 Alt+Q |
-| M2 | ✅ | 焦點還原與 `SendInput` 文字注入 |
-| M3 | ✅ | 候選框貼齊輸入游標 |
-| M4 | ✅ | 命令目錄、模糊搜尋、frecency 排序 |
-| M5 | ✅ | PSReadLine 歷史學習與機密過濾 |
-| M6 | ✅ | 字詞設定畫面 |
-| M7 | ✅ | 系統匣、開機自啟、封裝 |
-| M8 | ✅ | 多語言（繁中／日／英／法／德／韓） |
+**English** · [繁體中文](README.zh-Hant.md)
 
-內建目錄涵蓋 **usbipd、git、wsl、netsh、docker、winget、npm、cargo** 共 104 筆命令，
-六個語言的說明與搜尋關鍵字都齊備。
+</div>
 
-啟動時會從 PSReadLine 歷史學習你實際用過的命令，出現次數越多初始排序越前面。
-匯入採增量方式，只讀上次之後新增的部分。
+---
 
-### 多語言
+`usbipd`, `git`, `netsh`, `docker` — dozens of subcommands and flags that never quite stick, so
+every time means another trip through `--help`. QQKey lets you search those commands by keywords
+in your own language and puts the result in your command line, with the caret parked exactly where
+you have to take over.
 
-介面支援 **繁體中文、日本語、English、Français、Deutsch、한국어**。首次啟動依
-Windows 的顯示語言自動套用，也可以在設定畫面手動指定；換了語言之後候選框、設定
-畫面、系統匣選單與內建命令的說明會**立即**一起換掉，不必重新啟動。
+It never presses Enter for you. That is the whole point: you still read the command before it runs.
 
-搜尋關鍵字是**六個語言的聯集**，所以介面設成英文的時候，輸入「掛載」一樣找得到
-`usbipd attach --wsl`——搜尋能力不會因為換了介面語言而縮小。
+<!--
+  SCREENSHOTS — drop the images in and delete the sketch below.
+  Suggested shots (see docs/images/README.md):
+    docs/images/launcher.png           the launcher over a Windows Terminal window
+    docs/images/settings-commands.png  Settings → Commands
+    docs/images/settings-general.png   Settings → General
+  Then uncomment:
 
-## 技術架構
+  <p align="center"><img src="docs/images/launcher.png" alt="The QQKey launcher pinned to the caret in Windows Terminal" width="720"></p>
+-->
 
-- **後端**：Rust + Tauri v2。全域快捷鍵走 `tauri-plugin-global-shortcut`；
-  caret 定位與文字注入直接呼叫 Win32（`windows` crate）。
-- **前端**：React + TypeScript + Vite，兩個入口對應兩個 Tauri 視窗
-  （`launcher` 無邊框透明置頂候選框、`settings` 字詞設定畫面）；i18next + react-i18next。
-- **資料**：SQLite，存放於 `%APPDATA%\com.jeremywen.qqkey\qqkey.db`，不對外傳送。
-  候選池啟動時全載入記憶體，每次敲鍵的搜尋都不必再碰資料庫。
+```
+1 ─ You are mid-thought, in any window.
+
+      PS C:\> ▮
+
+2 ─ Alt+Q, and type "attach".
+
+      ┌──────────────────────────────────────────────────────┐
+      │ ⌕  attach                                            │
+      ├──────────────────────────────────────────────────────┤
+      │ 1  usbipd attach --wsl --busid {busid}         ★7    │
+      │    Attach a USB device to WSL                        │
+      │ 2  usbipd bind --busid {busid}                 ★3    │
+      │    Share a device before attaching                   │
+      │ 3  docker attach {container}                         │
+      ├──────────────────────────────────────────────────────┤
+      │ ↑↓ move · Tab complete · Alt+1–9 pick · Enter insert │
+      └──────────────────────────────────────────────────────┘
+
+3 ─ Enter. The text lands in your prompt, cut off before the placeholder.
+
+      PS C:\> usbipd attach --wsl --busid ▮
+
+    Nothing has run. The caret is where you take over.
+```
+
+## Highlights
+
+- **Insert, never execute.** The command stops just before the first `{placeholder}`, and control
+  characters are stripped on the way out — a stray `\r\n` reaching a terminal *is* an Enter press,
+  so that filter is the last line of defence.
+- **Appears at the caret.** The launcher pins itself to the text cursor of the window you were
+  typing in, not to the middle of the screen. Three layers of fallback, then screen-edge clamping.
+- **Works in any window.** Focus is remembered before the launcher shows, restored afterwards, and
+  the text is delivered with `SendInput`. Terminals, editors, browser address bars, dialog boxes.
+- **Frecency ordering.** Fuzzy match score × usage weight, with a 30-day half-life. The commands
+  you actually use float to the top; the number you see (`★7`) is the same one the sort uses.
+- **Learns from your history.** Commands are imported incrementally from your PSReadLine history —
+  filtered first, so lines that look like they carry credentials never reach the database.
+- **104 built-in commands** for usbipd, git, wsl, netsh, docker, winget, npm and cargo, each with a
+  description and search keywords in all six UI languages.
+- **Six-language UI** — 繁體中文, 日本語, English, Français, Deutsch, 한국어 — switched live,
+  no restart. Search keywords are the *union* of all six, so setting the UI to English does not
+  cost you the ability to find `usbipd attach --wsl` by typing 掛載.
+- **Local only.** One SQLite file in `%APPDATA%`. Nothing is sent anywhere, and there is no
+  network code to audit.
+
+## Install
+
+Windows 10 or 11, x64. Grab an installer from the
+[Releases page](https://github.com/theanswertw/QQKey/releases) — either
+`QQKey_x.y.z_x64_en-US.msi` or `QQKey_x.y.z_x64-setup.exe`. If no release has been published yet,
+[build from source](#development).
+
+QQKey then lives in the tray with no visible window. Left-click the icon to open the launcher,
+right-click for the menu (launcher / settings / quit). *Start automatically at sign-in* is a
+checkbox in the settings window, off by default.
+
+## Keys
+
+| Key | Action |
+|---|---|
+| `Alt+Q` | Open / dismiss the launcher (rebindable) |
+| `Alt+Shift+Q` | Open the settings window |
+| `↑` `↓` | Move the selection |
+| `Tab` | Complete the selection into the search box — completes only, does not insert |
+| `Alt+1`–`Alt+9` | Pick that entry directly |
+| `Enter` | Insert into the command line |
+| `Esc` | Dismiss, and hand focus back to where you were |
+
+<details>
+<summary>Why these keys, specifically</summary>
+
+**`Alt+Q`, not `Alt+Space`.** Windows reserves `Alt+Space` for the window menu; inside Windows
+Terminal it takes an extra settings change before the app ever sees it.
+
+**Direct pick on `Alt`, not on bare digits.** Command names carry digits of their own — `7z`,
+`base64`, `md5sum`, `python3`. The number row has to stay available for the query.
+
+**Settings on a global shortcut, not a key inside the launcher.** A Chinese IME swallows
+combinations like `Ctrl+,`, eating the modifier and leaving a full-width comma behind.
+
+**Enter and `↑↓` are handed to the IME while composing.** Typing 掛載 in Bopomofo means pressing
+Enter to confirm the candidate — and confirming a character should not fire off a command.
+
+</details>
+
+## Settings
+
+`Alt+Shift+Q`, or the tray menu. Three tabs:
+
+**Commands** — search, filter by source, add / edit / delete, enable / disable in bulk, reset the
+usage statistics of a single entry. Editing a built-in entry turns it into your own, so later
+catalogue updates leave your version alone.
+
+**General** — UI language · start at sign-in · rebind the shortcut · history learning and a manual
+import · the credential-filter pattern · launcher background opacity · share commands as JSON
+through the clipboard · full backup and restore · open the log folder.
+
+**About** — version, licence, author, contact.
+
+> **Sharing and backup are different things.** Sharing carries only the commands you added or
+> edited yourself: the built-in catalogue is already on the other machine, and anything learnt from
+> history may carry work content. A backup carries *everything* — all entries, the accumulated
+> usage statistics and every setting — because those thousands of learnt entries travel no other
+> way. Restoring **replaces** what is there now.
+
+## Privacy and security
+
+QQKey is a keyboard automation tool by nature, and it reads your shell history. Both deserve to be
+stated plainly.
+
+- **It synthesises keystrokes.** Text is delivered through `SendInput`, and caret location uses UI
+  Automation. That is the same surface automation tooling uses, so an EDR product may take an
+  interest. Read the code before you deploy it, and check it against your organisation's policy.
+- **History lines that look like secrets are dropped whole.** Anything matching `password`,
+  `token`, `secret`, `credential`, `ConvertTo-SecureString` and friends — or holding a run of 20+
+  characters after `=` or `:` — is skipped entirely. It never reaches the database and never shows
+  up in the launcher. Only the *number* of skipped lines is reported; their contents are not
+  recorded anywhere. The filter deliberately over-blocks: a command caught by mistake can be added
+  back by hand, while a credential that slips through stays in the database.
+- **Everything stays on the machine.** `%APPDATA%\com.jeremywen.qqkey\qqkey.db`. History learning
+  can be switched off entirely.
+- **The log records neither window titles nor inserted text.** It lives in
+  `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\` — note: Local, not Roaming — and tracks how far each
+  step got, because a tray-only app has nowhere else to explain itself. Foreground tracking fires
+  on every window switch, so logging titles there would amount to writing down everything you
+  opened all day. It stores the window handle and nothing else.
+
+## How it works
+
+Getting a keypress to end up as text in someone else's window is a strictly ordered sequence of
+Win32 calls:
+
+1. **`inject.rs`** installs a `SetWinEventHook` at startup and tracks the foreground window
+   *continuously*. Querying `GetForegroundWindow` at the moment the hotkey fires is too late —
+   QQKey's own hidden window can still be holding the foreground right after launch.
+2. **`hotkey.rs`** remembers that window, positions the launcher, *then* shows it. The first two
+   have to happen before `show()`: once the launcher is visible it *is* the foreground window, and
+   the target's caret is no longer reachable.
+3. **`caret.rs`** locates the caret through three layers — `GetGUIThreadInfo`, then UI Automation
+   `TextPattern`, then the bottom-left corner of the window — and clamps the result to the screen,
+   flipping above the caret when there is no room below.
+4. On accept, **`template.rs`** truncates at the first placeholder and strips control characters,
+   **`inject.rs`** restores focus (`SetForegroundWindow`, falling back to `AttachThreadInput` when
+   the foreground lock refuses), waits 40 ms, and sends the string as UTF-16 through `SendInput`.
+5. Usage is recorded **only if the insert succeeded** — a failed attempt should not promote
+   anything. On failure the launcher comes back with the reason written inside it, because a
+   launcher that closes without typing anything just reads as a broken tool.
 
 ```
 src/
-├─ launcher/   候選框 UI
-├─ settings/   字詞設定畫面
-├─ i18n/       語系解析與六個語系檔
-└─ shared/     共用型別
+├─ launcher/     the candidate box
+├─ settings/     the settings window
+├─ i18n/         locale resolution + six locale files
+└─ shared/       types shared with the backend
 src-tauri/
-├─ resources/catalog/*.json   內建命令目錄（隨執行檔內嵌，六語言）
+├─ resources/catalog/*.json    built-in catalogue, embedded at compile time
 └─ src/
-   ├─ hotkey.rs    全域快捷鍵與候選框顯示／隱藏
-   ├─ i18n.rs      系統語系偵測與後端使用者可見字串
-   ├─ caret.rs     游標定位（三層 fallback）與螢幕邊界夾制
-   ├─ inject.rs    前景追蹤、焦點還原 + SendInput 注入
-   ├─ template.rs  `{佔位符}` 截斷
-   ├─ catalog/     候選命令型別、內建目錄與歷史學習
-   ├─ store.rs     SQLite 儲存與 frecency 持久化
-   ├─ ranking.rs   模糊比對 × frecency 排序
-   ├─ state.rs     資料庫與記憶體候選池
-   └─ commands.rs  前端可呼叫的 IPC
+   ├─ hotkey.rs     global shortcut, show / hide
+   ├─ caret.rs      caret location (three fallbacks) + screen clamping
+   ├─ inject.rs     foreground tracking, focus restore, SendInput
+   ├─ template.rs   {placeholder} truncation and sanitising
+   ├─ catalog/      candidate types, built-in catalogue, history learning
+   ├─ store.rs      SQLite, schema migrations, frecency persistence
+   ├─ ranking.rs    fuzzy match × frecency
+   ├─ state.rs      database handle + in-memory candidate pool
+   ├─ i18n.rs       system locale detection, backend user-facing strings
+   └─ commands.rs   IPC surface
 spike/
-├─ caret-probe/  caret 定位驗證（M0）
-└─ input-probe/  SendInput 與快捷鍵驗證
+├─ caret-probe/     caret location experiments (and their findings)
+└─ input-probe/     SendInput and hotkey verification
 ```
 
-## 安裝
+The candidate pool lives in memory (`RwLock<Vec<Entry>>`), so a keystroke's worth of searching
+never touches the database.
 
-從 `src-tauri/target/release/bundle/` 取安裝檔：
+## Development
 
-- `msi/QQKey_0.1.0_x64_en-US.msi`
-- `nsis/QQKey_0.1.0_x64-setup.exe`
-
-安裝後 QQKey 常駐在系統匣，平常沒有可見視窗。左鍵單擊系統匣圖示可叫出候選框，
-右鍵開選單（叫出候選框／設定／結束）。開機自動啟動可在設定畫面開啟。
-
-## 開發
+Requires Rust (the toolchain is pinned to 1.92 in `rust-toolchain.toml`), Node.js, and the
+[Tauri v2 Windows prerequisites](https://v2.tauri.app/start/prerequisites/).
 
 ```powershell
 npm install
-npm run tauri dev      # 開發模式，支援熱重載
-npm run tauri build    # 產出 MSI / NSIS 安裝檔
+npm run tauri dev      # dev mode, hot reload, vite on :1420
+npm run tauri build    # MSI + NSIS installers under src-tauri/target/release/bundle/
+npm run build          # frontend only — also the only TypeScript type check (tsc && vite build)
 ```
 
 ```powershell
 cd src-tauri
-cargo test             # 後端單元測試
+cargo test                     # 86 backend unit tests
+cargo test flips_above         # one test — names are descriptive sentences, usable as filters
+cargo test --lib caret::       # one module
 ```
 
-> 重新啟動 QQKey 時，前一個程序要完全結束後全域快捷鍵才會釋放。
-> 太快啟動新的會註冊失敗，中間留幾秒。
+> When restarting QQKey, the previous process has to exit fully before the global shortcut is
+> released. Start the new one too quickly and registration fails — and release builds have no
+> console to tell you so.
 
-## 快捷鍵
+There is no frontend test suite; type checking is `npm run build`, and the type annotation in
+`src/i18n/resources.ts` is the only thing keeping the six locale files in step.
 
-| 按鍵 | 動作 |
-|---|---|
-| `Alt+Q` | 叫出／收起候選框（可在設定畫面改綁） |
-| `Alt+Shift+Q` | 開啟設定畫面 |
-| `↑` `↓` | 移動選取 |
-| `Tab` | 把選取項目補進搜尋框（只補完，不填入） |
-| `Alt+1`–`Alt+9` | 直接選取對應項目 |
-| `Enter` | 填入命令列 |
-| `Esc` | 取消 |
+## Contributing
 
-直選掛在 `Alt` 上而不是裸數字鍵，因為命令名稱本身就常帶數字
-（`7z`、`base64`、`md5sum`、`python3`），數字鍵要留給查詢字串。
+Issues and pull requests are welcome. The most useful contribution is usually a **command worth
+adding to the built-in catalogue** — especially for a tool whose flags you have had to look up more
+than twice.
 
-選擇 Alt+Q 而非 Alt+Space，是因為後者是 Windows 系統視窗選單的保留鍵，
-在 Windows Terminal 中需要另外改設定才能傳遞給應用程式。
+Adding one:
 
-設定入口做成全域快捷鍵而非候選框裡的按鍵，是因為中文輸入法會攔截
-`Ctrl+,` 這類組合，把修飾鍵吃掉只留下一個全形逗號。
+1. Add the entry to the right file under `src-tauri/resources/catalog/`, or add a new file *and*
+   register it in the `CATALOGS` list in `catalog/builtin.rs` — the catalogue is embedded into the
+   executable, not read at runtime.
+2. `description` and `keywords` are maps over all six languages (`zh-Hant` `ja` `en` `fr` `de`
+   `ko`). `template` is written once: it is the database's UNIQUE key, and duplicating it six times
+   fails silently.
+3. `cargo test` — the catalogue tests reject duplicate templates, unparsable files and any missing
+   translation.
 
-## 設定畫面
+Keywords in your own language are what make the search work, so a translation you would actually
+type beats a literal one.
 
-`Alt+Shift+Q` 開啟，分三頁：
+`CLAUDE.md` in the repository root is the architecture guide: the invariants, why things are
+ordered the way they are, and what was deliberately *not* done. Worth reading before a larger
+change. It is written in Traditional Chinese.
 
-- **命令字詞**：搜尋、依來源篩選、新增／編輯／刪除、啟用停用（可批次）、
-  清除單筆使用統計。編輯過的內建條目會轉為自訂，之後更新版本不會被蓋回去。
-- **一般設定**：介面語言、開機自啟、快捷鍵改綁、歷史學習開關與手動匯入、機密過濾規則、
-  透過剪貼簿以 JSON 分享自訂命令（只含自己新增或編輯過的，
-  內建目錄對方也有，歷史學來的可能夾帶工作內容，都不會被匯出）、
-  完整備份與還原、開啟日誌資料夾。
-- **關於**：版本、授權、作者簡介與聯絡方式（Email、專案頁）。
+Code conventions: comments, docs and UI copy are in Traditional Chinese; test names are descriptive
+English sentences. New user-facing strings go in `src/i18n/locales/*.json` (frontend) or the
+`messages!` macro in `i18n.rs` (backend) — all six languages at once, in both cases.
 
-**分享**與**備份**是兩件事：分享只含自訂命令，備份則帶走全部條目、使用統計與
-所有設定——歷史學來的那上千筆只有備份帶得走。還原會取代目前的全部資料。
+## Known limitations
 
-## 圖示
+- **The launcher enters IME composition mode when a Chinese IME is active.** Shared behaviour among
+  Windows applications; switching input mode is manual for now. Disabling the IME outright is not
+  an option — searching by Chinese keywords is a feature.
+- **Entries you have edited stay in the language you edited them in.** Deliberate: overwriting them
+  on a language switch would break the "edited entries are never overwritten" invariant, which
+  amounts to silently destroying the description you wrote. Delete the entry to get the built-in
+  version back on the next sync.
+- **The startup-failure dialog follows the Windows display language**, not the one picked in
+  settings. At that point the database is not open yet, so there is nothing to read the setting from.
+- **`restore()` overwrites the shortcut and opacity settings without re-registering or pushing
+  them.** They apply after a restart. Known gap, not yet fixed.
+- **`rusqlite` is pinned to 0.37.** 0.40 pulls in `libsqlite3-sys` 0.38, whose build script uses
+  the unstable `cfg_select` and does not compile on Rust 1.92 stable.
+- The CSS font stack deliberately names no CJK font, leaving Chromium to do language-aware fallback
+  from `<html lang>`. Verifying that properly needs a machine with the relevant language packs
+  installed — a dev box without Japanese fonts will give you a false pass.
 
-`src-tauri/icons/source.png` 是 1024×1024 的來源檔，其餘尺寸與 `.ico`／`.icns`
-由它產生。要換圖示時替換來源檔後執行：
+## Licence
 
-```powershell
-npm run tauri icon src-tauri/icons/source.png
-```
+[MIT](LICENSE) © 2026 Jeremy Wen
 
-圖案取自產品本身的隱喻——發光的輸入游標，底下貼著候選框。
-
-## 已知限制
-
-- 候選框在中文輸入法模式下打字會進入注音組字狀態。這是 Windows 應用的
-  共同行為，目前需自行切換中英。搜尋支援中文關鍵字，所以不宜直接停用輸入法。
-- 換語言之後，**你自己編輯過的條目會停在原本的語言**。那是刻意的：編輯過的條目
-  不該被內建目錄蓋回去，為了換語言而覆寫等於毀掉你自己寫的說明。想拿回內建版本
-  就把那一筆刪掉，下次同步會重建回來。
-- 啟動失敗對話框只認 Windows 的**顯示語言**，不認設定畫面裡選的那一個——
-  那個時間點資料庫還沒開起來，讀不到設定。
-
-## 注意事項
-
-- QQKey 使用 `SendInput` 與 UI Automation，行為近似自動化工具。
-  部署前請自行審查程式碼，並確認符合公司資安政策；如遭 EDR 攔截，請洽 IT 部門。
-- QQKey 會讀取 PowerShell 歷史紀錄以學習常用命令。歷史中可能夾帶憑證，
-  匯入前一律以規則過濾——命中 `password`、`token`、`secret`、`credential`、
-  `ConvertTo-SecureString` 等樣式，或 `=`／`:` 後接 20 字元以上長字串的行，
-  整行略過，不會進資料庫也不會出現在候選框。略過的**筆數**會回報，內容不會被記錄。
-  過濾採寧可誤殺的策略：誤殺的命令可以自己補回來，漏放的憑證會一直留在資料庫裡。
-- 所有資料僅存於本機 `%APPDATA%\com.jeremywen.qqkey\`，不對外傳送。
-  歷史匯入可在設定畫面關閉（M6）。
-- 診斷日誌寫在 `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\`（與資料庫不同層），
-  可從設定畫面開啟。日誌不記錄視窗標題，也不記錄填入的內容。
-
-## 授權
-
-MIT License，見 [LICENSE](LICENSE)。
+Written and maintained by [Jeremy Wen](mailto:jeremy@jeremywen.com). Questions, commands worth
+adding, and bug reports are all welcome — when reporting a problem, please avoid pasting command
+text that contains credentials or internal paths.
