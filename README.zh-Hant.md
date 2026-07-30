@@ -76,8 +76,12 @@ QQKey 就是為那一刻做的。`Alt+Q` 該比跑一趟 `--help` 更快。
 
 Windows 10 或 11，x64。到
 [Releases 頁面](https://github.com/theanswertw/QQKey/releases)取安裝檔——
-`QQKey_x.y.z_x64_en-US.msi` 或 `QQKey_x.y.z_x64-setup.exe` 任一。若尚未發佈版本，
-請[自行建置](#開發)。
+`QQKey_x.y.z_x64_en-US.msi` 或 `QQKey_x.y.z_x64-setup.exe` 任一。
+
+安裝檔**未經程式碼簽章**，所以 SmartScreen 會顯示「Windows 已保護您的電腦」，把安裝按鈕
+藏在「其他資訊 → 仍要執行」後面。任何來自 Windows 沒見過的發行者的未簽章程式都是這樣，
+不代表檔案有問題——每個 release 都附上 SHA-256，可以核對下載到的是不是發佈出來的那一份；
+[自行建置](#開發)產出的也是同樣這兩個安裝檔。
 
 安裝後 QQKey 常駐在系統匣，平常沒有可見視窗。左鍵單擊圖示叫出候選框，右鍵開選單
 （叫出候選框／設定／結束）。開機自動啟動是設定畫面裡的一個選項，預設關閉。

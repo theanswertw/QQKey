@@ -80,8 +80,13 @@ That moment is the whole reason this exists. `Alt+Q` is meant to be shorter than
 
 Windows 10 or 11, x64. Grab an installer from the
 [Releases page](https://github.com/theanswertw/QQKey/releases) — either
-`QQKey_x.y.z_x64_en-US.msi` or `QQKey_x.y.z_x64-setup.exe`. If no release has been published yet,
-[build from source](#development).
+`QQKey_x.y.z_x64_en-US.msi` or `QQKey_x.y.z_x64-setup.exe`.
+
+The installers are **not code-signed**, so SmartScreen will show *"Windows protected your PC"* and
+hide the install button behind **More info → Run anyway**. That is what Windows does with any
+unsigned binary from a publisher it has not seen before, not a sign that the file is wrong — every
+release lists SHA-256 hashes if you want to check the download against what was published, and
+[building from source](#development) produces the same two installers.
 
 QQKey then lives in the tray with no visible window. Left-click the icon to open the launcher,
 right-click for the menu (launcher / settings / quit). *Start automatically at sign-in* is a
