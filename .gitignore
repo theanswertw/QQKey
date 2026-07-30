@@ -15,6 +15,10 @@ dist-ssr
 # Rust 編譯輸出（src-tauri 與 spike/*）
 target/
 
+# tauri icon 會一併產生行動版圖示，本專案只做 Windows 桌面版
+src-tauri/icons/android/
+src-tauri/icons/ios/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

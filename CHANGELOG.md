@@ -56,6 +56,8 @@
 - **M7**：開機自動啟動，於設定畫面開關。
 - **M7**：關閉設定視窗改為收起而非銷毀——QQKey 是常駐工具，關窗不等於結束。
 - **M7**：`npm run tauri build` 產出 MSI 與 NSIS 安裝檔。
+- 應用程式圖示：發光的輸入游標貼著下方的候選框，取自產品本身的隱喻。
+  來源檔為 `src-tauri/icons/source.png`，其餘尺寸由它產生。
 
 ### Fixed
 
@@ -74,4 +76,3 @@
   用了 unstable 的 `cfg_select`，在 Rust 1.92 stable 上編不過。
 - 重新啟動 QQKey 時，前一個程序要完全結束後全域快捷鍵才會釋放。
   太快啟動新的會註冊失敗，且 release 版沒有 console 可以看到錯誤訊息。
-- 應用程式圖示仍是 Tauri 預設圖示，尚未客製。
