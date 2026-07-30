@@ -1,4 +1,4 @@
-//! SQLite 儲存。資料庫放在 `%APPDATA%\QQKey\qqkey.db`，不對外傳送。
+//! SQLite 儲存。資料庫放在 `%APPDATA%\com.example.qqkey\qqkey.db`，不對外傳送。
 
 use std::path::Path;
 use std::sync::Mutex;
