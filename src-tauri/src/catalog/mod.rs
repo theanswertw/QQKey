@@ -26,6 +26,15 @@ impl Source {
         }
     }
 
+    /// 寫回資料庫用的字串，與 `parse()` 互為反向。
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Source::User => "user",
+            Source::Builtin => "builtin",
+            Source::History => "history",
+        }
+    }
+
     pub fn priority(self) -> u8 {
         match self {
             Source::User => 2,
@@ -75,24 +84,32 @@ pub struct NewEntry {
 }
 
 /// 傳給前端的候選項目。
+///
+/// 欄位目前都是單字，`camelCase` 轉換後長得一樣——但標上去是為了日後：
+/// 加一個 `last_used` 而忘了這件事的話，Rust 送 `last_used`、TS 寫 `lastUsed`，
+/// `cargo build` 與 `tsc` 都不會有意見，執行期才變成 undefined。
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Candidate {
     pub id: i64,
     pub template: String,
     pub description: Option<String>,
     pub source: Source,
-    /// frecency 累計分數，供 UI 顯示常用程度
+    /// 衰減到當下的 frecency 分數，供 UI 顯示常用程度
     pub score: f64,
 }
 
-impl From<&Entry> for Candidate {
-    fn from(entry: &Entry) -> Self {
+impl Candidate {
+    /// 分數要衰減到「現在」才有意義。顯示未衰減的原始值，會讓一個三個月
+    /// 沒碰過的命令標著 ★10 卻排在 ★3 的後面——使用者看到的數字解釋不了
+    /// 他看到的順序。
+    pub fn from_entry(entry: &Entry, now: i64) -> Self {
         Candidate {
             id: entry.id,
             template: entry.template.clone(),
             description: entry.description.clone(),
             source: entry.source,
-            score: entry.score,
+            score: crate::ranking::decay(entry.score, entry.last_used, now),
         }
     }
 }
@@ -113,8 +130,10 @@ pub struct EntryView {
     pub last_used: Option<i64>,
 }
 
-impl From<&Entry> for EntryView {
-    fn from(entry: &Entry) -> Self {
+impl EntryView {
+    /// 同 `Candidate::from_entry`：`score` 是衰減到當下的值，
+    /// 設定畫面顯示的數字才解釋得了候選框裡的排序。
+    pub fn from_entry(entry: &Entry, now: i64) -> Self {
         EntryView {
             id: entry.id,
             template: entry.template.clone(),
@@ -122,7 +141,7 @@ impl From<&Entry> for EntryView {
             keywords: entry.keywords.clone(),
             source: entry.source,
             enabled: entry.enabled,
-            score: entry.score,
+            score: crate::ranking::decay(entry.score, entry.last_used, now),
             boost: entry.boost,
             last_used: entry.last_used,
         }
@@ -179,3 +198,54 @@ pub struct SharedFile {
 
 /// 目前的匯出格式版本。
 pub const SHARED_FILE_VERSION: u32 = 1;
+
+/// 匯入前的試算，讓使用者知道按下去會發生什麼事。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportPreview {
+    pub total: usize,
+    /// 本機還沒有的
+    pub added: usize,
+    /// 會覆寫既有內容的
+    pub overwritten: usize,
+}
+
+/// 備份檔裡的一筆命令。
+///
+/// 跟 `SharedEntry` 分開：分享給同事的是整理好的命令，備份要的卻是
+/// 「換一台機器能回到原狀」，所以來源與使用統計一個都不能少。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BackupEntry {
+    pub template: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub keywords: Option<String>,
+    pub source: Source,
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    #[serde(default)]
+    pub score: f64,
+    #[serde(default)]
+    pub last_used: Option<i64>,
+    #[serde(default)]
+    pub boost: f64,
+}
+
+/// 完整備份檔。
+///
+/// 存的是**未衰減**的原始分數與最後使用時間，不是畫面上顯示的那個值——
+/// 衰減是相對於「現在」算出來的，存快照進去等於把時間也一起凍結，
+/// 還原之後排序就不對了。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BackupFile {
+    pub version: u32,
+    pub entries: Vec<BackupEntry>,
+    /// `meta` 表原樣帶走：快捷鍵、歷史匯入位移、機密過濾樣式、不透明度。
+    pub settings: Vec<(String, String)>,
+}
+
+/// 目前的備份格式版本。
+pub const BACKUP_FILE_VERSION: u32 = 1;

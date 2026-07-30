@@ -1,0 +1,6 @@
+# 釘住 toolchain：rusqlite 固定在 0.37，是因為 0.40 會帶進 libsqlite3-sys 0.38，
+# 而它的 build script 用了 unstable 的 cfg_select，在這個版本的 stable 編不過
+# （見 src-tauri/Cargo.toml 的註解）。換機器或換人接手時 toolchain 一飄，
+# 就會再踩一次同一個坑，而錯誤訊息指向的是別人的 build script，不容易聯想。
+[toolchain]
+channel = "1.92.0"

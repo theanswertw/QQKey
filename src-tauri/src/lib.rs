@@ -27,7 +27,7 @@ pub(crate) fn trace(scope: &str, message: &str) {
 }
 
 /// 日誌檔的位置由 tauri-plugin-log 決定，在 Windows 是
-/// `%LOCALAPPDATA%\com.example.qqkey\logs\`——注意跟資料庫所在的
+/// `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\`——注意跟資料庫所在的
 /// Roaming `%APPDATA%` 不是同一個地方。
 fn log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     use tauri_plugin_log::{Target, TargetKind};
@@ -140,6 +140,7 @@ pub fn run() {
         }))
         // 日誌接著裝，後面每一個 plugin 的失敗才有地方可寫
         .plugin(log_plugin())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -154,10 +155,14 @@ pub fn run() {
             commands::create_entry,
             commands::update_entry,
             commands::delete_entry,
+            commands::delete_entries,
             commands::set_entries_enabled,
             commands::reset_entry_score,
             commands::export_entries,
             commands::import_entries,
+            commands::preview_import,
+            commands::backup_to_file,
+            commands::restore_from_file,
             commands::get_settings,
             commands::set_shortcut,
             commands::launcher_opacity,

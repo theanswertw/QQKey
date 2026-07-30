@@ -25,14 +25,18 @@ export default function Settings() {
     <div className="settings">
       <header className="settings__header">
         <h1 className="settings__title">QQKey 設定</h1>
-        <nav className="tabs">
+        <nav className="tabs" role="tablist">
           <button
+            role="tab"
+            aria-selected={tab === "entries"}
             className={tab === "entries" ? "tab tab--active" : "tab"}
             onClick={() => setTab("entries")}
           >
             命令字詞
           </button>
           <button
+            role="tab"
+            aria-selected={tab === "general"}
             className={tab === "general" ? "tab tab--active" : "tab"}
             onClick={() => setTab("general")}
           >
@@ -51,7 +55,12 @@ export default function Settings() {
       )}
 
       {toast && (
-        <div className={`toast toast--${toast.kind}`} onClick={() => setToast(null)}>
+        <div
+          className={`toast toast--${toast.kind}`}
+          role="status"
+          aria-live="polite"
+          onClick={() => setToast(null)}
+        >
           {toast.message}
         </div>
       )}

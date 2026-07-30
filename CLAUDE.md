@@ -65,7 +65,7 @@ cargo test --lib caret::      # 單一模組
 
 ### 資料層
 
-`store.rs`（SQLite，`%APPDATA%\com.example.qqkey\qqkey.db`）+ `state.rs`（`AppState`，
+`store.rs`（SQLite，`%APPDATA%\com.jeremywen.qqkey\qqkey.db`）+ `state.rs`（`AppState`，
 啟用中的條目全載入 `RwLock<Vec<Entry>>` 記憶體候選池，每次敲鍵的搜尋不必碰資料庫）。
 
 **任何改動條目的操作都必須呼叫 `AppState::reload_pool()`**，否則排序與可見性
@@ -88,6 +88,13 @@ key 常數定義在 `state.rs` 頂端。
 - `import_history()` 的 upsert 帶 `WHERE entry.source = 'history'`，不會蓋掉整理過的
   內建條目，也不會把實際使用累積的分數回沖。
 - `export_entries()` **只匯出 user 來源**：內建目錄對方也有，歷史學來的可能夾帶工作內容。
+- `upsert_user()`（匯入）刻意**不**帶 source 保護：使用者選了對方那一版，效果等同他
+  自己編輯過。但它不覆寫 `enabled`——刻意停用的條目不該因為匯入就自己打開。
+
+**匯出與備份是兩件事**，不要合併：`export_entries()` 是分享（只含 user，`SharedFile`），
+`backup()` 是換機器（全來源 + 使用統計 + 整張 `meta`，`BackupFile`）。備份存的是
+**未衰減**的原始 `score`——衰減是相對於「現在」算的，存快照等於把時間也凍進去。
+`restore()` 是**取代**不是合併，整段在同一個交易裡。
 
 ### 排序
 
@@ -111,9 +118,16 @@ key 常數定義在 `state.rs` 頂端。
   用到新的 Tauri plugin 能力時另需在 `src-tauri/capabilities/default.json` 加權限。
 
 前後端型別
-: `src/shared/types.ts` 手動對應後端 serde 結構。`EntryView` / `Settings` /
-  `ImportReport` 用 `#[serde(rename_all = "camelCase")]`，`Source` 序列化為小寫字串。
-  改後端結構時兩邊都要動。
+: `src/shared/types.ts` 手動對應後端 serde 結構。傳給前端的結構一律加
+  `#[serde(rename_all = "camelCase")]`（含 `Candidate`、`EntryPage`、`EntryPatch`
+  這幾個目前欄位都是單字、加不加看起來一樣的），`Source` 序列化為小寫字串。
+  漏了的話，日後加一個 `last_used` 欄位時 Rust 送 snake_case、TS 讀 camelCase，
+  `cargo build` 與 `tsc` 都不會有意見，執行期才變成 undefined。
+
+分數顯示
+: `Candidate::from_entry()` 與 `EntryView::from_entry()` 給的 `score` 是**衰減到
+  當下**的值，跟排序用的是同一個。傳原始累計值會讓三個月沒碰的命令標著 ★10
+  卻排在 ★3 後面——使用者看到的數字必須解釋得了他看到的順序。
 
 佔位符邏輯有兩份
 : Rust `template.rs::injectable_prefix()`（決定真正送出什麼）與 TS
@@ -168,7 +182,7 @@ key 常數定義在 `state.rs` 頂端。
 - 測試名稱是英文描述句（`flips_above_when_it_would_overflow_the_bottom`），
   assert 訊息用繁中說明期望。
 - `crate::trace(scope, message)` 是後端診斷輸出，一律寫進日誌檔（`tauri-plugin-log`，
-  Windows 位置是 `%LOCALAPPDATA%\com.example.qqkey\logs\`，注意不是資料庫所在的
+  Windows 位置是 `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\`，注意不是資料庫所在的
   Roaming）。**日誌會留在磁碟上，所以不記錄視窗標題、不記錄注入內容**。
 - 前端沒有 lint 設定；型別檢查靠 `npm run build`。無前端測試。
 

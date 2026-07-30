@@ -1,6 +1,7 @@
 //! 應用程式共用狀態：資料庫與記憶體中的候選池。
 
 use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
@@ -8,8 +9,8 @@ use std::sync::RwLock;
 
 use crate::catalog::history::{self, ImportReport, SecretFilter};
 use crate::catalog::{
-    load_builtin, Candidate, Entry, EntryPage, EntryPatch, EntryView, SharedEntry, SharedFile,
-    Source, SHARED_FILE_VERSION,
+    load_builtin, BackupEntry, BackupFile, Candidate, Entry, EntryPage, EntryPatch, EntryView,
+    ImportPreview, SharedEntry, SharedFile, Source, BACKUP_FILE_VERSION, SHARED_FILE_VERSION,
 };
 use crate::ranking;
 use crate::store::Store;
@@ -85,9 +86,10 @@ impl AppState {
 
     pub fn search(&self, query: &str, limit: usize) -> Vec<Candidate> {
         let pool = self.pool.read().unwrap();
-        ranking::rank(&pool, query, ranking::now(), limit)
+        let now = ranking::now();
+        ranking::rank(&pool, query, now, limit)
             .into_iter()
-            .map(Candidate::from)
+            .map(|entry| Candidate::from_entry(entry, now))
             .collect()
     }
 
@@ -216,19 +218,23 @@ impl AppState {
                 .then_with(|| left.template.cmp(&right.template))
         });
 
+        let now = ranking::now();
         Ok(EntryPage {
             total: filtered.len(),
             entries: filtered
                 .into_iter()
                 .skip(offset)
                 .take(limit)
-                .map(EntryView::from)
+                .map(|entry| EntryView::from_entry(entry, now))
                 .collect(),
         })
     }
 
     pub fn create_entry(&self, patch: &EntryPatch) -> Result<i64, String> {
         check_template(&patch.template)?;
+        if let Some(boost) = patch.boost {
+            check_boost(boost)?;
+        }
         let id = self
             .store
             .create_entry(patch)
@@ -239,6 +245,9 @@ impl AppState {
 
     pub fn update_entry(&self, id: i64, patch: &EntryPatch) -> Result<(), String> {
         check_template(&patch.template)?;
+        if let Some(boost) = patch.boost {
+            check_boost(boost)?;
+        }
         self.store
             .update_entry(id, patch)
             .map_err(|error| error.to_string())?;
@@ -250,6 +259,15 @@ impl AppState {
             .delete_entry(id)
             .map_err(|error| error.to_string())?;
         self.reload_pool()
+    }
+
+    pub fn delete_entries(&self, ids: &[i64]) -> Result<usize, String> {
+        let deleted = self
+            .store
+            .delete_entries(ids)
+            .map_err(|error| error.to_string())?;
+        self.reload_pool()?;
+        Ok(deleted)
     }
 
     pub fn set_enabled(&self, ids: &[i64], enabled: bool) -> Result<usize, String> {
@@ -291,7 +309,8 @@ impl AppState {
         serde_json::to_string_pretty(&file).map_err(|error| error.to_string())
     }
 
-    pub fn import_entries(&self, json: &str) -> Result<usize, String> {
+    /// 解析並驗證分享檔。預覽與實際匯入走同一段，免得兩邊的判準飄開。
+    fn parse_shared(&self, json: &str) -> Result<SharedFile, String> {
         let file: SharedFile =
             serde_json::from_str(json).map_err(|error| format!("JSON 格式不正確：{error}"))?;
         if file.version > SHARED_FILE_VERSION {
@@ -305,11 +324,100 @@ impl AppState {
         // 沉默地改掉別人給的東西比直接說「這個檔案有問題」更難追。
         for entry in &file.entries {
             check_template(&entry.template)?;
+            check_boost(entry.boost)?;
+        }
+        Ok(file)
+    }
+
+    /// 匯入前的試算。
+    ///
+    /// 從前是直接寫進去、事後才回報筆數，使用者沒有機會知道自己即將覆蓋掉
+    /// 多少本機的東西——而覆蓋是沒有 undo 的。
+    pub fn preview_import(&self, json: &str) -> Result<ImportPreview, String> {
+        let file = self.parse_shared(json)?;
+        let existing: HashSet<String> = self
+            .store
+            .load_all()
+            .map_err(|error| error.to_string())?
+            .into_iter()
+            .map(|entry| entry.template)
+            .collect();
+
+        let overwritten = file
+            .entries
+            .iter()
+            .filter(|entry| existing.contains(&entry.template))
+            .count();
+
+        Ok(ImportPreview {
+            total: file.entries.len(),
+            added: file.entries.len() - overwritten,
+            overwritten,
+        })
+    }
+
+    pub fn import_entries(&self, json: &str) -> Result<usize, String> {
+        let file = self.parse_shared(json)?;
+        let written = self
+            .store
+            .upsert_user(&file.entries)
+            .map_err(|error| error.to_string())?;
+        self.reload_pool()?;
+        Ok(written)
+    }
+
+    /// 完整備份：所有來源的條目、使用統計，以及整張 `meta` 設定。
+    ///
+    /// 跟 `export_entries()` 是兩件事——那個只匯出 user 來源，是拿來分享的；
+    /// 這個是為了換機器時能回到原狀。歷史學來的上千筆與累積的 frecency
+    /// 只有這條路帶得走。
+    /// 回傳 JSON 與帶走的筆數。
+    pub fn backup(&self) -> Result<(String, usize), String> {
+        let all = self.store.load_all().map_err(|error| error.to_string())?;
+        let settings = self.store.all_meta().map_err(|error| error.to_string())?;
+        let count = all.len();
+
+        let file = BackupFile {
+            version: BACKUP_FILE_VERSION,
+            entries: all
+                .iter()
+                .map(|entry| BackupEntry {
+                    template: entry.template.clone(),
+                    description: entry.description.clone(),
+                    keywords: entry.keywords.clone(),
+                    source: entry.source,
+                    enabled: entry.enabled,
+                    // 存原始分數而不是衰減後的：衰減是相對於「現在」算的，
+                    // 存快照等於把時間凍結，還原之後排序就不對了。
+                    score: entry.score,
+                    last_used: entry.last_used,
+                    boost: entry.boost,
+                })
+                .collect(),
+            settings,
+        };
+        let json = serde_json::to_string_pretty(&file).map_err(|error| error.to_string())?;
+        Ok((json, count))
+    }
+
+    /// 從備份還原。會**取代**目前的全部資料。
+    pub fn restore(&self, json: &str) -> Result<usize, String> {
+        let file: BackupFile =
+            serde_json::from_str(json).map_err(|error| format!("不是有效的備份檔：{error}"))?;
+        if file.version > BACKUP_FILE_VERSION {
+            return Err(format!(
+                "這個備份是較新的格式（version {}），請先更新 QQKey",
+                file.version
+            ));
+        }
+        for entry in &file.entries {
+            check_template(&entry.template)?;
+            check_boost(entry.boost)?;
         }
 
         let written = self
             .store
-            .upsert_user(&file.entries)
+            .restore(&file.entries, &file.settings)
             .map_err(|error| error.to_string())?;
         self.reload_pool()?;
         Ok(written)
@@ -415,6 +523,24 @@ impl AppState {
 /// 注入端還有一道 `template::sanitize()` 兜底，但那一道是無聲的——
 /// 使用者會納悶存進去的命令為什麼跟送出來的不一樣。問題在入口就講清楚，
 /// 比事後默默改掉他的東西好。
+/// 手動加權只收非負的有限數。
+///
+/// 負的 boost 會讓排序權重的 `ln()` 得出 NaN，而 NaN 在比較時被
+/// `partial_cmp` 判為 `None` 吞掉——那筆命令會卡在原始順序上，
+/// 完全不受查詢相關度影響。症狀隱晦到使用者幾乎不可能歸因到
+/// 自己在某個欄位填了 -5。想讓命令往後排該用「停用」。
+fn check_boost(boost: f64) -> Result<(), String> {
+    if !boost.is_finite() {
+        return Err("手動加權要是一個有限的數字".into());
+    }
+    if boost < 0.0 {
+        return Err(format!(
+            "手動加權不能是負數（收到 {boost}）。想讓某筆命令不要出現，請改用「停用」。"
+        ));
+    }
+    Ok(())
+}
+
 fn check_template(template: &str) -> Result<(), String> {
     if crate::template::has_control_chars(template) {
         return Err(format!(
@@ -539,6 +665,45 @@ mod tests {
     }
 
     #[test]
+    fn rejects_a_negative_boost_that_would_nan_the_ranking() {
+        let (state, _dir) = temp_state();
+        let mut bad = patch("qqkey demo --flag", None);
+        bad.boost = Some(-5.0);
+
+        let error = state
+            .create_entry(&bad)
+            .expect_err("負的加權會讓排序權重變成 NaN，該在入口擋下");
+
+        assert!(
+            error.contains("負數"),
+            "訊息要說得出問題在哪，實際拿到：{error}"
+        );
+    }
+
+    #[test]
+    fn ranking_survives_a_negative_boost_already_in_the_database() {
+        // 入口擋得住新資料，但舊資料庫裡可能已經有負值
+        let entry = crate::catalog::Entry {
+            id: 1,
+            template: "qqkey demo".into(),
+            description: None,
+            keywords: None,
+            source: Source::User,
+            enabled: true,
+            score: 0.0,
+            last_used: None,
+            boost: -5.0,
+        };
+
+        let weight = crate::ranking::frecency_weight(&entry, 0);
+
+        assert!(
+            weight.is_finite(),
+            "排序權重不能是 NaN，否則那筆會卡在原位且不受查詢影響"
+        );
+    }
+
+    #[test]
     fn import_does_not_reopen_an_entry_you_disabled() {
         let (state, _dir) = temp_state();
         let id = state.create_entry(&patch("qqkey demo --flag", None)).unwrap();
@@ -593,6 +758,87 @@ mod tests {
             !json.contains("usbipd list"),
             "停用內建條目不該讓它混進分享檔——那是承諾只含自己新增或編輯過的"
         );
+    }
+
+    #[test]
+    fn backup_carries_what_export_deliberately_leaves_behind() {
+        let (state, _dir) = temp_state();
+        state
+            .create_entry(&patch("qqkey demo --flag", Some("示範命令")))
+            .unwrap();
+        state.set_launcher_opacity(55).unwrap();
+
+        let (json, count) = state.backup().unwrap();
+
+        assert!(count > 1, "備份要含所有來源，不只自訂的那一筆");
+        assert!(
+            json.contains("usbipd list"),
+            "內建條目也要帶走——這是備份不是分享"
+        );
+        assert!(
+            json.contains("launcher_opacity"),
+            "meta 設定要一起備份，換機器才回得到原狀"
+        );
+    }
+
+    #[test]
+    fn restore_replaces_everything_and_brings_settings_back() {
+        let (state, _dir) = temp_state();
+        state
+            .create_entry(&patch("qqkey demo --flag", Some("備份前")))
+            .unwrap();
+        state.set_launcher_opacity(55).unwrap();
+        let (json, _) = state.backup().unwrap();
+
+        // 備份之後又動了一輪
+        state
+            .create_entry(&patch("qqkey after-backup", None))
+            .unwrap();
+        state.set_launcher_opacity(88).unwrap();
+
+        state.restore(&json).unwrap();
+
+        let page = state
+            .list_entries("qqkey after-backup", None, 0, 10)
+            .unwrap();
+        assert_eq!(page.total, 0, "還原是取代——備份之後新增的東西不該留下");
+        assert_eq!(
+            state.launcher_opacity(),
+            55,
+            "設定也要回到備份當時的樣子"
+        );
+        let page = state.list_entries("qqkey demo", None, 0, 10).unwrap();
+        assert_eq!(page.entries[0].description.as_deref(), Some("備份前"));
+    }
+
+    #[test]
+    fn restore_refuses_a_backup_from_a_newer_version() {
+        let (state, _dir) = temp_state();
+        let json = r#"{"version":99,"entries":[],"settings":[]}"#;
+
+        let error = state
+            .restore(json)
+            .expect_err("格式比程式新就不該硬還原下去");
+
+        assert!(error.contains("較新"), "訊息要說得出原因，實際拿到：{error}");
+    }
+
+    #[test]
+    fn preview_tells_you_how_much_will_be_overwritten() {
+        let (state, _dir) = temp_state();
+        state
+            .create_entry(&patch("qqkey demo --flag", None))
+            .unwrap();
+        let json = r#"{"version":1,"entries":[
+            {"template":"qqkey demo --flag","description":"對方的說明"},
+            {"template":"qqkey brand-new"}
+        ]}"#;
+
+        let preview = state.preview_import(json).unwrap();
+
+        assert_eq!(preview.total, 2);
+        assert_eq!(preview.added, 1, "本機沒有的算新增");
+        assert_eq!(preview.overwritten, 1, "撞名的要先講，覆寫是沒有 undo 的");
     }
 
     #[test]

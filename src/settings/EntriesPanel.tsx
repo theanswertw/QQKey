@@ -9,10 +9,37 @@ import {
   type EntryView,
 } from "../shared/types";
 import EntryDialog from "./EntryDialog";
+import ConfirmDialog from "./ConfirmDialog";
 
 const PAGE_SIZE = 40;
 
 type SourceFilter = CandidateSource | "all";
+
+/** 把最後使用時間寫成「3 天前」。後端一直有傳這個值，只是從來沒被畫出來過。 */
+function relativeTime(seconds: number | null): string {
+  if (!seconds) {
+    return "未用過";
+  }
+  const days = Math.floor(Date.now() / 1000 / 86400 - seconds / 86400);
+  if (days <= 0) {
+    return "今天";
+  }
+  if (days === 1) {
+    return "昨天";
+  }
+  if (days < 30) {
+    return `${days} 天前`;
+  }
+  const months = Math.floor(days / 30);
+  return months < 12 ? `${months} 個月前` : `${Math.floor(days / 365)} 年前`;
+}
+
+/** 待確認的刪除。單筆與批次共用一個對話框。 */
+interface PendingDelete {
+  ids: number[];
+  /** 單筆時附上命令內容，讓使用者確認自己點的是哪一筆 */
+  template?: string;
+}
 
 export default function EntriesPanel({ onError }: { onError: (message: string) => void }) {
   const [query, setQuery] = useState("");
@@ -22,6 +49,7 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
   const [checked, setChecked] = useState<Set<number>>(new Set());
   /** undefined 表示沒開對話框；null 表示新增 */
   const [editing, setEditing] = useState<EntryView | null | undefined>(undefined);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | undefined>(undefined);
 
   const reload = useCallback(async () => {
     try {
@@ -44,8 +72,17 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
   // 換條件時回到第一頁，免得停在一個已經不存在的頁碼上
   useEffect(() => {
     setPage(0);
-    setChecked(new Set());
   }, [query, source]);
+
+  /*
+   * 翻頁與換條件都清空選取。從前這裡只看 [query, source]，於是在第 1 頁勾了
+   * 十筆、翻到第 2 頁之後，批次列仍寫著「已選取 10 筆」——按下停用會作用在
+   * 螢幕上看不到的條目。跨頁保留選取要能講清楚選了哪些才不危險，
+   * 而這個畫面沒有那個位置。
+   */
+  useEffect(() => {
+    setChecked(new Set());
+  }, [query, source, page]);
 
   const run = async (action: () => Promise<unknown>) => {
     try {
@@ -66,14 +103,24 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
     });
   };
 
-  const save = (patch: EntryPatch) => {
+  /*
+   * 成功才關對話框。從前是先關再送出，於是撞上 UNIQUE 約束（同一個 template
+   * 已經存在）或控制字元檢查時，使用者剛打完的整筆內容就沒了，而看到的
+   * 只有一行原始的 SQL 錯誤。
+   */
+  const save = async (patch: EntryPatch) => {
     const target = editing;
-    setEditing(undefined);
-    void run(() =>
-      target
-        ? invoke("update_entry", { id: target.id, patch })
-        : invoke("create_entry", { patch }),
-    );
+    try {
+      if (target) {
+        await invoke("update_entry", { id: target.id, patch });
+      } else {
+        await invoke("create_entry", { patch });
+      }
+      setEditing(undefined);
+      await reload();
+    } catch (error) {
+      onError(String(error));
+    }
   };
 
   const lastPage = Math.max(0, Math.ceil(data.total / PAGE_SIZE) - 1);
@@ -98,6 +145,13 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
           <option value="builtin">內建</option>
           <option value="history">歷史</option>
         </select>
+        <button
+          className="button"
+          disabled={data.entries.length === 0}
+          onClick={() => setChecked(new Set(data.entries.map((entry) => entry.id)))}
+        >
+          選取本頁
+        </button>
         <button className="button button--primary" onClick={() => setEditing(null)}>
           新增命令
         </button>
@@ -125,6 +179,12 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
             }
           >
             停用
+          </button>
+          <button
+            className="button button--danger"
+            onClick={() => setPendingDelete({ ids: [...checked] })}
+          >
+            刪除
           </button>
           <button className="button button--ghost" onClick={() => setChecked(new Set())}>
             取消選取
@@ -158,8 +218,17 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
               <span className={`tag tag--${entry.source}`}>
                 {SOURCE_LABELS[entry.source]}
               </span>
-              <span className="row__score" title="frecency 分數">
+              <span
+                className="row__score"
+                title="衰減後的使用分數——就是候選框拿來排序的那一個"
+              >
                 {entry.score >= 0.05 ? entry.score.toFixed(1) : "—"}
+              </span>
+              <span className="row__boost" title="手動加權">
+                {entry.boost > 0 ? `+${entry.boost}` : ""}
+              </span>
+              <span className="row__used" title="最後使用時間">
+                {relativeTime(entry.lastUsed)}
               </span>
               <div className="row__actions">
                 <button
@@ -191,7 +260,9 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
                 </button>
                 <button
                   className="button button--ghost button--danger"
-                  onClick={() => void run(() => invoke("delete_entry", { id: entry.id }))}
+                  onClick={() =>
+                    setPendingDelete({ ids: [entry.id], template: entry.template })
+                  }
                 >
                   刪除
                 </button>
@@ -233,6 +304,27 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
           entry={editing}
           onSave={save}
           onCancel={() => setEditing(undefined)}
+        />
+      )}
+
+      {pendingDelete && (
+        <ConfirmDialog
+          title={pendingDelete.ids.length > 1 ? "刪除選取的命令" : "刪除這筆命令"}
+          message={
+            pendingDelete.template
+              ? `${pendingDelete.template}\n\n刪除後無法復原。若只是想讓它不出現在候選框，用「停用」就好。`
+              : `將刪除 ${pendingDelete.ids.length} 筆命令，無法復原。\n\n若只是想讓它們不出現在候選框，用「停用」就好。`
+          }
+          confirmLabel="刪除"
+          danger
+          onConfirm={() => {
+            const { ids } = pendingDelete;
+            setPendingDelete(undefined);
+            void run(() => invoke("delete_entries", { ids })).then(() =>
+              setChecked(new Set()),
+            );
+          }}
+          onCancel={() => setPendingDelete(undefined)}
         />
       )}
     </div>

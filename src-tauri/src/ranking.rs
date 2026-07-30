@@ -37,9 +37,14 @@ pub fn bump(score: f64, last_used: Option<i64>, now: i64) -> f64 {
 
 /// frecency 對排序的加權。取對數讓常用項目上浮，
 /// 但不會常用到完全壓過比對品質——搜尋精準度仍該優先。
-fn frecency_weight(entry: &Entry, now: i64) -> f64 {
+///
+/// `boost` 夾在非負：負的 boost 會讓 `ln()` 收到負數而得出 NaN，
+/// 而 NaN 在排序比較裡會被 `partial_cmp` 判為 `None` 吞掉，那筆就卡在
+/// 原始順序上、完全不受查詢相關度影響——症狀隱晦到幾乎無從歸因。
+/// 寫入端已經夾制過，這裡防的是資料庫裡可能已經存在的舊值。
+pub fn frecency_weight(entry: &Entry, now: i64) -> f64 {
     let decayed = decay(entry.score, entry.last_used, now);
-    1.0 + 2.0 * (1.0 + decayed + entry.boost).ln()
+    1.0 + 2.0 * (1.0 + decayed + entry.boost.max(0.0)).ln()
 }
 
 /// 依查詢字串排序候選項目。查詢為空時純粹依 frecency 排。

@@ -12,6 +12,7 @@ export default function Launcher() {
   /** 每次叫出候選框都要重查一次，常用度可能在上次之後變了 */
   const [refreshToken, setRefreshToken] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     focusInput();
@@ -72,16 +73,26 @@ export default function Launcher() {
           setSelected(0);
         }
       })
-      .catch((error) => {
-        console.error("查詢候選命令失敗", error);
+      .catch((reason) => {
         if (!cancelled) {
           setCandidates([]);
+          // 不要讓查詢失敗長得跟「查無結果」一樣——那會讓人一直改關鍵字重試
+          setError(`搜尋失敗：${reason}`);
         }
       });
     return () => {
       cancelled = true;
     };
   }, [query, refreshToken]);
+
+  /*
+   * 讓選取項目留在可視範圍內。目前九筆剛好塞得下純屬巧合——把
+   * MAX_CANDIDATES 調大、或系統字型放大一級，鍵盤選取就會移出視野
+   * 而畫面完全沒有反應。
+   */
+  useEffect(() => {
+    itemRefs.current[selected]?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
 
   const dismiss = () => {
     void invoke("hide_launcher");
@@ -155,6 +166,13 @@ export default function Launcher() {
         <input
           ref={inputRef}
           className="launcher__input"
+          role="combobox"
+          aria-label="搜尋命令"
+          aria-expanded={candidates.length > 0}
+          aria-controls="launcher-list"
+          aria-activedescendant={
+            candidates[selected] ? `launcher-item-${candidates[selected].id}` : undefined
+          }
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -168,12 +186,18 @@ export default function Launcher() {
       </div>
 
       {candidates.length > 0 ? (
-        <ul className="launcher__list">
+        <ul className="launcher__list" id="launcher-list" role="listbox">
           {candidates.map((candidate, index) => {
             const { prefix, hint } = splitTemplate(candidate.template);
             return (
               <li
                 key={candidate.id}
+                id={`launcher-item-${candidate.id}`}
+                ref={(node) => {
+                  itemRefs.current[index] = node;
+                }}
+                role="option"
+                aria-selected={index === selected}
                 className={
                   index === selected
                     ? "launcher__item launcher__item--selected"
@@ -192,7 +216,9 @@ export default function Launcher() {
                     {candidate.description}
                   </span>
                 )}
-                {candidate.score >= 1 && (
+                {/* 分數是衰減到當下的，跟排序用的是同一個值——顯示原始累計值
+                    會讓三個月沒碰的命令標著 ★10 卻排在 ★3 後面 */}
+                {candidate.score >= 0.5 && (
                   <span className="launcher__score">
                     ★{Math.round(candidate.score)}
                   </span>
@@ -218,7 +244,15 @@ export default function Launcher() {
         <span>Alt+1–9 直選</span>
         <span>Enter 填入</span>
         <span>Esc 取消</span>
-        <span className="launcher__footer-end">Alt+Shift+Q 設定</span>
+        {/* 從前這裡只是靜態文字，滑鼠沒有辦法從候選框進到設定畫面——
+            而 open_settings 這支 IPC 早就註冊好了卻沒有人呼叫 */}
+        <button
+          type="button"
+          className="launcher__footer-end launcher__link"
+          onClick={() => void invoke("open_settings")}
+        >
+          Alt+Shift+Q 設定
+        </button>
       </div>
     </div>
   );

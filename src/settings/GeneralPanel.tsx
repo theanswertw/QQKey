@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { ImportReport, Settings } from "../shared/types";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import type { ImportPreview, ImportReport, Settings } from "../shared/types";
+import ConfirmDialog from "./ConfirmDialog";
 
 /** 不透明度可調的範圍。後端才是權威，這裡只是不讓 UI 送出後端會拒絕的值。 */
 const MIN_OPACITY = 20;
@@ -36,6 +38,14 @@ export default function GeneralPanel({
   const [pattern, setPattern] = useState("");
   const [report, setReport] = useState<ImportReport | null>(null);
   const [autostart, setAutostart] = useState(false);
+  /** 首次載入失敗的原因。有值時畫面要給得出重試，而不是卡在「載入中…」。 */
+  const [loadError, setLoadError] = useState<string | null>(null);
+  /** 已試算、等待確認的匯入。 */
+  const [pending, setPending] = useState<{ json: string; preview: ImportPreview } | undefined>(
+    undefined,
+  );
+  /** 已選定、等待確認的還原來源。還原會蓋掉全部資料，不能不問就做。 */
+  const [restorePath, setRestorePath] = useState<string | undefined>(undefined);
   /** 不透明度草稿。拖動時只驅動預覽，放手才寫入。 */
   const [opacity, setOpacity] = useState(0);
 
@@ -47,7 +57,9 @@ export default function GeneralPanel({
       setPattern(result.secretPattern);
       setOpacity(result.launcherOpacity);
       setAutostart(await invoke<boolean>("autostart_enabled"));
+      setLoadError(null);
     } catch (error) {
+      setLoadError(String(error));
       onError(String(error));
     }
   };
@@ -56,8 +68,34 @@ export default function GeneralPanel({
     void reload();
   }, []);
 
+  /*
+   * 設定視窗關閉時只是 hide()，React state 全數保留，所以重新開啟看到的會是
+   * 上次的舊資料——候選池筆數、使用統計都可能已經變了。重新取得焦點時再讀一次。
+   */
+  useEffect(() => {
+    const onFocus = () => void reload();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
   if (!settings) {
-    return <div className="panel">載入中…</div>;
+    // autostart_enabled 走的是登錄檔查詢，失敗是有可能的。沒有這個分支的話
+    // 畫面會永遠停在「載入中…」，而唯一的錯誤 toast 四秒後就消失了。
+    return (
+      <div className="panel">
+        {loadError === null ? (
+          "載入中…"
+        ) : (
+          <div className="crash">
+            <p className="crash__title">讀不到設定</p>
+            <p className="crash__message">{loadError}</p>
+            <button type="button" className="crash__button" onClick={() => void reload()}>
+              重試
+            </button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   const run = async (action: () => Promise<unknown>, notice: string) => {
@@ -115,11 +153,53 @@ export default function GeneralPanel({
     }
   };
 
+  /*
+   * 先試算再問。從前是讀了剪貼簿就直接寫進去、事後才回報筆數——
+   * 使用者沒有機會知道自己即將覆蓋掉本機多少東西，而覆寫沒有 undo。
+   */
   const importEntries = async () => {
     try {
       const json = await navigator.clipboard.readText();
-      const written = await invoke<number>("import_entries", { json });
-      onNotice(`已從剪貼簿匯入 ${written} 筆命令`);
+      const result = await invoke<ImportPreview>("preview_import", { json });
+      if (result.total === 0) {
+        onNotice("剪貼簿裡的檔案沒有任何命令");
+        return;
+      }
+      setPending({ json, preview: result });
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
+  const backup = async () => {
+    try {
+      const path = await save({
+        title: "備份 QQKey 資料",
+        defaultPath: "qqkey-backup.json",
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (!path) {
+        return;
+      }
+      const count = await invoke<number>("backup_to_file", { path });
+      onNotice(`已備份 ${count} 筆命令與目前的設定`);
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
+  const chooseRestore = async () => {
+    try {
+      const path = await open({
+        title: "選擇要還原的備份",
+        multiple: false,
+        directory: false,
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (typeof path !== "string") {
+        return;
+      }
+      setRestorePath(path);
     } catch (error) {
       onError(String(error));
     }
@@ -371,6 +451,67 @@ export default function GeneralPanel({
           </button>
         </div>
       </section>
+
+      <section className="section">
+        <h2 className="section__title">備份與還原</h2>
+        <p className="section__note">
+          跟上面的「分享」是兩件事。備份帶走<strong>全部</strong>——內建、
+          歷史學來的、以及累積的使用統計與這一頁的所有設定，換一台機器能回到原狀。
+          歷史學來的那上千筆只有這條路帶得走。
+        </p>
+        <div className="section__row">
+          <button className="button" onClick={backup}>
+            備份到檔案
+          </button>
+          <button className="button" onClick={chooseRestore}>
+            從備份還原
+          </button>
+        </div>
+        <p className="section__note section__note--warn">
+          還原會<strong>取代</strong>目前的全部資料，包含你之後新增或編輯過的命令。
+        </p>
+      </section>
+
+      {pending && (
+        <ConfirmDialog
+          title="確認匯入"
+          message={
+            `這個檔案有 ${pending.preview.total} 筆命令：新增 ${pending.preview.added} 筆` +
+            (pending.preview.overwritten > 0
+              ? `，覆寫 ${pending.preview.overwritten} 筆本機已有的。\n\n被覆寫的說明與關鍵字會換成檔案裡的版本，無法復原。`
+              : "。")
+          }
+          confirmLabel="匯入"
+          danger={pending.preview.overwritten > 0}
+          onConfirm={() => {
+            const { json } = pending;
+            setPending(undefined);
+            void run(
+              () => invoke("import_entries", { json }),
+              `已匯入 ${pending.preview.total} 筆命令`,
+            );
+          }}
+          onCancel={() => setPending(undefined)}
+        />
+      )}
+
+      {restorePath && (
+        <ConfirmDialog
+          title="確認還原"
+          message={`${restorePath}\n\n將以這份備份取代目前的全部資料——現有的命令、使用統計與設定都會被蓋掉，無法復原。`}
+          confirmLabel="還原"
+          danger
+          onConfirm={() => {
+            const path = restorePath;
+            setRestorePath(undefined);
+            void run(
+              () => invoke("restore_from_file", { path }),
+              "已從備份還原",
+            );
+          }}
+          onCancel={() => setRestorePath(undefined)}
+        />
+      )}
 
       <section className="section">
         <h2 className="section__title">診斷紀錄</h2>

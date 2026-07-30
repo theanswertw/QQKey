@@ -55,6 +55,13 @@ export interface Settings {
   poolSize: number;
 }
 
+/** 匯入前的試算。覆寫沒有 undo，按下去之前要先講清楚。 */
+export interface ImportPreview {
+  total: number;
+  added: number;
+  overwritten: number;
+}
+
 export interface ImportReport {
   scanned: number;
   imported: number;

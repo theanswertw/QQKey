@@ -44,7 +44,16 @@ body,
 .launcher {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /*
+   * 只佔用實際需要的高度，不再撐滿整個視窗。查無結果時原本是一個 640×420
+   * 的大方塊中間寫一句話，而它就浮在游標旁邊，等於把使用者正在看的終端機
+   * 內容遮掉一大片。
+   *
+   * 收合的是內容不是視窗：視窗本身 transparent，空出來的部分不會顯示任何
+   * 東西。改成動態調整視窗尺寸的話，就得在 show() 之後重新定位，而
+   * hotkey.rs 那串 Win32 呼叫的順序是調過的，動它的風險遠大於這裡的收益。
+   */
+  max-height: 100%;
   border: 1px solid var(--qq-border);
   border-radius: var(--qq-radius);
   background: var(--qq-surface);
@@ -83,7 +92,8 @@ body,
 }
 
 .launcher__list {
-  flex: 1;
+  /* 跟著內容長，長到裝不下才捲動 */
+  flex: 0 1 auto;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -112,11 +122,19 @@ body,
   color: var(--qq-text-dim);
 }
 
+/*
+ * 可以縮但不搶空間。從前是 flex: none 且沒有 overflow，長命令會把說明與
+ * 分數整個擠出視窗，再被 .launcher 的 overflow: hidden 直接切掉——
+ * 沒有省略號，也看不出來被截了。
+ */
 .launcher__command {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   font-family: var(--qq-mono);
   font-size: 14px;
   white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 佔位符不會被送出，僅提示使用者接下來要在終端機裡補什麼 */
@@ -141,11 +159,46 @@ body,
 }
 
 .launcher__empty {
-  flex: 1;
-  display: grid;
-  place-items: center;
+  flex: none;
+  padding: 22px 16px;
+  text-align: center;
   font-size: 13px;
   color: var(--qq-text-dim);
+}
+
+/* ErrorBoundary 的畫面。候選框沒有邊框也沒有關閉鈕，這裡是它唯一的出口 */
+.crash {
+  padding: 18px 20px;
+  border: 1px solid var(--qq-border);
+  border-radius: var(--qq-radius);
+  background: var(--qq-surface);
+  color: var(--qq-text);
+  font-size: 13px;
+}
+
+.crash__title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: var(--qq-danger);
+}
+
+.crash__message {
+  margin: 0 0 14px;
+  font-family: var(--qq-mono);
+  font-size: 12px;
+  color: var(--qq-text-dim);
+  overflow-wrap: anywhere;
+}
+
+.crash__button {
+  padding: 6px 12px;
+  border: 1px solid var(--qq-border);
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 /* 注入失敗時才出現。訊息可能不短，讓它自己換行，不要把提示列擠掉 */
@@ -169,4 +222,19 @@ body,
 
 .launcher__footer-end {
   margin-left: auto;
+}
+
+/* 提示列裡唯一可以按的東西，但長得要像提示而不是按鈕 */
+.launcher__link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.launcher__link:hover,
+.launcher__link:focus-visible {
+  color: var(--qq-accent);
 }

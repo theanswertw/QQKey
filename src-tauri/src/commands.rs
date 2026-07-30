@@ -4,7 +4,7 @@ use tauri::{Manager, Runtime, State, WebviewUrl, WebviewWindow, WebviewWindowBui
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::catalog::history::ImportReport;
-use crate::catalog::{Candidate, EntryPage, EntryPatch, Source};
+use crate::catalog::{Candidate, EntryPage, EntryPatch, ImportPreview, Source};
 use crate::hotkey::LAUNCHER_LABEL;
 use crate::state::{AppState, Settings};
 
@@ -82,6 +82,12 @@ pub fn delete_entry(state: State<AppState>, id: i64) -> Result<(), String> {
     state.delete_entry(id)
 }
 
+/// 批次刪除，回傳實際刪掉的筆數。前端負責先取得使用者確認。
+#[tauri::command]
+pub fn delete_entries(state: State<AppState>, ids: Vec<i64>) -> Result<usize, String> {
+    state.delete_entries(&ids)
+}
+
 #[tauri::command]
 pub fn set_entries_enabled(
     state: State<AppState>,
@@ -104,6 +110,31 @@ pub fn export_entries(state: State<AppState>) -> Result<String, String> {
 #[tauri::command]
 pub fn import_entries(state: State<AppState>, json: String) -> Result<usize, String> {
     state.import_entries(&json)
+}
+
+/// 匯入前的試算，讓使用者知道會新增幾筆、覆寫幾筆。
+#[tauri::command]
+pub fn preview_import(state: State<AppState>, json: String) -> Result<ImportPreview, String> {
+    state.preview_import(&json)
+}
+
+/// 完整備份到檔案。路徑由前端的存檔對話框選定。
+///
+/// 檔案由後端寫而不是把 JSON 送回前端再寫——備份可能有上千筆，
+/// 沒必要在 IPC 邊界上來回搬一大包字串。
+#[tauri::command]
+pub fn backup_to_file(state: State<AppState>, path: String) -> Result<usize, String> {
+    let (json, count) = state.backup()?;
+    std::fs::write(&path, &json).map_err(|error| format!("寫入 {path} 失敗：{error}"))?;
+    Ok(count)
+}
+
+/// 從備份檔還原。會取代目前的全部資料，前端負責先取得確認。
+#[tauri::command]
+pub fn restore_from_file(state: State<AppState>, path: String) -> Result<usize, String> {
+    let json =
+        std::fs::read_to_string(&path).map_err(|error| format!("讀取 {path} 失敗：{error}"))?;
+    state.restore(&json)
 }
 
 // ------------------------------------------------------------ 設定畫面：一般設定

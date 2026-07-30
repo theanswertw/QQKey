@@ -1,11 +1,11 @@
-//! SQLite 儲存。資料庫放在 `%APPDATA%\com.example.qqkey\qqkey.db`，不對外傳送。
+//! SQLite 儲存。資料庫放在 `%APPDATA%\com.jeremywen.qqkey\qqkey.db`，不對外傳送。
 
 use std::path::Path;
 use std::sync::Mutex;
 
 use rusqlite::{params, Connection, OptionalExtension};
 
-use crate::catalog::{Entry, EntryPatch, NewEntry, SharedEntry, Source};
+use crate::catalog::{BackupEntry, Entry, EntryPatch, NewEntry, SharedEntry, Source};
 
 pub struct Store {
     connection: Mutex<Connection>,
@@ -137,6 +137,24 @@ impl Store {
         Ok(())
     }
 
+    /// 批次刪除，回傳實際刪掉的筆數。
+    ///
+    /// 歷史匯入一次會帶進上千筆，要清掉整批雜訊時一頁 40 筆逐一點不切實際。
+    /// 包在同一個交易裡，中途失敗不會刪一半。
+    pub fn delete_entries(&self, ids: &[i64]) -> rusqlite::Result<usize> {
+        let mut connection = self.connection.lock().unwrap();
+        let transaction = connection.transaction()?;
+        let mut deleted = 0;
+        {
+            let mut statement = transaction.prepare("DELETE FROM entry WHERE id = ?1")?;
+            for id in ids {
+                deleted += statement.execute([id])?;
+            }
+        }
+        transaction.commit()?;
+        Ok(deleted)
+    }
+
     /// 批次啟用／停用。用來一次關掉整批歷史雜訊。
     pub fn set_enabled(&self, ids: &[i64], enabled: bool) -> rusqlite::Result<usize> {
         let mut connection = self.connection.lock().unwrap();
@@ -231,6 +249,59 @@ impl Store {
                     entry.enabled as i64,
                     entry.boost
                 ])?;
+            }
+        }
+        transaction.commit()?;
+        Ok(written)
+    }
+
+    /// 整張 `meta` 表，供備份帶走。
+    pub fn all_meta(&self) -> rusqlite::Result<Vec<(String, String)>> {
+        let connection = self.connection.lock().unwrap();
+        let mut statement = connection.prepare("SELECT key, value FROM meta")?;
+        let rows = statement.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?;
+        rows.collect()
+    }
+
+    /// 以備份內容取代目前的資料。
+    ///
+    /// 是「取代」不是「合併」——還原備份的意思就是回到當時的狀態，
+    /// 留下現在多出來的東西反而不是使用者要的。整段包在同一個交易裡，
+    /// 中途失敗會整個回捲，不會留下一個清空到一半的資料庫。
+    pub fn restore(
+        &self,
+        entries: &[BackupEntry],
+        settings: &[(String, String)],
+    ) -> rusqlite::Result<usize> {
+        let mut connection = self.connection.lock().unwrap();
+        let transaction = connection.transaction()?;
+        let mut written = 0;
+        {
+            transaction.execute("DELETE FROM entry", [])?;
+            transaction.execute("DELETE FROM meta", [])?;
+
+            let mut statement = transaction.prepare(
+                "INSERT INTO entry
+                   (template, description, keywords, source, enabled, score, last_used, boost)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            )?;
+            for entry in entries {
+                written += statement.execute(params![
+                    entry.template,
+                    entry.description,
+                    entry.keywords,
+                    entry.source.as_str(),
+                    entry.enabled as i64,
+                    entry.score,
+                    entry.last_used,
+                    entry.boost
+                ])?;
+            }
+
+            let mut meta = transaction
+                .prepare("INSERT INTO meta (key, value) VALUES (?1, ?2)")?;
+            for (key, value) in settings {
+                meta.execute(params![key, value])?;
             }
         }
         transaction.commit()?;
