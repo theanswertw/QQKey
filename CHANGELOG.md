@@ -3,7 +3,7 @@
 本檔案記錄 QQKey 的重要變更，格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，
 版本號依循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
-## [Unreleased]
+## [0.1.0] - 2026-07-30
 
 ### Added
 
