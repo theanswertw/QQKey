@@ -37,6 +37,10 @@ const MAX_LAUNCHER_OPACITY: u8 = 100;
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub shortcut: String,
+    /// 目前真正按得出來的快捷鍵。設定值被別的程式佔用時會退回預設，
+    /// 這時它跟 `shortcut` 不一樣，設定畫面得講出這件事。
+    /// 空字串代表一個都沒註冊成功。
+    pub active_shortcut: String,
     pub history_import: bool,
     pub secret_pattern: String,
     /// 讓設定畫面能提供「還原預設」
@@ -53,6 +57,13 @@ pub struct AppState {
     /// 啟用中的條目全載入記憶體。候選池頂多幾千筆，
     /// 這樣每敲一個字的搜尋都不必再碰資料庫。
     pool: RwLock<Vec<Entry>>,
+    /// 目前真正註冊成功的快捷鍵，空字串代表一個都沒註冊上。
+    ///
+    /// 跟 meta 裡的設定值分開存。設定的組合被別的程式佔用時會退回預設，
+    /// 兩者就此分岔——而解除舊綁定必須認這一個。認設定值的話，解除的會是
+    /// 一個從來沒註冊成功的組合，退回註冊的那個就永遠賴在系統裡，
+    /// 使用者反而再也設不回預設值。
+    active_shortcut: RwLock<String>,
 }
 
 impl AppState {
@@ -67,6 +78,8 @@ impl AppState {
         Ok(Self {
             store,
             pool: RwLock::new(pool),
+            // 這時還沒註冊過，等啟動流程試完才知道哪一個真的生效
+            active_shortcut: RwLock::new(String::new()),
         })
     }
 
@@ -215,6 +228,7 @@ impl AppState {
     }
 
     pub fn create_entry(&self, patch: &EntryPatch) -> Result<i64, String> {
+        check_template(&patch.template)?;
         let id = self
             .store
             .create_entry(patch)
@@ -224,6 +238,7 @@ impl AppState {
     }
 
     pub fn update_entry(&self, id: i64, patch: &EntryPatch) -> Result<(), String> {
+        check_template(&patch.template)?;
         self.store
             .update_entry(id, patch)
             .map_err(|error| error.to_string())?;
@@ -286,6 +301,12 @@ impl AppState {
             ));
         }
 
+        // 整批擋掉而不是跳過有問題的那幾筆：匯入是信任邊界，
+        // 沉默地改掉別人給的東西比直接說「這個檔案有問題」更難追。
+        for entry in &file.entries {
+            check_template(&entry.template)?;
+        }
+
         let written = self
             .store
             .upsert_user(&file.entries)
@@ -299,6 +320,7 @@ impl AppState {
     pub fn settings(&self) -> Settings {
         Settings {
             shortcut: self.shortcut(),
+            active_shortcut: self.active_shortcut(),
             history_import: self.history_import_enabled(),
             secret_pattern: self.secret_pattern(),
             default_secret_pattern: history::DEFAULT_SECRET_PATTERN.to_string(),
@@ -320,6 +342,16 @@ impl AppState {
         self.store
             .set_meta(META_SHORTCUT, value)
             .map_err(|error| error.to_string())
+    }
+
+    /// 目前真正註冊成功的快捷鍵，空字串代表一個都沒有。
+    pub fn active_shortcut(&self) -> String {
+        self.active_shortcut.read().unwrap().clone()
+    }
+
+    /// 由啟動流程與換綁流程在確定註冊結果之後呼叫。
+    pub fn set_active_shortcut(&self, value: &str) {
+        *self.active_shortcut.write().unwrap() = value.to_string();
     }
 
     pub fn secret_pattern(&self) -> String {
@@ -378,6 +410,21 @@ impl AppState {
     }
 }
 
+/// 樣板寫進資料庫之前先擋掉控制字元。
+///
+/// 注入端還有一道 `template::sanitize()` 兜底，但那一道是無聲的——
+/// 使用者會納悶存進去的命令為什麼跟送出來的不一樣。問題在入口就講清楚，
+/// 比事後默默改掉他的東西好。
+fn check_template(template: &str) -> Result<(), String> {
+    if crate::template::has_control_chars(template) {
+        return Err(format!(
+            "命令裡有換行或 Tab 這類控制字元，不能存下來——送進終端機時換行等同按下 Enter。\n\n{}",
+            template.escape_debug()
+        ));
+    }
+    Ok(())
+}
+
 /// 從指定位元組讀到檔尾。切到半個 UTF-8 字元時交給 lossy 轉換處理，
 /// 那一行本來就會被雜訊或機密過濾擋下。
 fn read_from(path: &Path, offset: u64) -> std::io::Result<String> {
@@ -426,6 +473,38 @@ mod tests {
     }
 
     #[test]
+    fn create_rejects_a_template_carrying_a_newline() {
+        let (state, _dir) = temp_state();
+
+        let error = state
+            .create_entry(&patch("git push --force\n", None))
+            .expect_err("含換行的樣板不該進得了資料庫");
+
+        assert!(
+            error.contains("控制字元"),
+            "訊息要說得出問題在哪，實際拿到：{error}"
+        );
+    }
+
+    #[test]
+    fn import_rejects_a_shared_file_carrying_a_newline() {
+        let (state, _dir) = temp_state();
+        // 設定畫面的單行輸入框擋得住手打，但剪貼簿匯入完全繞過它
+        let json = r#"{"version":1,"entries":[{"template":"git push --force\n"}]}"#;
+        let before = state.pool_size();
+
+        let error = state
+            .import_entries(json)
+            .expect_err("挾帶換行的分享檔整份都不該收下");
+
+        assert!(
+            error.contains("控制字元"),
+            "訊息要說得出問題在哪，實際拿到：{error}"
+        );
+        assert_eq!(state.pool_size(), before, "整批拒絕，不該有半筆漏進去");
+    }
+
+    #[test]
     fn disabled_entry_disappears_from_search_but_stays_in_the_list() {
         let (state, _dir) = temp_state();
         let id = state
@@ -457,6 +536,63 @@ mod tests {
             "改過的條目要轉成 user，之後同步內建目錄才不會蓋回去"
         );
         assert_eq!(page.entries[0].description.as_deref(), Some("我自己的說明"));
+    }
+
+    #[test]
+    fn import_does_not_reopen_an_entry_you_disabled() {
+        let (state, _dir) = temp_state();
+        let id = state.create_entry(&patch("qqkey demo --flag", None)).unwrap();
+        state.set_enabled(&[id], false).unwrap();
+
+        // 對方那份檔案裡這筆是啟用的
+        let json = r#"{"version":1,"entries":[{"template":"qqkey demo --flag","description":"對方的說明"}]}"#;
+        state.import_entries(json).unwrap();
+
+        let page = state.list_entries("qqkey demo", None, 0, 1).unwrap();
+        assert!(
+            !page.entries[0].enabled,
+            "你刻意關掉的條目不該因為匯入別人的檔案就自己打開"
+        );
+        assert_eq!(
+            page.entries[0].description.as_deref(),
+            Some("對方的說明"),
+            "內容本身還是要更新，不然匯入等於沒做"
+        );
+    }
+
+    #[test]
+    fn toggling_enabled_leaves_a_builtin_entry_builtin() {
+        let (state, _dir) = temp_state();
+        let page = state
+            .list_entries("usbipd list", Some(Source::Builtin), 0, 1)
+            .unwrap();
+        let target = page.entries[0].id;
+
+        state.set_enabled(&[target], false).unwrap();
+
+        let page = state.list_entries("usbipd list", None, 0, 1).unwrap();
+        assert_eq!(
+            page.entries[0].source,
+            Source::Builtin,
+            "單純開關啟用不該改變來源——只有真的編輯內容才轉成 user"
+        );
+        assert!(!page.entries[0].enabled, "停用本身還是要生效");
+    }
+
+    #[test]
+    fn export_skips_a_disabled_builtin_entry() {
+        let (state, _dir) = temp_state();
+        let page = state
+            .list_entries("usbipd list", Some(Source::Builtin), 0, 1)
+            .unwrap();
+        state.set_enabled(&[page.entries[0].id], false).unwrap();
+
+        let json = state.export_entries().unwrap();
+
+        assert!(
+            !json.contains("usbipd list"),
+            "停用內建條目不該讓它混進分享檔——那是承諾只含自己新增或編輯過的"
+        );
     }
 
     #[test]

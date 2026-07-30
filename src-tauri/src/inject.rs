@@ -16,9 +16,8 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId, IsIconic, SetForegroundWindow,
-    ShowWindow, EVENT_SYSTEM_FOREGROUND, SW_RESTORE, WINEVENT_OUTOFCONTEXT,
-    WINEVENT_SKIPOWNPROCESS,
+    GetForegroundWindow, GetWindowThreadProcessId, IsIconic, SetForegroundWindow, ShowWindow,
+    EVENT_SYSTEM_FOREGROUND, SW_RESTORE, WINEVENT_OUTOFCONTEXT, WINEVENT_SKIPOWNPROCESS,
 };
 
 /// 候選框叫出前的前景視窗。`HWND` 不是 `Send`，因此存原始指標數值。
@@ -74,10 +73,10 @@ pub fn remember_foreground() {
         crate::trace("焦點", "前景不可用，沿用追蹤到的視窗");
         return;
     }
-    crate::trace(
-        "焦點",
-        &format!("記錄目標視窗 {:?} {:?}", hwnd.0, window_title(hwnd)),
-    );
+    // 只記 HWND 不記標題：診斷定位問題需要的是「有沒有記錄到、是不是同一個
+    // 視窗」，而這行每按一次快捷鍵就跑一次，寫標題等於把使用者開過什麼
+    // 留在磁碟上——與下面 hook callback 的顧慮相同。
+    crate::trace("焦點", &format!("記錄目標視窗 {:?}", hwnd.0));
     *TARGET_WINDOW.lock().unwrap() = Some(hwnd.0 as isize);
 }
 
@@ -85,12 +84,6 @@ fn belongs_to_self(hwnd: HWND) -> bool {
     let mut pid = 0u32;
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
     pid == std::process::id()
-}
-
-fn window_title(hwnd: HWND) -> String {
-    let mut buffer = [0u16; 128];
-    let len = unsafe { GetWindowTextW(hwnd, &mut buffer) };
-    String::from_utf16_lossy(&buffer[..len.max(0) as usize])
 }
 
 /// 目前記錄的目標視窗，供 caret 定位使用。

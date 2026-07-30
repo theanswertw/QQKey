@@ -12,11 +12,17 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn open(path: &Path) -> rusqlite::Result<Self> {
+    /// 錯誤是字串而不是 `rusqlite::Error`：schema 版本比程式新並不是資料庫
+    /// 出錯，而是要講給使用者聽的話，而這句話會直接進啟動失敗的對話框。
+    pub fn open(path: &Path) -> Result<Self, String> {
         if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+            // 這裡失敗的話下面 Connection::open 也會失敗，錯誤由它去報；
+            // 但「為什麼」建不出來（權限、磁碟滿）只有這一行看得到。
+            if let Err(error) = std::fs::create_dir_all(parent) {
+                crate::trace("儲存", &format!("建立資料夾失敗：{error}"));
+            }
         }
-        let connection = Connection::open(path)?;
+        let connection = Connection::open(path).map_err(|error| error.to_string())?;
         migrate(&connection)?;
         Ok(Self {
             connection: Mutex::new(connection),
@@ -195,6 +201,14 @@ impl Store {
     }
 
     /// 寫入從 JSON 匯入的使用者條目。同 template 者覆寫，並一律標記為 user 來源。
+    ///
+    /// 轉成 user 是刻意的：使用者選了對方那一版，效果等同他自己編輯過，
+    /// 之後就不該再被內建目錄蓋回去。這跟 `sync_builtin`／`import_history`
+    /// 的 `WHERE` 保護不衝突——那兩支是自動跑的，不能碰使用者整理過的東西；
+    /// 這一支是使用者按下按鈕才會發生的。
+    ///
+    /// 但 `enabled` 不跟著覆寫：你刻意關掉的條目，不該因為匯入一份別人的
+    /// 檔案就自己打開。新條目仍照檔案裡的值建立。
     pub fn upsert_user(&self, entries: &[SharedEntry]) -> rusqlite::Result<usize> {
         let mut connection = self.connection.lock().unwrap();
         let transaction = connection.transaction()?;
@@ -206,7 +220,6 @@ impl Store {
                  ON CONFLICT(template) DO UPDATE SET
                    description = excluded.description,
                    keywords    = excluded.keywords,
-                   enabled     = excluded.enabled,
                    boost       = excluded.boost,
                    source      = 'user'",
             )?;
@@ -263,29 +276,71 @@ impl Store {
     }
 }
 
-fn migrate(connection: &Connection) -> rusqlite::Result<()> {
-    connection.execute_batch(
-        "PRAGMA journal_mode = WAL;
+/// 目前的 schema 版本。動到 `entry` 或 `meta` 的結構時 +1，
+/// 並在 `migrate()` 的階梯尾端補上對應的一段。
+const SCHEMA_VERSION: i64 = 1;
 
-         CREATE TABLE IF NOT EXISTS entry (
-           id          INTEGER PRIMARY KEY,
-           template    TEXT NOT NULL UNIQUE,
-           description TEXT,
-           keywords    TEXT,
-           source      TEXT NOT NULL,
-           enabled     INTEGER NOT NULL DEFAULT 1,
-           score       REAL NOT NULL DEFAULT 0,
-           last_used   INTEGER,
-           boost       REAL NOT NULL DEFAULT 0
-         );
+/// 建立或升級 schema。版本記在 SQLite 內建的 `user_version`，不另外開表。
+///
+/// 從前這裡只有一組 `CREATE TABLE IF NOT EXISTS`。那對既有資料庫等於什麼
+/// 都不做——只要哪天加一個欄位，舊資料庫的 SELECT 就會撞上 `no such column`，
+/// 而且是在啟動時撞，使用者只會看到工具再也打不開。匯出檔案早就有版本號了，
+/// 資料庫沒理由沒有。
+fn migrate(connection: &Connection) -> Result<(), String> {
+    connection
+        .execute_batch("PRAGMA journal_mode = WAL;")
+        .map_err(|error| format!("設定 journal 模式失敗：{error}"))?;
 
-         CREATE INDEX IF NOT EXISTS idx_entry_enabled ON entry(enabled);
+    let version: i64 = connection
+        .query_row("PRAGMA user_version", [], |row| row.get(0))
+        .map_err(|error| format!("讀取 schema 版本失敗：{error}"))?;
 
-         CREATE TABLE IF NOT EXISTS meta (
-           key   TEXT PRIMARY KEY,
-           value TEXT NOT NULL
-         );",
-    )
+    if version > SCHEMA_VERSION {
+        // 不試著降級。新版寫進去的欄位砍掉就是弄丟資料，寧可不開。
+        return Err(format!(
+            "這個資料庫是較新版本的 QQKey 建立的（schema v{version}，\
+             本程式只認得 v{SCHEMA_VERSION}）。請改用新版，\
+             或把資料庫移到別處讓 QQKey 重建一個。"
+        ));
+    }
+
+    // 既有資料庫的 user_version 是 0 但表已經在了，靠 IF NOT EXISTS 讓這一段
+    // 對它是空操作，跑完一樣蓋上版本章。
+    if version < 1 {
+        connection
+            .execute_batch(
+                "CREATE TABLE IF NOT EXISTS entry (
+                   id          INTEGER PRIMARY KEY,
+                   template    TEXT NOT NULL UNIQUE,
+                   description TEXT,
+                   keywords    TEXT,
+                   source      TEXT NOT NULL,
+                   enabled     INTEGER NOT NULL DEFAULT 1,
+                   score       REAL NOT NULL DEFAULT 0,
+                   last_used   INTEGER,
+                   boost       REAL NOT NULL DEFAULT 0
+                 );
+
+                 CREATE INDEX IF NOT EXISTS idx_entry_enabled ON entry(enabled);
+
+                 CREATE TABLE IF NOT EXISTS meta (
+                   key   TEXT PRIMARY KEY,
+                   value TEXT NOT NULL
+                 );",
+            )
+            .map_err(|error| format!("建立資料表失敗：{error}"))?;
+    }
+
+    // 下一次改 schema 就接在這裡：if version < 2 { ...ALTER TABLE... }
+
+    if version != SCHEMA_VERSION {
+        // user_version 不吃參數綁定，只能組字串；SCHEMA_VERSION 是常數。
+        connection
+            .execute_batch(&format!("PRAGMA user_version = {SCHEMA_VERSION};"))
+            .map_err(|error| format!("寫入 schema 版本失敗：{error}"))?;
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -305,6 +360,70 @@ mod tests {
         let dir = tempfile::tempdir().expect("建立暫存目錄");
         let store = Store::open(&dir.path().join("test.db")).expect("開啟資料庫");
         (store, dir)
+    }
+
+    #[test]
+    fn migration_stamps_the_schema_version() {
+        let (store, _dir) = temp_store();
+
+        let version: i64 = store
+            .connection
+            .lock()
+            .unwrap()
+            .query_row("PRAGMA user_version", [], |row| row.get(0))
+            .unwrap();
+
+        assert_eq!(
+            version,
+            super::SCHEMA_VERSION,
+            "開完資料庫就該蓋上版本章，否則下次升級認不出這是哪一版"
+        );
+    }
+
+    #[test]
+    fn migration_leaves_an_existing_database_intact() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄");
+        let path = dir.path().join("test.db");
+        {
+            let store = Store::open(&path).expect("第一次開啟");
+            store
+                .sync_builtin(&[new_entry("usbipd list", "列出裝置")])
+                .unwrap();
+        }
+
+        let store = Store::open(&path).expect("同一個資料庫再開一次不該失敗");
+
+        assert_eq!(
+            store.load_enabled().unwrap().len(),
+            1,
+            "重跑 migration 不該動到既有資料"
+        );
+    }
+
+    #[test]
+    fn refuses_a_database_written_by_a_newer_version() {
+        let dir = tempfile::tempdir().expect("建立暫存目錄");
+        let path = dir.path().join("test.db");
+        Store::open(&path).expect("先建立一個正常的資料庫");
+        {
+            let connection = rusqlite::Connection::open(&path).unwrap();
+            connection
+                .execute_batch(&format!(
+                    "PRAGMA user_version = {};",
+                    super::SCHEMA_VERSION + 1
+                ))
+                .unwrap();
+        }
+
+        let error = match Store::open(&path) {
+            Ok(_) => panic!("版本比程式新就不該硬開下去"),
+            Err(error) => error,
+        };
+
+        assert!(
+            error.contains("較新版本"),
+            "訊息要讓使用者看得懂發生什麼事，實際拿到：{error}"
+        );
     }
 
     #[test]

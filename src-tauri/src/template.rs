@@ -19,6 +19,26 @@ fn find_placeholder(template: &str) -> Option<usize> {
     template[open..].find('}').map(|_| open)
 }
 
+/// 剝掉不該送進命令列的控制字元。
+///
+/// 整個工具的承諾是「填入而不執行」，但 `SendInput` 是逐個字元送出的——
+/// 送一個 CR/LF 給終端機就等於替使用者按下 Enter，命令會直接跑起來；
+/// Tab 則會觸發 PowerShell 補全，把剛填好的字改掉。
+///
+/// 樣板不是全都由使用者親手打進來的：從剪貼簿匯入的 JSON 完全繞過設定
+/// 畫面那個單行輸入框，一份挾帶 `git push --force\n` 的分享檔就足以讓人
+/// 按一次 Enter 就強推。這裡是送出前的最後一道，資料庫裡萬一已經有髒
+/// 資料也擋得住。
+pub fn sanitize(text: &str) -> String {
+    text.chars().filter(|c| !c.is_control()).collect()
+}
+
+/// 樣板裡有沒有控制字元。新增與匯入都先問過這裡，
+/// 讓問題在寫進資料庫之前就被擋下來，而不是等到注入時才無聲地消失。
+pub fn has_control_chars(template: &str) -> bool {
+    template.chars().any(char::is_control)
+}
+
 #[cfg(test)]
 mod tests {
     use super::injectable_prefix;
@@ -49,5 +69,44 @@ mod tests {
     #[test]
     fn placeholder_at_the_very_start_yields_empty_prefix() {
         assert_eq!(injectable_prefix("{cmd} --help"), "");
+    }
+
+    #[test]
+    fn sanitize_strips_the_newline_that_would_run_the_command() {
+        assert_eq!(
+            super::sanitize("git push --force\n"),
+            "git push --force",
+            "換行送到終端機就是 Enter，命令會直接執行"
+        );
+        assert_eq!(super::sanitize("git status\r\n"), "git status");
+    }
+
+    #[test]
+    fn sanitize_strips_tab_which_would_trigger_completion() {
+        assert_eq!(
+            super::sanitize("git\tstatus"),
+            "gitstatus",
+            "Tab 會觸發 PowerShell 補全，把填好的字改掉"
+        );
+    }
+
+    #[test]
+    fn sanitize_keeps_spaces_and_non_ascii() {
+        assert_eq!(
+            super::sanitize("usbipd attach --wsl --busid "),
+            "usbipd attach --wsl --busid ",
+            "命令裡的空格是有意義的，不能跟控制字元一起清掉"
+        );
+        assert_eq!(super::sanitize("echo 掛載 🚀"), "echo 掛載 🚀");
+    }
+
+    #[test]
+    fn detects_control_chars_before_they_reach_the_database() {
+        assert!(super::has_control_chars("git push\n"));
+        assert!(super::has_control_chars("git\tpush"));
+        assert!(
+            !super::has_control_chars("usbipd attach --wsl --busid {busid}"),
+            "正常的樣板不該被誤判"
+        );
     }
 }

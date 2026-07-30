@@ -7,6 +7,8 @@ export default function Launcher() {
   const [query, setQuery] = useState("");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState(0);
+  /** 注入失敗的原因。候選框沒有別的地方能講話，訊息只能留在框裡。 */
+  const [error, setError] = useState<string | null>(null);
   /** 每次叫出候選框都要重查一次，常用度可能在上次之後變了 */
   const [refreshToken, setRefreshToken] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -15,6 +17,7 @@ export default function Launcher() {
     focusInput();
     const unlisten = listen("launcher:shown", () => {
       setQuery("");
+      setError(null);
       setRefreshToken((token) => token + 1);
       focusInput();
     });
@@ -90,12 +93,27 @@ export default function Launcher() {
       return;
     }
     // 後端負責截斷佔位符、還原焦點、送出文字，並記下這次使用
-    invoke("accept_candidate", { id: candidate.id }).catch((error) => {
-      console.error("填入命令失敗", error);
+    invoke("accept_candidate", { id: candidate.id }).catch((reason) => {
+      // 注入失敗時後端會把候選框重新顯示，訊息就落在這裡——
+      // 從前這裡只寫 console，而 release 版根本沒有 console 可看
+      setError(String(reason));
+      focusInput();
     });
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    /*
+     * 組字期間的 Enter 與 ↑↓ 屬於輸入法，不是在選命令。不讓開的話，
+     * 用注音打「掛載」時確認選字就會把命令注入出去——而搜尋本來就是
+     * 鼓勵打中文關鍵字的，這條路踩到的機會不低。
+     *
+     * 只看 isComposing 不夠：compositionend 與 keydown 的先後順序沒有保證，
+     * 確認鍵有時會落在組字結束之後。keyCode 229 是輸入法吃掉按鍵時的標記，
+     * 補的就是這個空隙。
+     */
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       dismiss();
@@ -116,13 +134,15 @@ export default function Launcher() {
       accept(selected);
       return;
     }
-    // 參數一律留到終端機裡再補，所以查詢字串不需要數字，1–9 可直接當選取鍵
-    if (/^[1-9]$/.test(event.key)) {
-      const index = Number(event.key) - 1;
-      if (index < candidates.length) {
-        event.preventDefault();
-        accept(index);
-      }
+    /*
+     * 直選掛在 Alt 上，數字鍵留給查詢字串——命令名稱本身就常帶數字
+     * （7z、base64、md5sum、python3），裸數字當選取鍵的話這些命令永遠打不出來。
+     * 掛 Alt 也讓行為固定：原本 preventDefault 只在候選數夠多時才執行，
+     * 同一顆鍵會因為當下有幾筆候選而時而選取、時而輸入。
+     */
+    if (event.altKey && /^[1-9]$/.test(event.key)) {
+      event.preventDefault();
+      accept(Number(event.key) - 1);
     }
   };
 
@@ -136,7 +156,10 @@ export default function Launcher() {
           ref={inputRef}
           className="launcher__input"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setError(null);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="輸入命令關鍵字，例如 usbipd 或「掛載」"
           spellCheck={false}
@@ -184,9 +207,15 @@ export default function Launcher() {
         </div>
       )}
 
+      {error && (
+        <div className="launcher__error" role="alert">
+          填不進去：{error}
+        </div>
+      )}
+
       <div className="launcher__footer">
         <span>↑↓ 移動</span>
-        <span>1–9 直選</span>
+        <span>Alt+1–9 直選</span>
         <span>Enter 填入</span>
         <span>Esc 取消</span>
         <span className="launcher__footer-end">Alt+Shift+Q 設定</span>

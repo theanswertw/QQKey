@@ -106,6 +106,15 @@ export default function GeneralPanel({
     }
   };
 
+  const openLogDir = async () => {
+    try {
+      // 資料夾開起來使用者自己就看到了，不必再彈提示
+      await invoke("open_log_dir");
+    } catch (error) {
+      onError(String(error));
+    }
+  };
+
   const importEntries = async () => {
     try {
       const json = await navigator.clipboard.readText();
@@ -140,6 +149,15 @@ export default function GeneralPanel({
             套用
           </button>
         </div>
+        {settings.activeShortcut !== settings.shortcut && (
+          <p className="section__note section__note--warn">
+            {settings.activeShortcut
+              ? `${settings.shortcut} 沒有註冊成功，多半是被其他程式佔用了。
+                 目前實際可用的是 ${settings.activeShortcut}，換一組再套用就會生效。`
+              : `${settings.shortcut} 註冊失敗，現在沒有任何快捷鍵可以叫出候選框——
+                 請從系統匣圖示操作，或在這裡換一組。`}
+          </p>
+        )}
       </section>
 
       <section className="section">
@@ -350,6 +368,20 @@ export default function GeneralPanel({
           </button>
           <button className="button" onClick={importEntries}>
             從剪貼簿匯入
+          </button>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2 className="section__title">診斷紀錄</h2>
+        <p className="section__note">
+          QQKey 平常沒有可見視窗，出問題時只能靠日誌回推是哪一步失敗的。
+          日誌記錄叫出候選框、定位與注入各走到哪裡，
+          <strong>不記錄視窗標題，也不記錄填入的內容</strong>。
+        </p>
+        <div className="section__row">
+          <button className="button" onClick={openLogDir}>
+            開啟日誌資料夾
           </button>
         </div>
       </section>

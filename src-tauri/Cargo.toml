@@ -19,6 +19,10 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
+# release 版沒有 console（main.rs 的 windows_subsystem = "windows"），
+# 診斷訊息不落地成檔案就等於不存在。
+tauri-plugin-log = "2.9.0"
+log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # 固定在 0.37：rusqlite 0.40 會帶進 libsqlite3-sys 0.38，
@@ -30,6 +34,7 @@ regex = "1.13.1"
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.2"
+tauri-plugin-single-instance = "2.4.3"
 
 [target."cfg(windows)".dependencies]
 windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Threading", "Win32_System_Com", "Win32_System_Ole", "Win32_System_Variant", "Win32_UI_Accessibility", "Win32_Graphics_Gdi"] }

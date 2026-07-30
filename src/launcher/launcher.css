@@ -9,6 +9,7 @@
   --qq-text-dim: rgba(232, 234, 237, 0.55);
   --qq-accent: #4a9eff;
   --qq-selected: rgba(74, 158, 255, 0.16);
+  --qq-danger: #ff8a80;
   --qq-mono: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, monospace;
 }
 
@@ -20,6 +21,7 @@
     --qq-text: #1a1c1e;
     --qq-text-dim: rgba(26, 28, 30, 0.55);
     --qq-selected: rgba(74, 158, 255, 0.14);
+    --qq-danger: #c5221f;
   }
 }
 
@@ -144,6 +146,16 @@ body,
   place-items: center;
   font-size: 13px;
   color: var(--qq-text-dim);
+}
+
+/* 注入失敗時才出現。訊息可能不短，讓它自己換行，不要把提示列擠掉 */
+.launcher__error {
+  flex: none;
+  padding: 8px 16px;
+  border-top: 1px solid var(--qq-border);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--qq-danger);
 }
 
 .launcher__footer {

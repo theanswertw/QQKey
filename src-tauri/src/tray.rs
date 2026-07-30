@@ -10,13 +10,7 @@ use tauri::{AppHandle, Runtime};
 use crate::hotkey::SETTINGS_SHORTCUT;
 
 pub fn setup<R: Runtime>(app: &AppHandle<R>, shortcut: &str) -> tauri::Result<()> {
-    let show = MenuItem::with_id(
-        app,
-        "show",
-        format!("叫出候選框（{}）", pretty(shortcut)),
-        true,
-        None::<&str>,
-    )?;
+    let show = MenuItem::with_id(app, "show", show_label(shortcut), true, None::<&str>)?;
     let settings = MenuItem::with_id(
         app,
         "settings",
@@ -35,7 +29,7 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>, shortcut: &str) -> tauri::Result<()
 
     TrayIconBuilder::with_id("main")
         .icon(icon)
-        .tooltip(format!("QQKey — {} 叫出候選框", pretty(shortcut)))
+        .tooltip(tooltip(shortcut))
         .menu(&menu)
         // 左鍵留給「叫出候選框」，選單走右鍵
         .show_menu_on_left_click(false)
@@ -64,6 +58,25 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>, shortcut: &str) -> tauri::Result<()
     Ok(())
 }
 
+/// 這兩處收到的是**實際註冊成功**的快捷鍵，空字串代表一個都沒註冊上。
+/// 那種時候不能照寫一個按了沒反應的組合——系統匣是使用者唯一找得回
+/// 設定畫面的地方，得讓他知道要去改綁。
+fn show_label(shortcut: &str) -> String {
+    if shortcut.is_empty() {
+        "叫出候選框（快捷鍵未生效）".to_string()
+    } else {
+        format!("叫出候選框（{}）", pretty(shortcut))
+    }
+}
+
+fn tooltip(shortcut: &str) -> String {
+    if shortcut.is_empty() {
+        "QQKey — 快捷鍵未生效，請從設定改綁".to_string()
+    } else {
+        format!("QQKey — {} 叫出候選框", pretty(shortcut))
+    }
+}
+
 /// 把 `Alt+KeyQ` 這種內部表示法改寫成給人看的 `Alt+Q`。
 fn pretty(shortcut: &str) -> String {
     shortcut
@@ -76,18 +89,28 @@ fn pretty(shortcut: &str) -> String {
 /// 快捷鍵改綁後同步系統匣上的提示文字。
 pub fn refresh_tooltip<R: Runtime>(app: &AppHandle<R>, shortcut: &str) {
     if let Some(tray) = app.tray_by_id("main") {
-        let _ = tray.set_tooltip(Some(format!("QQKey — {} 叫出候選框", pretty(shortcut))));
+        let _ = tray.set_tooltip(Some(tooltip(shortcut)));
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::pretty;
+    use super::{pretty, show_label, tooltip};
 
     #[test]
     fn strips_the_key_prefix_for_display() {
         assert_eq!(pretty("Alt+KeyQ"), "Alt+Q");
         assert_eq!(pretty("Alt+Shift+KeyQ"), "Alt+Shift+Q");
         assert_eq!(pretty("Control+Space"), "Control+Space");
+    }
+
+    #[test]
+    fn says_so_when_no_shortcut_is_actually_registered() {
+        assert!(
+            show_label("").contains("未生效"),
+            "一個都沒註冊成功時，選單不該寫著按了沒反應的組合"
+        );
+        assert!(tooltip("").contains("未生效"));
+        assert_eq!(show_label("Alt+KeyQ"), "叫出候選框（Alt+Q）");
     }
 }

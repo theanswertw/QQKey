@@ -42,6 +42,11 @@ export interface EntryPatch {
 
 export interface Settings {
   shortcut: string;
+  /**
+   * 目前真正按得出來的快捷鍵。設定的組合被其他程式佔用時會退回預設，
+   * 這時它跟 `shortcut` 不一樣；空字串代表一個都沒註冊成功。
+   */
+  activeShortcut: string;
   historyImport: boolean;
   secretPattern: string;
   defaultSecretPattern: string;

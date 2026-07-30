@@ -165,15 +165,14 @@ export default function EntriesPanel({ onError }: { onError: (message: string) =
                 <button
                   className="button button--ghost"
                   onClick={() =>
+                    // 走跟批次停用同一條路。從前這裡送 update_entry，而那支
+                    // 會把內建條目轉成自訂——按個「停用」就讓它從此收不到
+                    // 內建目錄更新、還被算進匯出檔，兩顆看起來一樣的按鈕
+                    // 後果卻不同。單純開關啟用不該動到來源。
                     void run(() =>
-                      invoke("update_entry", {
-                        id: entry.id,
-                        patch: {
-                          template: entry.template,
-                          description: entry.description,
-                          keywords: entry.keywords,
-                          enabled: !entry.enabled,
-                        },
+                      invoke("set_entries_enabled", {
+                        ids: [entry.id],
+                        enabled: !entry.enabled,
                       }),
                     )
                   }

@@ -46,9 +46,12 @@ cargo test --lib caret::      # 單一模組
    `TextPattern` → 視窗左下角），`caret.rs::place()` 再做螢幕邊界夾制。
    實測結論見 `spike/caret-probe/README.md`。
 4. 前端選定後呼叫 `accept_candidate` → `template.rs::injectable_prefix()` 截斷佔位符
-   → `inject.rs::inject_text()` 還原焦點（`SetForegroundWindow`，失敗則以
-   `AttachThreadInput` 繞過前景鎖定）→ 睡 40ms → `SendInput` 逐個 UTF-16 送出。
-5. 注入成功才 `record_use()`，失敗的嘗試不拉高排序。
+   → `template.rs::sanitize()` 剝除控制字元（`\r\n` 送到終端機就等同 Enter，
+   命令會直接執行——這是「填入而不執行」的最後一道）→ `inject.rs::inject_text()`
+   還原焦點（`SetForegroundWindow`，失敗則以 `AttachThreadInput` 繞過前景鎖定）
+   → 睡 40ms → `SendInput` 逐個 UTF-16 送出。
+5. 注入成功才 `record_use()`，失敗的嘗試不拉高排序。**失敗時候選框會重新顯示
+   並把錯誤寫在框裡**——收了框又沒有字，使用者只會以為工具壞了。
 
 ### 雙視窗
 
@@ -68,9 +71,12 @@ cargo test --lib caret::      # 單一模組
 **任何改動條目的操作都必須呼叫 `AppState::reload_pool()`**，否則排序與可見性
 要等到下次啟動才反映。`record_use()` 例外——它就地更新單筆，不必重載整池。
 
-schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()` 以
-`CREATE TABLE IF NOT EXISTS` 處理。`meta` 存字串設定（快捷鍵、歷史匯入位移與開關、
-機密過濾樣式、候選框背景不透明度），key 常數定義在 `state.rs` 頂端。
+schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user_version`，
+`store.rs::migrate()` 依 `SCHEMA_VERSION` 逐段套用；**改動表結構時要 `SCHEMA_VERSION` +1
+並在階梯尾端補一段**，只加 `CREATE TABLE IF NOT EXISTS` 對既有資料庫等於沒做。
+版本比程式新時 `Store::open()` 直接回 Err（不試著降級），訊息會進啟動失敗對話框。
+`meta` 存字串設定（快捷鍵、歷史匯入位移與開關、機密過濾樣式、候選框背景不透明度），
+key 常數定義在 `state.rs` 頂端。
 
 ### 條目來源與優先序
 
@@ -113,6 +119,11 @@ schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()`
 : Rust `template.rs::injectable_prefix()`（決定真正送出什麼）與 TS
   `types.ts::splitTemplate()`（決定 UI 灰字提示切在哪）。規則要一致。
 
+控制字元有兩道
+: 入口 `state.rs::check_template()` 擋下含控制字元的新增與匯入（講出問題），
+  注入前 `template.rs::sanitize()` 再濾一次（資料庫裡已有髒資料也擋得住）。
+  匯入是**整批拒絕**而非跳過壞的那幾筆——那是信任邊界，默默改掉別人給的東西更難追。
+
 快捷鍵字串格式
 : 是 `keyboard-types` 的 code 名稱——`Alt+KeyQ`、`Alt+Shift+KeyQ`。顯示給人看時
   用 `tray.rs::pretty()` 去掉 `Key` 前綴。`hotkey.rs::rebind()` 在新綁定失敗時會
@@ -121,7 +132,21 @@ schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()`
 失敗策略
 : 啟動時快捷鍵註冊失敗、系統匣建立失敗、歷史匯入失敗都**只記錄不中止**——
   設定畫面是唯一能改綁的地方，那扇門得打得開。`AppState::secret_filter()`
-  在自訂樣式無效時退回預設，不讓匯入停擺。
+  在自訂樣式無效時退回預設，不讓匯入停擺。**例外是資料庫**：開不起來就沒有
+  候選池，`lib.rs::fatal_dialog()` 跳系統對話框說明原因與路徑後才退出，
+  不留一個叫不出東西的空殼。
+
+快捷鍵有兩個值
+: `meta.shortcut` 是設定值，`AppState::active_shortcut()` 是**實際註冊成功**的那一個。
+  設定的組合被佔用時會退回 `DEFAULT_SHORTCUT`，兩者就此分岔。系統匣顯示與
+  `rebind()` 的解除目標都必須用後者——拿設定值去解除會解到一個從沒註冊成功的
+  組合，退回註冊的那個從此賴在系統裡，使用者反而設不回預設值。
+  空字串代表一個都沒註冊上，`tray.rs` 會顯示「快捷鍵未生效」。
+
+改動條目的兩條路語意不同
+: `update_entry()` 會把 builtin 轉成 user（使用者編輯過就不該再被內建目錄蓋回），
+  `set_enabled()` 不轉。所以**單純開關啟用一律走 `set_enabled()`**，
+  前端單筆與批次都是。走錯的話，按個「停用」就會讓內建條目被算進匯出檔。
 
 ## 機密過濾（`catalog/history.rs`）
 
@@ -134,6 +159,7 @@ schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()`
 
 只回報略過的**筆數**，內容不記錄。`inject.rs` 的前景追蹤 callback 也刻意不做診斷
 輸出——每次切換視窗都會觸發，記錄標題等於把使用者一整天開過什麼全寫進 log。
+同樣理由，`remember_foreground()` 只記 HWND 不記標題。
 
 ## 程式碼慣例
 
@@ -141,7 +167,9 @@ schema 只有 `entry` 與 `meta` 兩張表，migration 在 `store.rs::migrate()`
   尤其是 Win32 呼叫順序、fallback 分支這類看不出理由的地方。
 - 測試名稱是英文描述句（`flips_above_when_it_would_overflow_the_bottom`），
   assert 訊息用繁中說明期望。
-- `crate::trace(scope, message)` 是後端診斷輸出，只在 `debug_assertions` 下生效。
+- `crate::trace(scope, message)` 是後端診斷輸出，一律寫進日誌檔（`tauri-plugin-log`，
+  Windows 位置是 `%LOCALAPPDATA%\com.example.qqkey\logs\`，注意不是資料庫所在的
+  Roaming）。**日誌會留在磁碟上，所以不記錄視窗標題、不記錄注入內容**。
 - 前端沒有 lint 設定；型別檢查靠 `npm run build`。無前端測試。
 
 ## 已知限制與依賴約束

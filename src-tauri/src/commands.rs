@@ -10,7 +10,7 @@ use crate::state::{AppState, Settings};
 
 const SETTINGS_LABEL: &str = "settings";
 
-/// 一次最多回九筆，對應數字鍵 1–9。
+/// 一次最多回九筆，對應直選鍵 Alt+1–9。
 const MAX_CANDIDATES: usize = 9;
 
 /// 依查詢字串取得候選命令。查詢為空時回傳最常用的幾筆。
@@ -34,8 +34,20 @@ pub fn accept_candidate<R: Runtime>(
     id: i64,
 ) -> Result<(), String> {
     let template = state.template_of(id)?;
+
+    // 成功路徑維持原樣——先收起候選框，焦點才回得去，這個順序是調過的。
+    // 但失敗時要把框叫回來：以系統管理員身分開的終端機會擋下 SendInput，
+    // 而那正是 usbipd 這類命令的日常情境。框收了又沒有字，使用者只會
+    // 以為工具壞了。
+    let text = crate::template::sanitize(crate::template::injectable_prefix(&template));
+
     let _ = window.hide();
-    crate::inject::inject_text(crate::template::injectable_prefix(&template))?;
+    if let Err(error) = crate::inject::inject_text(&text) {
+        crate::trace("注入", &format!("失敗：{error}"));
+        let _ = window.show();
+        let _ = window.set_focus();
+        return Err(error);
+    }
 
     // 注入成功才算數，免得把失敗的嘗試也拉高排序
     state.record_use(id)
@@ -108,8 +120,12 @@ pub fn set_shortcut<R: Runtime>(
     state: State<AppState>,
     shortcut: String,
 ) -> Result<(), String> {
-    crate::hotkey::rebind(&app, &state.shortcut(), &shortcut)?;
+    // 解除的必須是「目前真正註冊著的」而不是「設定裡寫的」——啟動時若因為
+    // 被佔用而退回了預設，兩者並不相同，拿設定值去解除會讓退回註冊的那個
+    // 賴在系統裡，使用者從此設不回預設值。
+    crate::hotkey::rebind(&app, &state.active_shortcut(), &shortcut)?;
     state.set_shortcut(&shortcut)?;
+    state.set_active_shortcut(&shortcut);
     crate::tray::refresh_tooltip(&app, &shortcut);
     Ok(())
 }
@@ -131,6 +147,25 @@ pub fn set_autostart<R: Runtime>(app: tauri::AppHandle<R>, enabled: bool) -> Res
         manager.disable()
     }
     .map_err(|error| error.to_string())
+}
+
+/// 開啟日誌資料夾。
+///
+/// 日誌是出問題時唯一交得出來的東西，但它躺在 `%LOCALAPPDATA%` 底下，
+/// 要使用者自己找不切實際，所以給一個點得到的入口。
+#[tauri::command]
+pub fn open_log_dir<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
+    let dir = app
+        .path()
+        .app_log_dir()
+        .map_err(|error| format!("取不到日誌資料夾位置：{error}"))?;
+    // 資料夾要等第一次寫入才會出現，剛裝好就來點的話得先把它建出來
+    std::fs::create_dir_all(&dir).map_err(|error| format!("建立日誌資料夾失敗：{error}"))?;
+    std::process::Command::new("explorer")
+        .arg(&dir)
+        .spawn()
+        .map_err(|error| format!("開啟日誌資料夾失敗：{error}"))?;
+    Ok(())
 }
 
 #[tauri::command]
