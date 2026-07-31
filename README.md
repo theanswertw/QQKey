@@ -21,6 +21,10 @@ A keyboard launcher for Windows that *inserts* commands into your prompt instead
 
 ---
 
+> Yes, this is a reinvented wheel. I took the existing ones for a spin and simply did not care for
+> the tread pattern — so I had one made to my taste. Although "made" is generous: Opus cut the tread,
+> I stood nearby being hard to please.
+
 `usbipd`, `git`, `netsh`, `docker` — dozens of subcommands and flags that never quite stick, so
 every time means another trip through `--help`. QQKey lets you search those commands by keywords
 in your own language and puts the result in your command line, with the caret parked exactly where
