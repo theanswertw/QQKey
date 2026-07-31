@@ -346,12 +346,31 @@ pub fn set_history_import_enabled(state: State<AppState>, enabled: bool) -> Resu
 /// 設定視窗刻意不在 `tauri.conf.json` 裡宣告，而是等到真的要開才建立——
 /// 即使設為 `visible: false`，它在啟動時仍會被 Windows 當成前景視窗，
 /// 害候選框把它誤認為要注入的目標。
-#[tauri::command]
+///
+/// **`(async)` 不可省。** 不帶它的 `#[tauri::command]` 會在**主執行緒**上執行，
+/// 而主執行緒就是事件迴圈；`WebviewWindowBuilder::build()` 內部是把建立視窗的
+/// 訊息丟給事件迴圈然後**等回覆**，於是主執行緒等自己，整個程式鎖死——
+/// 設定視窗停在全白（HWND 建好了但 WebView2 永遠沒初始化），候選框連 Esc 都
+/// 沒有反應，只能從工作管理員結束程序。這是 WebView2 的限制，官方文件在
+/// `WebviewWindowBuilder` 明文寫著「on Windows, this function deadlocks when
+/// used in a synchronous command and event handlers」（wry#583）。
+/// `(async)` 讓這支命令跑在 async runtime 的執行緒上，事件迴圈就空著能回覆了。
+///
+/// 全域快捷鍵那條路（`hotkey.rs::register_settings()`）不受影響：它的 callback
+/// 本來就不在事件迴圈執行緒上，所以從前只有滑鼠點候選框頁尾這條路會鎖死。
+/// 函式本體維持同步、維持阻塞是刻意的——`build()` 就是要等視窗真的建好。
+#[tauri::command(async)]
 pub fn open_settings<R: Runtime>(app: tauri::AppHandle<R>) -> Result<(), String> {
     show_settings_window(&app)
 }
 
-/// 顯示設定視窗，沒有就建立一個。全域快捷鍵與 IPC 都走這裡。
+/// 顯示設定視窗，沒有就建立一個。全域快捷鍵、系統匣與 IPC 都走這裡。
+///
+/// **不可從事件迴圈執行緒呼叫。** 第一次呼叫會走到
+/// `WebviewWindowBuilder::build()`，而它會等事件迴圈回覆——在事件迴圈上呼叫
+/// 就是等自己。呼叫端負責確保自己不在那條執行緒上（`open_settings` 靠
+/// `#[tauri::command(async)]`，`tray.rs` 靠 `thread::spawn`），
+/// 理由詳見 `open_settings` 的說明。
 pub fn show_settings_window<R: Runtime>(app: &tauri::AppHandle<R>) -> Result<(), String> {
     match app.get_webview_window(SETTINGS_LABEL) {
         Some(window) => {

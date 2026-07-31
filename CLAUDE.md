@@ -153,6 +153,23 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 : `commands.rs` 加函式後，**必須**在 `lib.rs` 的 `invoke_handler!` 註冊。
   用到新的 Tauri plugin 能力時另需在 `src-tauri/capabilities/default.json` 加權限。
 
+會建立視窗的程式碼不可跑在事件迴圈執行緒上
+: `WebviewWindowBuilder::build()` 是把請求丟給事件迴圈然後**等回覆**，在事件迴圈上
+  呼叫就是等自己——整個程式鎖死，新視窗停在全白（HWND 建好了但 WebView2 永遠沒
+  初始化），其他視窗連 Esc 都沒反應，只能從工作管理員結束程序。這是 WebView2 的
+  限制（wry#583），`WebviewWindowBuilder` 的文件明文寫著
+  「deadlocks when used in a synchronous command and event handlers」。
+  **哪些路在事件迴圈上**：不帶 `(async)` 的 `#[tauri::command]`（預設就在主執行緒）、
+  系統匣選單的 `on_menu_event`（Tauri 經 event loop proxy 送回來，在 run callback
+  裡呼叫 listener）。**哪些不在**：全域快捷鍵的 callback（`GlobalHotKeyEvent::
+  set_event_handler` 直接呼叫，不經 proxy）。所以同一支
+  `show_settings_window()` 從 Alt+Shift+Q 進去沒事，從候選框頁尾或系統匣選單進去
+  會鎖死——**測一條路通了不代表另外兩條也通**。
+  現行解法：`open_settings` 用 `#[tauri::command(async)]`，`tray.rs` 用
+  `thread::spawn`。只有**建立**會踩到，`show()`／`hide()`／`set_position()` 這些
+  直接 Win32 呼叫不需要事件迴圈幫忙 pump，所以 `hide_launcher` 與
+  「視窗已存在就顯示」那一支同步呼叫沒問題。
+
 前後端型別
 : `src/shared/types.ts` 手動對應後端 serde 結構。傳給前端的結構一律加
   `#[serde(rename_all = "camelCase")]`（含 `Candidate`、`EntryPage`、`EntryPatch`

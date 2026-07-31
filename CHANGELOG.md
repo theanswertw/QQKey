@@ -5,6 +5,20 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **從候選框頁尾或系統匣選單開啟設定視窗會鎖死整個程式。** 症狀是設定視窗停在全白、
+  候選框連 Esc 都沒有反應，只能從工作管理員結束程序。`WebviewWindowBuilder::build()`
+  是把建立視窗的請求丟給事件迴圈然後**等回覆**，而這兩條路都跑在事件迴圈執行緒上
+  （不帶 `(async)` 的 `#[tauri::command]` 預設就在主執行緒；系統匣選單事件則是 Tauri
+  經 event loop proxy 送回來、在 run callback 裡呼叫 listener），於是主執行緒等自己。
+  全白是因為 HWND 建好了、但 WebView2 的初始化回呼永遠等不到訊息迴圈來 pump。
+  這是 WebView2 的限制（wry#583），`WebviewWindowBuilder` 的文件明文寫著
+  「deadlocks when used in a synchronous command and event handlers」。
+  `open_settings` 改用 `#[tauri::command(async)]`，系統匣那條路改用 `thread::spawn`，
+  兩者都只是讓呼叫離開事件迴圈執行緒。全域快捷鍵 Alt+Shift+Q 從來不受影響——
+  它的 callback 不經 event loop proxy，這也是為什麼這個缺陷能一直沒被發現。
+
 ### Changed
 
 - **注入前的固定延遲改為輪詢前景視窗。** `SetForegroundWindow()` 回傳 true 只代表請求

@@ -50,9 +50,17 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>, shortcut: &str, lang: Lang) -> taur
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => crate::hotkey::toggle_launcher(app),
             "settings" => {
-                if let Err(error) = crate::commands::show_settings_window(app) {
-                    crate::trace("設定", &format!("開啟失敗：{error}"));
-                }
+                // 這個 callback 跑在**事件迴圈執行緒**上：Tauri 把選單事件透過
+                // event loop proxy 送回來，再於 run callback 裡呼叫這些 listener。
+                // 在這裡直接建立設定視窗會鎖死整個程式，理由見
+                // `commands::open_settings`。丟到另一條執行緒，事件迴圈才空著
+                // 能回覆建立視窗的請求。
+                let app = app.clone();
+                std::thread::spawn(move || {
+                    if let Err(error) = crate::commands::show_settings_window(&app) {
+                        crate::trace("設定", &format!("開啟失敗：{error}"));
+                    }
+                });
             }
             "quit" => app.exit(0),
             _ => {}
