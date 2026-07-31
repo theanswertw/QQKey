@@ -678,6 +678,18 @@ messages! {
         Ko: "원래 창으로 포커스를 되돌릴 수 없습니다",
     }
 
+    /// 焦點還原的請求被接受了，但前景在期限內沒有真的換過去。
+    /// **必須明確講出「沒有送出」**——否則使用者會跑去別的視窗找那串字。
+    foreground_not_settled(ms: u32) {
+        ZhHant: "等不到原視窗回到前景（{ms} 毫秒），沒有送出任何文字",
+        ZhHans: "等不到原窗口回到前台（{ms} 毫秒），没有发出任何文字",
+        Ja: "元のウィンドウが前面に戻るのを {ms} ミリ秒待っても確認できませんでした。文字は送信していません",
+        En: "The original window did not come to the foreground within {ms} ms; no text was sent",
+        Fr: "La fenêtre d'origine n'est pas passée au premier plan en {ms} ms ; aucun texte n'a été envoyé",
+        De: "Das ursprüngliche Fenster kam nicht innerhalb von {ms} ms in den Vordergrund; es wurde kein Text gesendet",
+        Ko: "원래 창이 {ms}밀리초 안에 앞으로 나오지 않았습니다. 아무 텍스트도 보내지 않았습니다",
+    }
+
     /// 以系統管理員身分開的終端機會擋下 `SendInput`，而那正是 usbipd 這類
     /// 命令的日常情境。
     input_partially_sent(sent: u32, expected: u32) {
@@ -843,6 +855,7 @@ mod tests {
 
         keeps!(no_target_window());
         keeps!(restore_focus_failed());
+        keeps!(foreground_not_settled(417), "417");
         keeps!(input_partially_sent(41, 99), "41", "99");
 
         keeps!(shortcut_parse_failed(SENTINEL, "§E§"), SENTINEL, "§E§");

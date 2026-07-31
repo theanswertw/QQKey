@@ -49,7 +49,9 @@ cargo test --lib caret::      # 單一模組
    → `template.rs::sanitize()` 剝除控制字元（`\r\n` 送到終端機就等同 Enter，
    命令會直接執行——這是「填入而不執行」的最後一道）→ `inject.rs::inject_text()`
    還原焦點（`SetForegroundWindow`，失敗則以 `AttachThreadInput` 繞過前景鎖定）
-   → 睡 40ms → `SendInput` 逐個 UTF-16 送出。
+   → **輪詢 `GetForegroundWindow()` 確認前景真的換過去**（`wait_until()`，每 5ms 一次、
+   上限 400ms，逾時回 Err 而不硬送）→ 睡 10ms 讓視窗內部焦點就緒
+   → `SendInput` 逐個 UTF-16 送出。
 5. 注入成功才 `record_use()`，失敗的嘗試不拉高排序。**失敗時候選框會重新顯示
    並把錯誤寫在框裡**——收了框又沒有字，使用者只會以為工具壞了。
 

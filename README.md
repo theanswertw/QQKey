@@ -183,7 +183,9 @@ Win32 calls:
    flipping above the caret when there is no room below.
 4. On accept, **`template.rs`** truncates at the first placeholder and strips control characters,
    **`inject.rs`** restores focus (`SetForegroundWindow`, falling back to `AttachThreadInput` when
-   the foreground lock refuses), waits 40 ms, and sends the string as UTF-16 through `SendInput`.
+   the foreground lock refuses), **polls until the target really is the foreground window**, and
+   only then sends the string as UTF-16 through `SendInput`. If it never gets there, the insert
+   fails loudly rather than typing into an unverified window.
 5. Usage is recorded **only if the insert succeeded** — a failed attempt should not promote
    anything. On failure the launcher comes back with the reason written inside it, because a
    launcher that closes without typing anything just reads as a broken tool.

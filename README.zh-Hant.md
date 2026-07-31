@@ -162,8 +162,9 @@ QQKey 本質上是鍵盤自動化工具，而且會讀你的 shell 歷史。這�
 3. **`caret.rs`** 以三層取得 caret 座標——`GetGUIThreadInfo`、UI Automation `TextPattern`、
    視窗左下角——再夾制到螢幕範圍內，下方放不下就翻到游標上方。
 4. 選定後，**`template.rs`** 截斷第一個佔位符並剝除控制字元，**`inject.rs`** 還原焦點
-   （`SetForegroundWindow`，遇到前景鎖定則以 `AttachThreadInput` 繞過），睡 40ms，
-   再以 UTF-16 逐個透過 `SendInput` 送出。
+   （`SetForegroundWindow`，遇到前景鎖定則以 `AttachThreadInput` 繞過），**輪詢確認前景真的
+   換過去了**才以 UTF-16 逐個透過 `SendInput` 送出。等不到就回報錯誤，不把文字硬送進一個
+   沒驗證過的視窗。
 5. **注入成功才記錄使用**——失敗的嘗試不該拉高任何東西的排序。失敗時候選框會重新顯示並把
    原因寫在框裡，因為一個收了框又沒有字的啟動器，讀起來就只是壞掉的工具。
 
