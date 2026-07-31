@@ -7,7 +7,7 @@
  * 用的是正規 BCP 47 標籤，所以可以直接餵給 `Intl.*` 與 `<html lang>`，
  * 兩邊都不需要轉換表。順序即設定畫面下拉選單的順序。
  */
-export const LANGUAGES = ["zh-Hant", "ja", "en", "fr", "de", "ko"] as const;
+export const LANGUAGES = ["zh-Hant", "zh-Hans", "ja", "en", "fr", "de", "ko"] as const;
 
 export type Language = (typeof LANGUAGES)[number];
 
@@ -24,6 +24,7 @@ export const AUTO_LANGUAGE = "auto";
  */
 export const LANGUAGE_LABELS: Record<Language, string> = {
   "zh-Hant": "繁體中文",
+  "zh-Hans": "简体中文",
   ja: "日本語",
   en: "English",
   fr: "Français",

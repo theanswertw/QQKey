@@ -5,6 +5,7 @@
       "template": "git status",
       "description": {
         "zh-Hant": "顯示工作區狀態",
+        "zh-Hans": "显示工作区状态",
         "ja": "ワークツリーの状態を表示",
         "en": "Show the working tree status",
         "fr": "Afficher l'état de la copie de travail",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "狀態",
+        "zh-Hans": "状态",
         "ja": "状態 ステータス",
         "en": "status",
         "fr": "état statut",
@@ -24,6 +26,7 @@
       "template": "git switch {branch}",
       "description": {
         "zh-Hant": "切換到指定分支",
+        "zh-Hans": "切换到指定分支",
         "ja": "指定したブランチに切り替え",
         "en": "Switch to a branch",
         "fr": "Basculer vers une branche",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "切換 分支",
+        "zh-Hans": "切换 分支",
         "ja": "切り替え ブランチ",
         "en": "switch branch checkout",
         "fr": "basculer branche",
@@ -43,6 +47,7 @@
       "template": "git switch -c {branch}",
       "description": {
         "zh-Hant": "建立並切換到新分支",
+        "zh-Hans": "创建并切换到新分支",
         "ja": "新しいブランチを作成して切り替え",
         "en": "Create a new branch and switch to it",
         "fr": "Créer une nouvelle branche et y basculer",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "新增 分支 建立",
+        "zh-Hans": "新建 分支 创建",
         "ja": "新規 作成 ブランチ",
         "en": "create new branch",
         "fr": "créer nouvelle branche",
@@ -62,6 +68,7 @@
       "template": "git add -A",
       "description": {
         "zh-Hant": "暫存所有變更",
+        "zh-Hans": "暂存所有改动",
         "ja": "すべての変更をステージング",
         "en": "Stage every change",
         "fr": "Indexer toutes les modifications",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "暫存 加入",
+        "zh-Hans": "暂存 添加",
         "ja": "ステージ 追加",
         "en": "stage add all",
         "fr": "indexer ajouter tout",
@@ -81,6 +89,7 @@
       "template": "git commit -m \"{message}\"",
       "description": {
         "zh-Hant": "提交暫存的變更",
+        "zh-Hans": "提交暂存的改动",
         "ja": "ステージした変更をコミット",
         "en": "Commit the staged changes",
         "fr": "Valider les modifications indexées",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "提交",
+        "zh-Hans": "提交",
         "ja": "コミット",
         "en": "commit",
         "fr": "valider commit",
@@ -100,6 +110,7 @@
       "template": "git commit --amend",
       "description": {
         "zh-Hant": "修改最近一次提交",
+        "zh-Hans": "修改最近一次提交",
         "ja": "直前のコミットを修正",
         "en": "Amend the most recent commit",
         "fr": "Modifier le dernier commit",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "提交 修改",
+        "zh-Hans": "提交 修改 追加",
         "ja": "コミット 修正 アメンド",
         "en": "commit amend fix",
         "fr": "commit modifier corriger",
@@ -119,6 +131,7 @@
       "template": "git push",
       "description": {
         "zh-Hant": "推送到遠端",
+        "zh-Hans": "推送到远程",
         "ja": "リモートにプッシュ",
         "en": "Push to the remote",
         "fr": "Pousser vers le dépôt distant",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "推送 上傳",
+        "zh-Hans": "推送 上传 远程",
         "ja": "プッシュ 送信",
         "en": "push upload remote",
         "fr": "pousser envoyer distant",
@@ -138,6 +152,7 @@
       "template": "git pull --rebase",
       "description": {
         "zh-Hant": "拉取並以 rebase 併入",
+        "zh-Hans": "拉取并以变基方式合入",
         "ja": "プルして rebase で取り込む",
         "en": "Pull and integrate with rebase",
         "fr": "Tirer et intégrer avec rebase",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "拉取 更新",
+        "zh-Hans": "拉取 变基 更新",
         "ja": "プル 取得 更新",
         "en": "pull rebase update",
         "fr": "tirer récupérer mettre à jour",
@@ -157,6 +173,7 @@
       "template": "git fetch --all --prune",
       "description": {
         "zh-Hant": "抓取所有遠端並清掉已刪除的分支",
+        "zh-Hans": "获取所有远程并清理已删除的分支",
         "ja": "すべてのリモートを取得し、削除済みブランチを整理",
         "en": "Fetch every remote and prune deleted branches",
         "fr": "Récupérer tous les dépôts distants et nettoyer les branches supprimées",
@@ -165,6 +182,7 @@
       },
       "keywords": {
         "zh-Hant": "抓取 清理",
+        "zh-Hans": "获取 拉取 清理",
         "ja": "フェッチ 取得 整理 プルーン",
         "en": "fetch prune clean remote",
         "fr": "récupérer nettoyer élaguer distant",
@@ -176,6 +194,7 @@
       "template": "git log --oneline --graph --decorate -20",
       "description": {
         "zh-Hant": "以圖形檢視最近 20 筆提交",
+        "zh-Hans": "以图形查看最近 20 条提交",
         "ja": "直近 20 件のコミットをグラフで表示",
         "en": "View the last 20 commits as a graph",
         "fr": "Afficher les 20 derniers commits sous forme de graphe",
@@ -184,6 +203,7 @@
       },
       "keywords": {
         "zh-Hant": "歷史 紀錄 圖形",
+        "zh-Hans": "历史 日志 图形",
         "ja": "履歴 ログ グラフ",
         "en": "log history graph",
         "fr": "journal historique graphe",
@@ -195,6 +215,7 @@
       "template": "git diff",
       "description": {
         "zh-Hant": "檢視尚未暫存的變更",
+        "zh-Hans": "查看尚未暂存的改动",
         "ja": "まだステージしていない変更を表示",
         "en": "View the unstaged changes",
         "fr": "Afficher les modifications non indexées",
@@ -203,6 +224,7 @@
       },
       "keywords": {
         "zh-Hant": "差異 比對",
+        "zh-Hans": "差异 对比",
         "ja": "差分 ディフ 比較",
         "en": "diff changes compare",
         "fr": "différences comparer",
@@ -214,6 +236,7 @@
       "template": "git diff --staged",
       "description": {
         "zh-Hant": "檢視已暫存的變更",
+        "zh-Hans": "查看已暂存的改动",
         "ja": "ステージ済みの変更を表示",
         "en": "View the staged changes",
         "fr": "Afficher les modifications indexées",
@@ -222,6 +245,7 @@
       },
       "keywords": {
         "zh-Hant": "差異 暫存",
+        "zh-Hans": "差异 暂存",
         "ja": "差分 ステージ済み",
         "en": "diff staged cached",
         "fr": "différences indexées",
@@ -233,6 +257,7 @@
       "template": "git restore {path}",
       "description": {
         "zh-Hant": "捨棄檔案的工作區變更",
+        "zh-Hans": "丢弃文件在工作区的改动",
         "ja": "ファイルのワークツリーの変更を破棄",
         "en": "Discard a file's working tree changes",
         "fr": "Abandonner les modifications d'un fichier dans la copie de travail",
@@ -241,6 +266,7 @@
       },
       "keywords": {
         "zh-Hant": "還原 捨棄",
+        "zh-Hans": "还原 丢弃 恢复",
         "ja": "復元 破棄 リストア",
         "en": "restore discard revert",
         "fr": "restaurer abandonner annuler",
@@ -252,6 +278,7 @@
       "template": "git restore --staged {path}",
       "description": {
         "zh-Hant": "把檔案移出暫存區",
+        "zh-Hans": "把文件移出暂存区",
         "ja": "ファイルをステージから外す",
         "en": "Unstage a file",
         "fr": "Retirer un fichier de l'index",
@@ -260,6 +287,7 @@
       },
       "keywords": {
         "zh-Hant": "取消暫存",
+        "zh-Hans": "取消暂存",
         "ja": "ステージ解除 アンステージ",
         "en": "unstage reset",
         "fr": "désindexer retirer",
@@ -271,6 +299,7 @@
       "template": "git stash",
       "description": {
         "zh-Hant": "暫存目前的變更",
+        "zh-Hans": "贮藏当前的改动",
         "ja": "現在の変更を一時退避",
         "en": "Stash the current changes",
         "fr": "Mettre de côté les modifications actuelles",
@@ -279,6 +308,7 @@
       },
       "keywords": {
         "zh-Hant": "擱置 暫放",
+        "zh-Hans": "贮藏 暂存 搁置",
         "ja": "スタッシュ 退避",
         "en": "stash shelve",
         "fr": "remiser mettre de côté",
@@ -290,6 +320,7 @@
       "template": "git stash pop",
       "description": {
         "zh-Hant": "取回最近一次擱置的變更",
+        "zh-Hans": "取回最近一次贮藏的改动",
         "ja": "直前に退避した変更を取り出す",
         "en": "Reapply the most recently stashed changes",
         "fr": "Réappliquer les dernières modifications remisées",
@@ -298,6 +329,7 @@
       },
       "keywords": {
         "zh-Hant": "擱置 取回",
+        "zh-Hans": "贮藏 取回 弹出",
         "ja": "スタッシュ 復元 取り出す",
         "en": "stash pop apply",
         "fr": "remise appliquer récupérer",
@@ -309,6 +341,7 @@
       "template": "git branch -vv",
       "description": {
         "zh-Hant": "列出分支與其追蹤的遠端",
+        "zh-Hans": "列出分支及其跟踪的远程",
         "ja": "ブランチと追跡先のリモートを一覧表示",
         "en": "List branches with their tracked remotes",
         "fr": "Lister les branches et leurs dépôts distants suivis",
@@ -317,6 +350,7 @@
       },
       "keywords": {
         "zh-Hant": "分支 列表 追蹤",
+        "zh-Hans": "分支 列表 跟踪",
         "ja": "ブランチ 一覧 追跡",
         "en": "branch list tracking",
         "fr": "branche liste suivi",
@@ -328,6 +362,7 @@
       "template": "git reset --hard origin/{branch}",
       "description": {
         "zh-Hant": "捨棄本機變更並對齊遠端分支",
+        "zh-Hans": "丢弃本地改动并对齐远程分支",
         "ja": "ローカルの変更を破棄してリモートブランチに合わせる",
         "en": "Discard local changes and match the remote branch",
         "fr": "Abandonner les modifications locales et s'aligner sur la branche distante",
@@ -336,6 +371,7 @@
       },
       "keywords": {
         "zh-Hant": "重設 對齊 捨棄",
+        "zh-Hans": "重置 对齐 丢弃",
         "ja": "リセット 破棄 合わせる",
         "en": "reset hard discard match",
         "fr": "réinitialiser abandonner aligner",
@@ -347,6 +383,7 @@
       "template": "git cherry-pick {commit}",
       "description": {
         "zh-Hant": "套用指定提交",
+        "zh-Hans": "应用指定的提交",
         "ja": "指定したコミットを取り込む",
         "en": "Apply a specific commit",
         "fr": "Appliquer un commit précis",
@@ -355,6 +392,7 @@
       },
       "keywords": {
         "zh-Hant": "挑選 提交 套用",
+        "zh-Hans": "拣选 提交 应用",
         "ja": "チェリーピック コミット 適用",
         "en": "cherry pick commit apply",
         "fr": "picorer commit appliquer",
@@ -366,6 +404,7 @@
       "template": "git rebase -i HEAD~{n}",
       "description": {
         "zh-Hant": "互動式重整最近 n 筆提交",
+        "zh-Hans": "交互式变基最近 n 条提交",
         "ja": "直近 n 件のコミットを対話的に整理",
         "en": "Interactively rebase the last n commits",
         "fr": "Rebaser interactivement les n derniers commits",
@@ -374,6 +413,7 @@
       },
       "keywords": {
         "zh-Hant": "重整 互動 壓縮",
+        "zh-Hans": "变基 交互 压缩",
         "ja": "リベース 対話 整理 スカッシュ",
         "en": "rebase interactive squash",
         "fr": "rebaser interactif fusionner",

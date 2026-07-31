@@ -1,0 +1,192 @@
+{
+  "common": {
+    "cancel": "取消",
+    "source": {
+      "user": "自定义",
+      "builtin": "内置",
+      "history": "历史"
+    },
+    "crash": {
+      "title": "界面出问题了",
+      "retry": "重新加载"
+    }
+  },
+  "launcher": {
+    "searchLabel": "搜索命令",
+    "placeholder": "输入命令关键词，例如 usbipd 或“挂载”",
+    "empty": "没有匹配的命令",
+    "prompt": "输入关键词开始搜索",
+    "searchFailed": "搜索失败：{{reason}}",
+    "injectFailed": "填不进去：{{error}}",
+    "hint": {
+      "move": "↑↓ 移动",
+      "complete": "Tab 补全",
+      "direct": "Alt+1–9 直选",
+      "accept": "Enter 填入",
+      "dismiss": "Esc 取消",
+      "settings": "Alt+Shift+Q 设置"
+    }
+  },
+  "settings": {
+    "title": "QQKey 设置",
+    "tab": {
+      "entries": "命令词条",
+      "general": "常规设置",
+      "about": "关于"
+    },
+    "language": {
+      "title": "界面语言",
+      "note": "候选框、设置界面、系统托盘菜单与内置命令的说明都会跟着切换。选“跟随系统”时按 Windows 的显示语言决定。",
+      "auto": "跟随系统（{{language}}）"
+    },
+    "general": {
+      "loading": "加载中…",
+      "loadFailed": "读不到设置",
+      "retry": "重试",
+      "apply": "应用",
+      "restoreDefault": "还原默认",
+      "shortcutTitle": "全局快捷键",
+      "shortcutNote": "格式为修饰键加按键代码，例如 <code>Alt+KeyQ</code>、<code>Control+Shift+Space</code>。字母键要写成 <code>KeyQ</code> 这种形式。避开 <code>Alt+Space</code>——那是 Windows 系统窗口菜单的保留键。",
+      "shortcutUpdated": "快捷键已更新",
+      "shortcutFellBack": "{{wanted}} 没有注册成功，多半是被其他程序占用了。目前实际可用的是 {{active}}，换一组再应用就会生效。",
+      "shortcutNoneActive": "{{wanted}} 注册失败，现在没有任何快捷键可以打开候选框——请从系统托盘图标操作，或在这里换一组。"
+    },
+    "opacity": {
+      "title": "候选框背景",
+      "note": "候选框浮在你正在用的窗口上。不透明度越低，透出的底下内容越多；背景模糊会保持命令文字的可读性。设置窗口开着时候选框是隐藏的，下面的预览就是它实际的样子。",
+      "preview": "预览",
+      "sliderLabel": "候选框背景不透明度",
+      "percentLabel": "候选框背景不透明度百分比",
+      "minimumHint": "下限 {{percent}}%——再低，命令会被底下的内容干扰到读不出来。"
+    },
+    "startup": {
+      "title": "启动",
+      "note": "QQKey 平时没有可见窗口，靠系统托盘图标常驻。左键单击图标可打开候选框，右键打开菜单。",
+      "label": "开机时自动启动",
+      "enabled": "已设为开机自动启动",
+      "disabled": "已取消开机自动启动"
+    },
+    "history": {
+      "title": "历史记录学习",
+      "note_one": "从 PSReadLine 历史学习你实际用过的命令，出现次数越多初始排序越靠前。采用增量导入，只读上次之后新增的部分。目前候选池共 {{count}} 条。",
+      "note_other": "从 PSReadLine 历史学习你实际用过的命令，出现次数越多初始排序越靠前。采用增量导入，只读上次之后新增的部分。目前候选池共 {{count}} 条。",
+      "autoImport": "启动时自动导入",
+      "importNow": "立即导入",
+      "enabled": "已启用历史学习",
+      "disabled": "已停用历史学习",
+      "report_one": "扫描 {{count}} 行，导入 {{imported}} 条，跳过 {{skippedSecret}} 条疑似含凭据、{{skippedNoise}} 条噪声。",
+      "report_other": "扫描 {{count}} 行，导入 {{imported}} 条，跳过 {{skippedSecret}} 条疑似含凭据、{{skippedNoise}} 条噪声。",
+      "reportEmpty": "没有新增的历史记录。"
+    },
+    "secret": {
+      "title": "敏感信息过滤规则",
+      "note": "命中这个正则表达式的历史行会整行跳过，不会进数据库也不会出现在候选框。只会报告跳过的条数，内容不会被记录。另有一条固定规则会挡下 <code>=</code> 或 <code>:</code> 后接 20 个字符以上的长字符串，不受此处影响。",
+      "updated": "过滤规则已更新",
+      "warning": "放宽规则前请先确认：漏放的凭据会一直留在本机数据库里。被误杀的命令可以在“{{tab}}”页自己添加回来。"
+    },
+    "share": {
+      "title": "分享自定义命令",
+      "note": "通过剪贴板以 JSON 交换。只包含你自己新增或编辑过的命令——内置目录对方也有，历史学来的可能夹带工作内容，都不会被导出。",
+      "export": "导出到剪贴板",
+      "import": "从剪贴板导入",
+      "exported_one": "已复制 {{count}} 条自定义命令到剪贴板",
+      "exported_other": "已复制 {{count}} 条自定义命令到剪贴板",
+      "clipboardEmpty": "剪贴板里的文件没有任何命令"
+    },
+    "backup": {
+      "title": "备份与还原",
+      "note": "跟上面的“{{share}}”是两回事。备份带走<strong>全部</strong>——内置的、历史学来的，以及累积的使用统计与这一页的所有设置，换一台机器能回到原样。历史学来的那上千条只有这条路带得走。",
+      "save": "备份到文件",
+      "restore": "从备份还原",
+      "warning": "还原会<strong>取代</strong>目前的全部数据，包含你之后新增或编辑过的命令。",
+      "saveTitle": "备份 QQKey 数据",
+      "openTitle": "选择要还原的备份",
+      "saved_one": "已备份 {{count}} 条命令与目前的设置",
+      "saved_other": "已备份 {{count}} 条命令与目前的设置"
+    },
+    "import": {
+      "confirmTitle": "确认导入",
+      "confirm_one": "这个文件有 {{count}} 条命令，全部都会新增。",
+      "confirm_other": "这个文件有 {{count}} 条命令，全部都会新增。",
+      "confirmOverwrite_one": "这个文件有 {{count}} 条命令：新增 {{added}} 条，覆盖本机已有的 {{overwritten}} 条。\n\n被覆盖的说明与关键词会换成文件里的版本，无法恢复。",
+      "confirmOverwrite_other": "这个文件有 {{count}} 条命令：新增 {{added}} 条，覆盖本机已有的 {{overwritten}} 条。\n\n被覆盖的说明与关键词会换成文件里的版本，无法恢复。",
+      "confirmLabel": "导入",
+      "done_one": "已导入 {{count}} 条命令",
+      "done_other": "已导入 {{count}} 条命令"
+    },
+    "restore": {
+      "confirmTitle": "确认还原",
+      "confirmMessage": "{{path}}\n\n将以这份备份取代目前的全部数据——现有的命令、使用统计与设置都会被覆盖，无法恢复。",
+      "confirmLabel": "还原",
+      "done": "已从备份还原"
+    },
+    "logs": {
+      "title": "诊断记录",
+      "note": "QQKey 平时没有可见窗口，出问题时只能靠日志回推是哪一步失败的。日志记录打开候选框、定位与注入各走到哪里，<strong>不记录窗口标题，也不记录填入的内容</strong>。",
+      "open": "打开日志文件夹"
+    },
+    "entries": {
+      "searchPlaceholder": "搜索命令、说明或关键词",
+      "sourceFilter": "按来源筛选",
+      "allSources": "全部来源",
+      "selectPage": "选取本页",
+      "create": "新增命令",
+      "selectedCount_one": "已选取 {{count}} 条",
+      "selectedCount_other": "已选取 {{count}} 条",
+      "enable": "启用",
+      "disable": "停用",
+      "delete": "删除",
+      "edit": "编辑",
+      "clearSelection": "取消选取",
+      "resetScore": "归零",
+      "resetScoreHint": "清除使用统计",
+      "scoreHint": "衰减后的使用分数——就是候选框拿来排序的那一个",
+      "boostHint": "手动加权",
+      "lastUsedHint": "最后使用时间",
+      "neverUsed": "未用过",
+      "empty": "没有符合条件的命令",
+      "count_one": "共 {{count}} 条",
+      "count_other": "共 {{count}} 条",
+      "countPaged_one": "共 {{count}} 条，第 {{page}} / {{pages}} 页",
+      "countPaged_other": "共 {{count}} 条，第 {{page}} / {{pages}} 页",
+      "previousPage": "上一页",
+      "nextPage": "下一页",
+      "deleteOneTitle": "删除这条命令",
+      "deleteManyTitle": "删除选取的命令",
+      "deleteOneMessage": "{{template}}\n\n删除后无法恢复。若只是想让它不出现在候选框，用“停用”就好。",
+      "deleteManyMessage_one": "将删除 {{count}} 条命令，无法恢复。\n\n若只是想让它们不出现在候选框，用“停用”就好。",
+      "deleteManyMessage_other": "将删除 {{count}} 条命令，无法恢复。\n\n若只是想让它们不出现在候选框，用“停用”就好。"
+    },
+    "entry": {
+      "createTitle": "新增命令",
+      "editTitle": "编辑命令",
+      "template": "命令",
+      "templateHint": "以 <code>{名称}</code> 标记待填参数。填入命令行时会截断在第一个占位符之前，光标刚好停在你要接手输入的位置。",
+      "description": "说明",
+      "descriptionPlaceholder": "将设备挂载到 WSL",
+      "keywords": "搜索关键词",
+      "keywordsPlaceholder": "挂载 wsl 连接",
+      "keywordsHint": "以空格分隔。加了自己语言的词，就能用那个语言搜到这条命令。",
+      "keywordsBuiltinHint": "这是内置词条，显示的是当前语言那一份；保存后它会变成自定义词条，只吃你填的关键词。",
+      "boost": "手动加权",
+      "boostHint": "加到 frecency 分数上，让这条命令固定往前排。不收负数——想让某条不出现请用“停用”。",
+      "save": "保存"
+    },
+    "about": {
+      "pitch": "在任何窗口按下快捷键打开候选框，键入关键词找到命令后<strong>填入</strong>命令行而不执行，光标停在第一个待填参数处。按不按 Enter 由你决定。常用的命令按 frecency 自动上浮。",
+      "version": "版本",
+      "license": "许可",
+      "data": "数据",
+      "dataValue": "全部存于本机，不对外传送",
+      "authorTitle": "作者",
+      "origin": "QQKey 由 {{author}} 一人开发与维护。起因很简单：usbipd、git、netsh 这些工具的子命令与选项记不住，每次都得回头翻 <code>--help</code>，所以做了一个能用母语关键词找命令的工具，找到之后填进命令行让自己再看一眼，而不是替你按下去。",
+      "contact": "使用上的问题、想补进内置目录的命令，或是反馈 bug，都欢迎从下面任一条路找我。",
+      "emailCopied": "已复制 Email 到剪贴板",
+      "sendMail": "发信",
+      "copy": "复制",
+      "repo": "项目页",
+      "open": "打开",
+      "secretWarning": "反馈问题时请避免粘贴含有凭据或公司内部路径的命令内容。"
+    }
+  }
+}

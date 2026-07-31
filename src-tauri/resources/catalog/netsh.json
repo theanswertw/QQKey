@@ -5,6 +5,7 @@
       "template": "netsh interface show interface",
       "description": {
         "zh-Hant": "列出所有網路介面與其狀態",
+        "zh-Hans": "列出所有网络接口及其状态",
         "ja": "すべてのネットワークインターフェイスと状態を一覧表示",
         "en": "List all network interfaces and their state",
         "fr": "Lister toutes les interfaces réseau et leur état",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "介面 網卡 列表",
+        "zh-Hans": "接口 网卡 列表",
         "ja": "インターフェイス アダプター 一覧",
         "en": "interface adapter list nic",
         "fr": "interface carte liste réseau",
@@ -24,6 +26,7 @@
       "template": "netsh interface ip show config",
       "description": {
         "zh-Hant": "顯示所有介面的 IP 組態",
+        "zh-Hans": "显示所有接口的 IP 配置",
         "ja": "すべてのインターフェイスの IP 構成を表示",
         "en": "Show the IP configuration of every interface",
         "fr": "Afficher la configuration IP de chaque interface",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "ip 組態 設定",
+        "zh-Hans": "ip 配置 设置",
         "ja": "ip 構成 設定",
         "en": "ip config configuration",
         "fr": "ip configuration paramètres",
@@ -43,6 +47,7 @@
       "template": "netsh interface ip show address",
       "description": {
         "zh-Hant": "顯示各介面的 IP 位址",
+        "zh-Hans": "显示各接口的 IP 地址",
         "ja": "各インターフェイスの IP アドレスを表示",
         "en": "Show the IP address of each interface",
         "fr": "Afficher l'adresse IP de chaque interface",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "ip 位址",
+        "zh-Hans": "ip 地址",
         "ja": "ip アドレス",
         "en": "ip address",
         "fr": "ip adresse",
@@ -62,6 +68,7 @@
       "template": "netsh interface ip set address name=\"{name}\" static {ip} {mask} {gateway}",
       "description": {
         "zh-Hant": "設定介面為靜態 IP",
+        "zh-Hans": "把接口设置为静态 IP",
         "ja": "インターフェイスを固定 IP に設定",
         "en": "Set an interface to a static IP",
         "fr": "Définir une IP statique sur une interface",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "ip 靜態 固定",
+        "zh-Hans": "ip 静态 固定",
         "ja": "ip 固定 静的 スタティック",
         "en": "ip static fixed",
         "fr": "ip statique fixe",
@@ -81,6 +89,7 @@
       "template": "netsh interface ip set address name=\"{name}\" dhcp",
       "description": {
         "zh-Hant": "把介面切回 DHCP 自動取得",
+        "zh-Hans": "把接口切回 DHCP 自动获取",
         "ja": "インターフェイスを DHCP の自動取得に戻す",
         "en": "Switch an interface back to DHCP",
         "fr": "Rebasculer une interface sur DHCP",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "dhcp 自動",
+        "zh-Hans": "dhcp 自动",
         "ja": "dhcp 自動",
         "en": "dhcp automatic",
         "fr": "dhcp automatique",
@@ -100,6 +110,7 @@
       "template": "netsh interface ip set dns name=\"{name}\" static {dns}",
       "description": {
         "zh-Hant": "設定介面的 DNS 伺服器",
+        "zh-Hans": "设置接口的 DNS 服务器",
         "ja": "インターフェイスの DNS サーバーを設定",
         "en": "Set the DNS server for an interface",
         "fr": "Définir le serveur DNS d'une interface",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "dns 網域 名稱",
+        "zh-Hans": "dns 域名 解析",
         "ja": "dns 名前解決 サーバー",
         "en": "dns server resolver",
         "fr": "dns serveur résolution",
@@ -119,6 +131,7 @@
       "template": "netsh interface portproxy show all",
       "description": {
         "zh-Hant": "列出所有連接埠轉送規則（WSL 對外服務常用）",
+        "zh-Hans": "列出所有端口转发规则（WSL 对外提供服务时常用）",
         "ja": "すべてのポート転送ルールを一覧表示（WSL の外部公開でよく使う）",
         "en": "List all port forwarding rules (common when exposing WSL services)",
         "fr": "Lister toutes les règles de redirection de port (courant pour exposer des services WSL)",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "轉送 portproxy wsl 連接埠",
+        "zh-Hans": "转发 portproxy wsl 端口",
         "ja": "転送 ポートフォワード portproxy wsl ポート",
         "en": "portproxy forward port wsl",
         "fr": "redirection port portproxy wsl",
@@ -138,6 +152,7 @@
       "template": "netsh interface portproxy add v4tov4 listenport={port} listenaddress=0.0.0.0 connectport={port} connectaddress={address}",
       "description": {
         "zh-Hant": "新增連接埠轉送規則",
+        "zh-Hans": "添加端口转发规则",
         "ja": "ポート転送ルールを追加",
         "en": "Add a port forwarding rule",
         "fr": "Ajouter une règle de redirection de port",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "轉送 新增 portproxy",
+        "zh-Hans": "转发 添加 portproxy 端口",
         "ja": "転送 追加 portproxy",
         "en": "portproxy forward add port",
         "fr": "redirection ajouter portproxy port",
@@ -157,6 +173,7 @@
       "template": "netsh interface portproxy delete v4tov4 listenport={port} listenaddress=0.0.0.0",
       "description": {
         "zh-Hant": "刪除連接埠轉送規則",
+        "zh-Hans": "删除端口转发规则",
         "ja": "ポート転送ルールを削除",
         "en": "Delete a port forwarding rule",
         "fr": "Supprimer une règle de redirection de port",
@@ -165,6 +182,7 @@
       },
       "keywords": {
         "zh-Hant": "轉送 刪除",
+        "zh-Hans": "转发 删除 端口",
         "ja": "転送 削除",
         "en": "portproxy forward delete remove port",
         "fr": "redirection supprimer port",
@@ -176,6 +194,7 @@
       "template": "netsh wlan show profiles",
       "description": {
         "zh-Hant": "列出已儲存的無線網路設定檔",
+        "zh-Hans": "列出已保存的无线网络配置文件",
         "ja": "保存済みの無線 LAN プロファイルを一覧表示",
         "en": "List the saved wireless network profiles",
         "fr": "Lister les profils de réseau sans fil enregistrés",
@@ -184,6 +203,7 @@
       },
       "keywords": {
         "zh-Hant": "wifi 無線 設定檔",
+        "zh-Hans": "wifi 无线 配置文件",
         "ja": "wifi 無線 プロファイル",
         "en": "wifi wireless wlan profiles",
         "fr": "wifi sans fil profils",
@@ -195,6 +215,7 @@
       "template": "netsh advfirewall firewall show rule name=all",
       "description": {
         "zh-Hant": "列出所有防火牆規則",
+        "zh-Hans": "列出所有防火墙规则",
         "ja": "すべてのファイアウォールルールを一覧表示",
         "en": "List every firewall rule",
         "fr": "Lister toutes les règles du pare-feu",
@@ -203,6 +224,7 @@
       },
       "keywords": {
         "zh-Hant": "防火牆 規則",
+        "zh-Hans": "防火墙 规则",
         "ja": "ファイアウォール ルール",
         "en": "firewall rules",
         "fr": "pare-feu règles",
@@ -214,6 +236,7 @@
       "template": "netsh winsock reset",
       "description": {
         "zh-Hant": "重設 Winsock 目錄（需重新開機）",
+        "zh-Hans": "重置 Winsock 目录（需重启）",
         "ja": "Winsock カタログをリセット（再起動が必要）",
         "en": "Reset the Winsock catalog (requires a reboot)",
         "fr": "Réinitialiser le catalogue Winsock (redémarrage requis)",
@@ -222,6 +245,7 @@
       },
       "keywords": {
         "zh-Hant": "重設 網路 修復",
+        "zh-Hans": "重置 网络 修复",
         "ja": "リセット ネットワーク 修復",
         "en": "reset network repair winsock",
         "fr": "réinitialiser réseau réparer winsock",
@@ -233,6 +257,7 @@
       "template": "netsh int ip reset",
       "description": {
         "zh-Hant": "重設 TCP/IP 堆疊（需重新開機）",
+        "zh-Hans": "重置 TCP/IP 协议栈（需重启）",
         "ja": "TCP/IP スタックをリセット（再起動が必要）",
         "en": "Reset the TCP/IP stack (requires a reboot)",
         "fr": "Réinitialiser la pile TCP/IP (redémarrage requis)",
@@ -241,6 +266,7 @@
       },
       "keywords": {
         "zh-Hant": "重設 修復 tcpip",
+        "zh-Hans": "重置 修复 tcpip 协议栈",
         "ja": "リセット 修復 tcpip スタック",
         "en": "reset repair tcpip stack",
         "fr": "réinitialiser réparer tcpip pile",

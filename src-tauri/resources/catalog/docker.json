@@ -5,6 +5,7 @@
       "template": "docker ps",
       "description": {
         "zh-Hant": "列出執行中的容器",
+        "zh-Hans": "列出运行中的容器",
         "ja": "実行中のコンテナーを一覧表示",
         "en": "List the running containers",
         "fr": "Lister les conteneurs en cours d'exécution",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "容器 列表",
+        "zh-Hans": "容器 列表 运行",
         "ja": "コンテナー 一覧",
         "en": "containers list running",
         "fr": "conteneurs liste",
@@ -24,6 +26,7 @@
       "template": "docker ps -a",
       "description": {
         "zh-Hant": "列出所有容器（含已停止）",
+        "zh-Hans": "列出所有容器（含已停止的）",
         "ja": "すべてのコンテナーを一覧表示（停止済みも含む）",
         "en": "List all containers, including stopped ones",
         "fr": "Lister tous les conteneurs, y compris arrêtés",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "容器 列表 全部",
+        "zh-Hans": "容器 列表 全部 停止",
         "ja": "コンテナー 一覧 すべて 停止",
         "en": "containers list all stopped",
         "fr": "conteneurs liste tous arrêtés",
@@ -43,6 +47,7 @@
       "template": "docker images",
       "description": {
         "zh-Hant": "列出本機映像檔",
+        "zh-Hans": "列出本地镜像",
         "ja": "ローカルのイメージを一覧表示",
         "en": "List the local images",
         "fr": "Lister les images locales",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "映像 列表",
+        "zh-Hans": "镜像 列表",
         "ja": "イメージ 一覧",
         "en": "images list",
         "fr": "images liste",
@@ -62,6 +68,7 @@
       "template": "docker logs -f {container}",
       "description": {
         "zh-Hant": "持續跟看容器日誌",
+        "zh-Hans": "持续跟踪容器日志",
         "ja": "コンテナーのログを継続表示",
         "en": "Follow a container's logs",
         "fr": "Suivre les journaux d'un conteneur",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "日誌 紀錄 追蹤",
+        "zh-Hans": "日志 跟踪 查看",
         "ja": "ログ 追跡 フォロー",
         "en": "logs follow tail",
         "fr": "journaux suivre logs",
@@ -81,6 +89,7 @@
       "template": "docker exec -it {container} sh",
       "description": {
         "zh-Hant": "進入執行中的容器",
+        "zh-Hans": "进入运行中的容器",
         "ja": "実行中のコンテナーに入る",
         "en": "Open a shell inside a running container",
         "fr": "Ouvrir un shell dans un conteneur en cours d'exécution",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "進入 shell 執行",
+        "zh-Hans": "进入 shell 运行",
         "ja": "入る シェル 実行",
         "en": "exec shell enter attach",
         "fr": "exec shell entrer",
@@ -100,6 +110,7 @@
       "template": "docker build -t {tag} .",
       "description": {
         "zh-Hant": "以目前目錄的 Dockerfile 建置映像",
+        "zh-Hans": "用当前目录的 Dockerfile 构建镜像",
         "ja": "現在のディレクトリの Dockerfile からイメージをビルド",
         "en": "Build an image from the Dockerfile in the current directory",
         "fr": "Construire une image depuis le Dockerfile du dossier courant",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "建置 映像 編譯",
+        "zh-Hans": "构建 镜像 编译",
         "ja": "ビルド イメージ 構築",
         "en": "build image tag",
         "fr": "construire image compiler",
@@ -119,6 +131,7 @@
       "template": "docker run --rm -it {image} sh",
       "description": {
         "zh-Hant": "以互動模式跑一個用完即刪的容器",
+        "zh-Hans": "以交互模式跑一个用完即删的容器",
         "ja": "使い捨てのコンテナーを対話モードで実行",
         "en": "Run a throwaway container interactively",
         "fr": "Lancer un conteneur jetable en mode interactif",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "執行 暫時 互動",
+        "zh-Hans": "运行 临时 交互",
         "ja": "実行 一時 対話 使い捨て",
         "en": "run temporary interactive throwaway",
         "fr": "lancer temporaire interactif jetable",
@@ -138,6 +152,7 @@
       "template": "docker rm -f {container}",
       "description": {
         "zh-Hant": "強制移除容器",
+        "zh-Hans": "强制删除容器",
         "ja": "コンテナーを強制的に削除",
         "en": "Force-remove a container",
         "fr": "Supprimer un conteneur de force",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "移除 刪除 容器",
+        "zh-Hans": "删除 移除 容器 强制",
         "ja": "削除 除去 コンテナー",
         "en": "remove delete container force",
         "fr": "supprimer retirer conteneur",
@@ -157,6 +173,7 @@
       "template": "docker rmi {image}",
       "description": {
         "zh-Hant": "移除映像檔",
+        "zh-Hans": "删除镜像",
         "ja": "イメージを削除",
         "en": "Remove an image",
         "fr": "Supprimer une image",
@@ -165,6 +182,7 @@
       },
       "keywords": {
         "zh-Hant": "移除 映像 刪除",
+        "zh-Hans": "删除 镜像 移除",
         "ja": "削除 イメージ",
         "en": "remove image delete rmi",
         "fr": "supprimer image",
@@ -176,6 +194,7 @@
       "template": "docker compose up -d",
       "description": {
         "zh-Hant": "以背景模式啟動 compose 服務",
+        "zh-Hans": "以后台模式启动 compose 服务",
         "ja": "compose のサービスをバックグラウンドで起動",
         "en": "Start the compose services in the background",
         "fr": "Démarrer les services compose en arrière-plan",
@@ -184,6 +203,7 @@
       },
       "keywords": {
         "zh-Hant": "compose 啟動 背景",
+        "zh-Hans": "compose 启动 后台",
         "ja": "compose 起動 バックグラウンド",
         "en": "compose up start detached background",
         "fr": "compose démarrer arrière-plan",
@@ -195,6 +215,7 @@
       "template": "docker compose down",
       "description": {
         "zh-Hant": "停止並移除 compose 服務",
+        "zh-Hans": "停止并删除 compose 服务",
         "ja": "compose のサービスを停止して削除",
         "en": "Stop and remove the compose services",
         "fr": "Arrêter et supprimer les services compose",
@@ -203,6 +224,7 @@
       },
       "keywords": {
         "zh-Hant": "compose 停止 移除",
+        "zh-Hans": "compose 停止 删除",
         "ja": "compose 停止 削除",
         "en": "compose down stop remove",
         "fr": "compose arrêter supprimer",
@@ -214,6 +236,7 @@
       "template": "docker compose logs -f",
       "description": {
         "zh-Hant": "持續跟看 compose 服務日誌",
+        "zh-Hans": "持续跟踪 compose 服务日志",
         "ja": "compose のサービスログを継続表示",
         "en": "Follow the compose service logs",
         "fr": "Suivre les journaux des services compose",
@@ -222,6 +245,7 @@
       },
       "keywords": {
         "zh-Hant": "compose 日誌",
+        "zh-Hans": "compose 日志",
         "ja": "compose ログ",
         "en": "compose logs follow",
         "fr": "compose journaux suivre",
@@ -233,6 +257,7 @@
       "template": "docker system prune -a",
       "description": {
         "zh-Hant": "清除未使用的容器、映像與網路",
+        "zh-Hans": "清理未使用的容器、镜像与网络",
         "ja": "未使用のコンテナー、イメージ、ネットワークを削除",
         "en": "Clean up unused containers, images and networks",
         "fr": "Nettoyer les conteneurs, images et réseaux non utilisés",
@@ -241,6 +266,7 @@
       },
       "keywords": {
         "zh-Hant": "清理 空間 清除",
+        "zh-Hans": "清理 空间 磁盘",
         "ja": "整理 削除 容量 プルーン",
         "en": "prune clean disk space",
         "fr": "nettoyer élaguer espace disque",
@@ -252,6 +278,7 @@
       "template": "docker volume ls",
       "description": {
         "zh-Hant": "列出資料卷",
+        "zh-Hans": "列出数据卷",
         "ja": "ボリュームを一覧表示",
         "en": "List the volumes",
         "fr": "Lister les volumes",
@@ -260,6 +287,7 @@
       },
       "keywords": {
         "zh-Hant": "資料卷 volume 列表",
+        "zh-Hans": "数据卷 volume 列表",
         "ja": "ボリューム 一覧",
         "en": "volumes list",
         "fr": "volumes liste",

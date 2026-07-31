@@ -80,7 +80,7 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 
 `entry` 有兩個關鍵字欄位，語意不同：`keywords` 是**給人看的**（設定畫面的「搜尋
 關鍵字」輸入框讀它，只放當前介面語言那一份），`keywords_all` 是**給模糊比對用的**
-（內建目錄六個語言的聯集，`Entry::haystack()` 優先用它）。分成兩欄是因為把六語言塞進
+（內建目錄七個語言的聯集，`Entry::haystack()` 優先用它）。分成兩欄是因為把七語言塞進
 `keywords` 的話，使用者一按存檔就把那團字變成自己的關鍵字，而條目同時轉成 user 來源、
 從此不再被內建目錄更新。**`update_entry()` 與 `upsert_user()` 必須把 `keywords_all`
 清成 NULL**——使用者接手之後就只該吃他填的字，不清的話他改成 `foo` 之後德文的舊關鍵字
@@ -112,9 +112,9 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 **衰減在 Rust 端算**——SQLite 的數學函式要編譯時另外開啟，不能假設有。
 比對目標是 `Entry::haystack()`（template + 關鍵字 + description 併起來），
 所以中文關鍵字搜尋（輸入「掛載」找到 `usbipd attach --wsl`）才成立。內建條目用的是
-`keywords_all`（六語言聯集），所以介面切成英文之後中文關鍵字仍然找得到——**這個承諾
+`keywords_all`（七語言聯集），所以介面切成英文之後中文關鍵字仍然找得到——**這個承諾
 由 `ranking.rs` 的 `chinese_keywords_still_match_when_the_ui_is_english` 守著**。
-代價是 haystack 從約 39 字元長到約 110，短查詢會誤命中其他條目的歐語關鍵字；
+代價是 haystack 從約 39 字元長到約 115，短查詢會誤命中其他條目的歐語關鍵字；
 `a_cross_language_keyword_does_not_outrank_a_real_match` 是那件事的回歸測試。
 
 空查詢時只列出用過或手動加權過的條目，不塞一串沒用過的當噪音。
@@ -124,14 +124,14 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 新增內建命令目錄
 : 在 `src-tauri/resources/catalog/` 加 JSON，**同時**在 `catalog/builtin.rs` 的
   `CATALOGS` 加一行 `include_str!`（目錄是內嵌進執行檔的，不是執行時讀檔）。
-  `description` 與 `keywords` 是**六個語言的 map**（`zh-Hant`/`ja`/`en`/`fr`/`de`/`ko`），
-  `template` 只寫一次——它是資料庫的 UNIQUE key，複製六份的失敗模式是靜默的。
+  `description` 與 `keywords` 是**七個語言的 map**（`zh-Hant`/`zh-Hans`/`ja`/`en`/`fr`/
+  `de`/`ko`），`template` 只寫一次——它是資料庫的 UNIQUE key，複製七份的失敗模式是靜默的。
   `builtin.rs` 的測試會擋下重複 template、解析不過的檔案，以及**任何語言缺譯**
   （`every_entry_is_translated_into_every_language` 檢查的是 `LangMap::get()`
   而不是 `load_builtin()` 的產物——後者有 fallback，缺譯會靜靜地變成英文或繁中）。
 
 新增使用者可見的後端字串
-: 在 `i18n.rs` 的 `messages!` 巨集裡加一條，六個語言一次寫齊。少一個語言巨集就
+: 在 `i18n.rs` 的 `messages!` 巨集裡加一條，七個語言一次寫齊。少一個語言巨集就
   不匹配、插值名字打錯 `format!` 就報錯——這是選手寫方案而不是 `rust-i18n` 的全部
   理由，所以**不要**改成執行期查表。「每個語言都有」不需要測試（編譯器擋著），
   但「每個語言都真的印出了插值」需要：加進
@@ -141,9 +141,9 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
   而且同一份日誌不該前後兩種語言。
 
 新增使用者可見的前端字串
-: 六個 `src/i18n/locales/*.json` 都要加。漏一個會被 `resources.ts` 的型別標註擋下
+: 七個 `src/i18n/locales/*.json` 都要加。漏一個會被 `resources.ts` 的型別標註擋下
   （`tsc` 會指名缺哪個鍵）；但它擋不到「多」出來的鍵，所以每個帶 `{{count}}` 的鍵
-  一律六檔同時提供 `_one` 與 `_other`，中日韓兩者填相同文字。內嵌 `<code>`／`<strong>`
+  一律七檔同時提供 `_one` 與 `_other`，中日韓兩者填相同文字。內嵌 `<code>`／`<strong>`
   的句子用 `<Trans components={{ code: <code /> }} />` 的**對照表**形式，不要用
   `<0>`／`<1>` 索引——譯者重排標籤的那一刻索引就錯了。
 
@@ -198,7 +198,7 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 
 ## 多語言（`i18n.rs` + `src/i18n/`）
 
-支援六個語言：`zh-Hant` `ja` `en` `fr` `de` `ko`。**這六個標籤在前後端逐字相同**
+支援七個語言：`zh-Hant` `zh-Hans` `ja` `en` `fr` `de` `ko`。**這七個標籤在前後端逐字相同**
 （Rust 的 `Lang` serde 名稱 = TS 的 `LANGUAGES`），不一致的話兩邊會各自 fallback
 而且都不報錯，畫面上只看到一半換了語言。用正規 BCP 47 標籤是刻意的——前端可以
 直接餵給 `Intl.*` 與 `<html lang>`，兩邊都不需要轉換表。
@@ -221,6 +221,13 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
 的機器在台灣企業環境很常見，用後者會把它們全判成中文，而測試抓不到這個錯
 （只覆蓋 `match_tag`）。實測：繁中版 Windows 11 回報的是舊式的 `zh-TW`，不是
 `zh-Hant-TW`，所以「只看主要語言子標籤」那一段是主路徑而非備用路徑。
+
+`zh` 是**唯一**要再看 script 與 region 子標籤的語言（簡繁共用同一個主要子標籤），
+其餘語言仍然只看第一段。判別採白名單：明確指向簡體的（`Hans`／`CN`／`SG`／`MY`）
+才對到 `zh-Hans`，其餘的 `zh` 一律 `zh-Hant`——含 `zh-TW`／`zh-HK`／`zh-MO` 與裸 `zh`。
+裸 `zh` 在 CLDR 的預設是簡體，這裡刻意不跟：Windows 的顯示語言從不回報這種形式，
+而把一個判不出來的標籤丟給繁中使用者看簡體，比反過來更像故障。
+**前端 `src/i18n/index.ts` 的 `matchTag()` 有同一份規則，兩邊要一起改。**
 
 `i18n::set_current()` 必須是 `.setup()` 的第一行：更早（`run()` 開頭）plugin 還沒
 初始化，偵測結果那行 `trace` 會被靜默丟掉；更晚就趕不上 `migrate()` 與 `fatal_dialog()`。
@@ -279,7 +286,7 @@ schema 只有 `entry` 與 `meta` 兩張表。版本記在 SQLite 內建的 `user
   Windows 位置是 `%LOCALAPPDATA%\com.jeremywen.qqkey\logs\`，注意不是資料庫所在的
   Roaming）。**日誌會留在磁碟上，所以不記錄視窗標題、不記錄注入內容**。
 - 前端沒有 lint 設定；型別檢查靠 `npm run build`。無前端測試——所以
-  `src/i18n/resources.ts` 的型別標註是六個語系檔一致性的唯一防線。
+  `src/i18n/resources.ts` 的型別標註是七個語系檔一致性的唯一防線。
 - UI 文案一律進 `src/i18n/locales/*.json` 或 `i18n.rs` 的 `messages!`，元件裡不留
   硬編碼字串（`console.error` 例外，那是開發者面向的）。`aria-label`、`title`、
   `placeholder` 與原生檔案對話框的 `title` 也算 UI 文案，最容易漏。

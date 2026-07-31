@@ -3,9 +3,9 @@
 //! 目錄以 JSON 內嵌進執行檔，新增工具需要重新編譯——內建目錄本來就隨版本
 //! 更新，使用者自己加的條目走資料庫，由設定畫面維護。
 //!
-//! 說明與關鍵字六個語言存在同一個檔案裡，而不是一個語言一個目錄。因為
+//! 說明與關鍵字七個語言存在同一個檔案裡，而不是一個語言一個目錄。因為
 //! `template` 是資料庫的 UNIQUE key 也是 `sync_builtin()` 的 upsert 依據，
-//! 拆檔就得把它複製六份，而複製失敗的模式是靜默的：某個語言的 template 少一個
+//! 拆檔就得把它複製七份，而複製失敗的模式是靜默的：某個語言的 template 少一個
 //! 字元，那一筆在那個語言就變成獨立的新條目，看起來卻像「這個語言忘了翻」。
 
 use serde::Deserialize;
@@ -32,7 +32,7 @@ struct CatalogFile {
 
 /// 磁碟上的形狀。
 ///
-/// 刻意跟 [`NewEntry`]（要寫進資料庫的形狀）分開：一個是六語言全帶，一個是
+/// 刻意跟 [`NewEntry`]（要寫進資料庫的形狀）分開：一個是七語言全帶，一個是
 /// 選定語言加上聯集。硬塞成同一個型別，「這個 keywords 是哪一種」就會變成
 /// 要靠上下文猜的事。
 #[derive(Deserialize)]
@@ -44,9 +44,9 @@ struct CatalogEntry {
     keywords: Option<LangMap>,
 }
 
-/// 一段文字的六個語言版本。
+/// 一段文字的七個語言版本。
 ///
-/// 用六個具名欄位而不是 `HashMap<String, String>`：語言標籤打成 `"zh-hant"`
+/// 用七個具名欄位而不是 `HashMap<String, String>`：語言標籤打成 `"zh-hant"`
 /// 或 `"jp"` 的話，HashMap 會安靜地多收一個沒人讀的 key，而具名欄位配上
 /// `deny_unknown_fields` 會在載入時就講出來。
 #[derive(Deserialize)]
@@ -54,6 +54,8 @@ struct CatalogEntry {
 struct LangMap {
     #[serde(rename = "zh-Hant", default)]
     zh_hant: Option<String>,
+    #[serde(rename = "zh-Hans", default)]
+    zh_hans: Option<String>,
     #[serde(default)]
     ja: Option<String>,
     #[serde(default)]
@@ -70,6 +72,7 @@ impl LangMap {
     fn get(&self, lang: Lang) -> Option<&str> {
         let slot = match lang {
             Lang::ZhHant => &self.zh_hant,
+            Lang::ZhHans => &self.zh_hans,
             Lang::Ja => &self.ja,
             Lang::En => &self.en,
             Lang::Fr => &self.fr,
@@ -93,7 +96,7 @@ impl LangMap {
             .or_else(|| self.get(Lang::ZhHant))
     }
 
-    /// 六個語言所有非空白詞的聯集，去重後以空白接起來。
+    /// 七個語言所有非空白詞的聯集，去重後以空白接起來。
     ///
     /// 順序跟著 `Lang::ALL`，但當前語言那一份會由呼叫端另外放在前面，
     /// 所以這裡不必為排序操心。
@@ -227,14 +230,14 @@ mod tests {
             .find(|entry| entry.template == "usbipd attach --wsl --busid {busid}")
             .expect("usbipd attach 應該在內建目錄裡");
 
-        let union = entry.keywords_all.expect("內建條目應該有六語言聯集");
+        let union = entry.keywords_all.expect("內建條目應該有七語言聯集");
         assert!(union.contains("掛載"), "英文介面下仍要認得中文關鍵字：{union}");
         assert!(union.contains("attach"), "英文關鍵字也要在裡面：{union}");
 
         let keywords = entry.keywords.expect("英文介面應該有英文關鍵字");
         assert!(
             !keywords.contains("掛載"),
-            "給人看的那一欄只放當前語言，不然使用者一存檔就把六語言變成自己的關鍵字：{keywords}"
+            "給人看的那一欄只放當前語言，不然使用者一存檔就把七語言變成自己的關鍵字：{keywords}"
         );
     }
 

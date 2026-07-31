@@ -13,7 +13,7 @@ Windows 上的鍵盤啟動器——把命令**填入**你的命令列，而不�
 <img alt="Tauri v2" src="https://img.shields.io/badge/Tauri-v2-24c8db?logo=tauri&logoColor=white">
 <img alt="Rust 1.92" src="https://img.shields.io/badge/Rust-1.92-dea584?logo=rust&logoColor=white">
 <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
-<img alt="UI in 6 languages" src="https://img.shields.io/badge/UI-6%20languages-8957e5">
+<img alt="UI in 7 languages" src="https://img.shields.io/badge/UI-7%20languages-8957e5">
 
 [English](README.md) · **繁體中文**
 
@@ -69,9 +69,9 @@ QQKey 就是為那一刻做的。`Alt+Q` 該比跑一趟 `--help` 更快。
 - **從歷史學習。** 從 PSReadLine 歷史增量匯入你實際用過的命令——先過濾，疑似夾帶憑證的行
   不會進資料庫。
 - **內建 104 筆命令**，涵蓋 usbipd、git、wsl、netsh、docker、winget、npm、cargo，
-  六個介面語言的說明與搜尋關鍵字都齊備。
-- **六語言介面**——繁體中文、日本語、English、Français、Deutsch、한국어——即時切換，
-  不必重新啟動。搜尋關鍵字是六個語言的**聯集**，所以介面設成英文，並不會讓你失去輸入
+  七個介面語言的說明與搜尋關鍵字都齊備。
+- **七語言介面**——繁體中文、简体中文、日本語、English、Français、Deutsch、한국어——
+  即時切換，不必重新啟動。搜尋關鍵字是七個語言的**聯集**，所以介面設成英文，並不會讓你失去輸入
   「掛載」找到 `usbipd attach --wsl` 的能力。
 - **只在本機。** `%APPDATA%` 下一個 SQLite 檔案。不對外傳送，也沒有網路程式碼需要審查。
 
@@ -171,7 +171,7 @@ QQKey 本質上是鍵盤自動化工具，而且會讀你的 shell 歷史。這�
 src/
 ├─ launcher/     候選框
 ├─ settings/     設定畫面
-├─ i18n/         語系解析與六個語系檔
+├─ i18n/         語系解析與七個語系檔
 └─ shared/       與後端共用的型別
 src-tauri/
 ├─ resources/catalog/*.json    內建目錄，編譯期內嵌
@@ -215,7 +215,7 @@ cargo test --lib caret::       # 單一模組
 > 重新啟動 QQKey 時，前一個程序要完全結束後全域快捷鍵才會釋放。太快啟動新的會註冊失敗，
 > 而 release 版沒有 console 看不到錯誤訊息。
 
-前端沒有測試；型別檢查靠 `npm run build`，而 `src/i18n/resources.ts` 的型別標註是六個語系檔
+前端沒有測試；型別檢查靠 `npm run build`，而 `src/i18n/resources.ts` 的型別標註是七個語系檔
 一致性的唯一防線。
 
 ## 參與貢獻
@@ -227,8 +227,8 @@ cargo test --lib caret::       # 單一模組
 
 1. 加到 `src-tauri/resources/catalog/` 下對應的檔案，或新增一個檔案並**同時**在
    `catalog/builtin.rs` 的 `CATALOGS` 註冊一行——目錄是內嵌進執行檔的，不是執行時讀檔。
-2. `description` 與 `keywords` 是**六個語言的 map**（`zh-Hant` `ja` `en` `fr` `de` `ko`）。
-   `template` 只寫一次：它是資料庫的 UNIQUE key，複製六份的失敗模式是靜默的。
+2. `description` 與 `keywords` 是**七個語言的 map**（`zh-Hant` `zh-Hans` `ja` `en` `fr` `de`
+   `ko`）。`template` 只寫一次：它是資料庫的 UNIQUE key，複製七份的失敗模式是靜默的。
 3. `cargo test`——目錄測試會擋下重複的 template、解析不過的檔案，以及任何語言缺譯。
 
 用自己語言寫的關鍵字才是搜尋成立的原因，所以你真的會打出來的譯法，勝過字面上正確的譯法。
@@ -238,7 +238,7 @@ cargo test --lib caret::       # 單一模組
 
 程式碼慣例：註解、文件、UI 文案用繁體中文台灣用語；測試名稱是英文描述句。新增的使用者可見
 字串放 `src/i18n/locales/*.json`（前端）或 `i18n.rs` 的 `messages!` 巨集（後端）——兩者都是
-六個語言一次寫齊。
+七個語言一次寫齊。
 
 ## 已知限制
 
@@ -258,7 +258,7 @@ cargo test --lib caret::       # 單一模組
 
 ## 致謝
 
-**Claude Opus 5**——主導。架構、Win32 呼叫順序、六個語言，以及這份 README。
+**Claude Opus 5**——主導。架構、Win32 呼叫順序、七個語言，以及這份 README。
 **Jeremy Wen**——輔助。產品方向、程式碼裡讀不到的那些事，以及否決權。
 
 分工是自然形成的。Opus 寫程式，並記得那些呼叫為什麼非得是那個順序。Jeremy 負責提供模型從

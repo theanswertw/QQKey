@@ -5,6 +5,7 @@
       "template": "winget search {query}",
       "description": {
         "zh-Hant": "搜尋可安裝的套件",
+        "zh-Hans": "搜索可安装的软件包",
         "ja": "インストールできるパッケージを検索",
         "en": "Search for installable packages",
         "fr": "Rechercher des paquets installables",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "搜尋 尋找",
+        "zh-Hans": "搜索 查找 软件包",
         "ja": "検索 探す",
         "en": "search find",
         "fr": "rechercher chercher trouver",
@@ -24,6 +26,7 @@
       "template": "winget install {package}",
       "description": {
         "zh-Hant": "安裝套件",
+        "zh-Hans": "安装软件包",
         "ja": "パッケージをインストール",
         "en": "Install a package",
         "fr": "Installer un paquet",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "安裝",
+        "zh-Hans": "安装 软件包",
         "ja": "インストール",
         "en": "install",
         "fr": "installer",
@@ -43,6 +47,7 @@
       "template": "winget list",
       "description": {
         "zh-Hant": "列出已安裝的套件",
+        "zh-Hans": "列出已安装的软件包",
         "ja": "インストール済みのパッケージを一覧表示",
         "en": "List the installed packages",
         "fr": "Lister les paquets installés",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "列表 已安裝",
+        "zh-Hans": "列表 已安装",
         "ja": "一覧 インストール済み",
         "en": "list installed",
         "fr": "liste installés",
@@ -62,6 +68,7 @@
       "template": "winget upgrade",
       "description": {
         "zh-Hant": "列出有更新可用的套件",
+        "zh-Hans": "列出有更新可用的软件包",
         "ja": "更新があるパッケージを一覧表示",
         "en": "List the packages with updates available",
         "fr": "Lister les paquets ayant une mise à jour disponible",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "更新 檢查",
+        "zh-Hans": "更新 升级 检查",
         "ja": "更新 アップグレード 確認",
         "en": "upgrade update check outdated",
         "fr": "mettre à jour vérifier",
@@ -81,6 +89,7 @@
       "template": "winget upgrade --all",
       "description": {
         "zh-Hant": "更新所有套件",
+        "zh-Hans": "更新所有软件包",
         "ja": "すべてのパッケージを更新",
         "en": "Upgrade every package",
         "fr": "Mettre à jour tous les paquets",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "更新 全部",
+        "zh-Hans": "更新 升级 全部",
         "ja": "更新 アップグレード すべて",
         "en": "upgrade update all",
         "fr": "mettre à jour tous tout",
@@ -100,6 +110,7 @@
       "template": "winget uninstall {package}",
       "description": {
         "zh-Hant": "移除套件",
+        "zh-Hans": "卸载软件包",
         "ja": "パッケージをアンインストール",
         "en": "Uninstall a package",
         "fr": "Désinstaller un paquet",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "移除 解除安裝",
+        "zh-Hans": "卸载 删除",
         "ja": "アンインストール 削除",
         "en": "uninstall remove",
         "fr": "désinstaller supprimer",
@@ -119,6 +131,7 @@
       "template": "winget show {package}",
       "description": {
         "zh-Hant": "顯示套件的詳細資訊",
+        "zh-Hans": "显示软件包的详细信息",
         "ja": "パッケージの詳細を表示",
         "en": "Show the details of a package",
         "fr": "Afficher les détails d'un paquet",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "詳情 資訊",
+        "zh-Hans": "详情 信息",
         "ja": "詳細 情報",
         "en": "show details info",
         "fr": "détails informations afficher",
@@ -138,6 +152,7 @@
       "template": "winget source update",
       "description": {
         "zh-Hant": "更新套件來源索引",
+        "zh-Hans": "更新软件包源索引",
         "ja": "パッケージソースのインデックスを更新",
         "en": "Refresh the package source index",
         "fr": "Actualiser l'index des sources de paquets",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "來源 更新 索引",
+        "zh-Hans": "源 更新 索引",
         "ja": "ソース 更新 インデックス",
         "en": "source update index refresh",
         "fr": "source mettre à jour index",

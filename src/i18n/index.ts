@@ -32,7 +32,9 @@ async function wantedLanguage(): Promise<Language> {
  * 與後端 `i18n::match_tag()` 同一組規則。只有上面那條備援路徑用得到。
  *
  * 實測：Windows 回報的是舊式的 `zh-TW` 而不是 `zh-Hant-TW`，所以「只看主要
- * 語言子標籤」那一段不是備用路徑而是主路徑。
+ * 語言子標籤」那一段不是備用路徑而是主路徑。`zh` 是唯一要再看 script 與
+ * region 的語言（簡繁共用主要子標籤），判別採白名單：明確指向簡體的才給
+ * `zh-Hans`，其餘的 `zh` 一律 `zh-Hant`。兩邊的規則要一起改。
  */
 function matchTag(raw: string): Language {
   const tag = raw.replace(/_/g, "-");
@@ -40,9 +42,9 @@ function matchTag(raw: string): Language {
   if (exact) {
     return exact;
   }
-  const primary = tag.split("-")[0].toLowerCase();
+  const [primary, ...rest] = tag.toLowerCase().split("-");
   if (primary === "zh") {
-    return "zh-Hant";
+    return rest.some((part) => ["hans", "cn", "sg", "my"].includes(part)) ? "zh-Hans" : "zh-Hant";
   }
   return isLanguage(primary) ? primary : FALLBACK_LANGUAGE;
 }

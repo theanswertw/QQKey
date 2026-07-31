@@ -25,6 +25,8 @@ use serde::{Deserialize, Serialize};
 pub enum Lang {
     #[serde(rename = "zh-Hant")]
     ZhHant,
+    #[serde(rename = "zh-Hans")]
+    ZhHans,
     #[serde(rename = "ja")]
     Ja,
     #[serde(rename = "en")]
@@ -39,8 +41,9 @@ pub enum Lang {
 
 impl Lang {
     /// 順序即設定畫面下拉選單的順序。也供「每個語系都要有」的測試列舉用。
-    pub const ALL: [Lang; 6] = [
+    pub const ALL: [Lang; 7] = [
         Lang::ZhHant,
+        Lang::ZhHans,
         Lang::Ja,
         Lang::En,
         Lang::Fr,
@@ -51,6 +54,7 @@ impl Lang {
     pub fn as_tag(self) -> &'static str {
         match self {
             Lang::ZhHant => "zh-Hant",
+            Lang::ZhHans => "zh-Hans",
             Lang::Ja => "ja",
             Lang::En => "en",
             Lang::Fr => "fr",
@@ -150,32 +154,36 @@ pub fn resolve(setting: Option<&str>) -> Lang {
     }
 }
 
-/// 把系統回報的標籤對到支援的六個之一。
-///
-/// 規則只有三條，刻意**不解析 script 與 region 子標籤**：
+/// 把系統回報的標籤對到支援的七個之一。
 ///
 /// 1. 完全相同（不分大小寫）
-/// 2. 主要語言子標籤相同：`fr-CA`→`fr`、`de-AT`→`de`、`zh-Hant-TW`→`zh-Hant`
-/// 3. 其餘落到 [`FALLBACK`]
+/// 2. 主要語言子標籤是 `zh`：再看其餘子標籤分簡繁（規則見下）
+/// 3. 其他語言只看主要語言子標籤：`fr-CA`→`fr`、`de-AT`→`de`
+/// 4. 都不中落到 [`FALLBACK`]
 ///
-/// `zh` 一律對到 `zh-Hant`，**包含 `zh-Hans` 與 `zh-CN`**。我們沒有簡體，
-/// 但對簡體讀者而言繁體遠比英文可讀；而且這條規則讓整個函式不必碰 script
-/// 子標籤，少掉一整類標籤解析的錯誤。
+/// **只有 `zh` 需要碰 script 與 region 子標籤**，因為簡繁共用同一個主要語言，
+/// 其餘語言仍然只看第一段。判別採白名單：明確指向簡體的（`Hans`、`CN`、`SG`、
+/// `MY`）才對到 `zh-Hans`，其餘的 `zh` 一律 `zh-Hant`——含 `zh-TW`／`zh-HK`／
+/// `zh-MO`，以及沒有任何子標籤的裸 `zh`。裸 `zh` 在 CLDR 的預設是簡體，但
+/// Windows 的顯示語言從不回報這種形式（實測給的是 `zh-TW`／`zh-CN`），
+/// 而把一個判不出來的標籤丟給繁中使用者看簡體，比反過來更像故障。
 fn match_tag(raw: &str) -> Lang {
     // Windows 給的是連字號形式，但備援路徑與某些設定會給底線，一併吃下來
     let tag = raw.replace('_', "-");
     if let Some(exact) = Lang::parse(&tag) {
         return exact;
     }
-    match tag
-        .split('-')
-        .next()
-        .unwrap_or_default()
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        "zh" => Lang::ZhHant,
-        primary => Lang::parse(primary).unwrap_or(FALLBACK),
+    let mut subtags = tag.split('-').map(str::to_ascii_lowercase);
+    let primary = subtags.next().unwrap_or_default();
+    match primary.as_str() {
+        "zh" => {
+            if subtags.any(|part| matches!(part.as_str(), "hans" | "cn" | "sg" | "my")) {
+                Lang::ZhHans
+            } else {
+                Lang::ZhHant
+            }
+        }
+        other => Lang::parse(other).unwrap_or(FALLBACK),
     }
 }
 
@@ -232,7 +240,7 @@ fn detect() -> Option<String> {
 
 // ------------------------------------------------------------ 使用者可見字串
 
-/// 宣告一條使用者可見訊息，六個語系各一份。
+/// 宣告一條使用者可見訊息，七個語系各一份。
 ///
 /// 刻意不用 `rust-i18n` 這類以 YAML／JSON 查表的方案：那裡 key 打錯、少一個
 /// 語系、插值參數掉一個，三者都是執行期靜默失敗，而症狀是使用者看到空字串
@@ -247,6 +255,7 @@ macro_rules! messages {
         $(#[$doc:meta])*
         $name:ident ( $($arg:ident : $ty:ty),* ) {
             ZhHant: $zh:literal,
+            ZhHans: $zh_hans:literal,
             Ja: $ja:literal,
             En: $en:literal,
             Fr: $fr:literal,
@@ -258,6 +267,7 @@ macro_rules! messages {
         pub fn $name(lang: Lang $(, $arg: $ty)*) -> String {
             match lang {
                 Lang::ZhHant => format!($zh),
+                Lang::ZhHans => format!($zh_hans),
                 Lang::Ja => format!($ja),
                 Lang::En => format!($en),
                 Lang::Fr => format!($fr),
@@ -277,6 +287,7 @@ messages! {
     /// 地方，得讓他知道要去改綁。
     tray_show_inactive() {
         ZhHant: "叫出候選框（快捷鍵未生效）",
+        ZhHans: "打开候选框（快捷键未生效）",
         Ja: "候補ウィンドウを開く（ショートカット無効）",
         En: "Open launcher (shortcut inactive)",
         Fr: "Ouvrir le lanceur (raccourci inactif)",
@@ -286,6 +297,7 @@ messages! {
 
     tray_show(shortcut: &str) {
         ZhHant: "叫出候選框（{shortcut}）",
+        ZhHans: "打开候选框（{shortcut}）",
         Ja: "候補ウィンドウを開く（{shortcut}）",
         En: "Open launcher ({shortcut})",
         Fr: "Ouvrir le lanceur ({shortcut})",
@@ -295,6 +307,7 @@ messages! {
 
     tray_settings(shortcut: &str) {
         ZhHant: "設定（{shortcut}）",
+        ZhHans: "设置（{shortcut}）",
         Ja: "設定（{shortcut}）",
         En: "Settings ({shortcut})",
         Fr: "Paramètres ({shortcut})",
@@ -304,6 +317,7 @@ messages! {
 
     tray_quit() {
         ZhHant: "結束 QQKey",
+        ZhHans: "退出 QQKey",
         Ja: "QQKey を終了",
         En: "Quit QQKey",
         Fr: "Quitter QQKey",
@@ -313,6 +327,7 @@ messages! {
 
     tray_tooltip_inactive() {
         ZhHant: "QQKey — 快捷鍵未生效，請從設定改綁",
+        ZhHans: "QQKey — 快捷键未生效，请到设置里重新指定",
         Ja: "QQKey — ショートカットが無効です。設定で変更してください",
         En: "QQKey — shortcut inactive, rebind it in Settings",
         Fr: "QQKey — raccourci inactif, redéfinissez-le dans les paramètres",
@@ -322,6 +337,7 @@ messages! {
 
     tray_tooltip(shortcut: &str) {
         ZhHant: "QQKey — {shortcut} 叫出候選框",
+        ZhHans: "QQKey — {shortcut} 打开候选框",
         Ja: "QQKey — {shortcut} で候補ウィンドウを開く",
         En: "QQKey — {shortcut} opens the launcher",
         Fr: "QQKey — {shortcut} ouvre le lanceur",
@@ -333,6 +349,7 @@ messages! {
 
     settings_window_title() {
         ZhHant: "QQKey 設定",
+        ZhHans: "QQKey 设置",
         Ja: "QQKey 設定",
         En: "QQKey Settings",
         Fr: "Paramètres QQKey",
@@ -348,6 +365,7 @@ messages! {
 
     fatal_caption() {
         ZhHant: "QQKey 無法啟動",
+        ZhHans: "QQKey 无法启动",
         Ja: "QQKey を起動できません",
         En: "QQKey cannot start",
         Fr: "QQKey ne peut pas démarrer",
@@ -359,6 +377,7 @@ messages! {
     /// 所以連資料庫路徑一起帶出去——他至少能去那個位置看一眼。
     fatal_no_data_dir(error: &str) {
         ZhHant: "取不到資料夾位置：{error}",
+        ZhHans: "获取不到文件夹位置：{error}",
         Ja: "フォルダーの場所を取得できません：{error}",
         En: "Could not determine the data folder: {error}",
         Fr: "Impossible de déterminer le dossier de données : {error}",
@@ -368,6 +387,7 @@ messages! {
 
     fatal_open_database(error: &str, path: &str) {
         ZhHant: "開啟資料庫失敗：{error}\n\n{path}",
+        ZhHans: "打开数据库失败：{error}\n\n{path}",
         Ja: "データベースを開けませんでした：{error}\n\n{path}",
         En: "Failed to open the database: {error}\n\n{path}",
         Fr: "Échec de l'ouverture de la base de données : {error}\n\n{path}",
@@ -377,6 +397,7 @@ messages! {
 
     fatal_load_pool(error: &str, path: &str) {
         ZhHant: "載入候選池失敗：{error}\n\n{path}",
+        ZhHans: "加载候选池失败：{error}\n\n{path}",
         Ja: "候補プールの読み込みに失敗しました：{error}\n\n{path}",
         En: "Failed to load the candidate pool: {error}\n\n{path}",
         Fr: "Échec du chargement du pool de candidats : {error}\n\n{path}",
@@ -391,6 +412,7 @@ messages! {
 
     db_journal_mode_failed(error: &str) {
         ZhHant: "設定 journal 模式失敗：{error}",
+        ZhHans: "设置 journal 模式失败：{error}",
         Ja: "journal モードの設定に失敗しました：{error}",
         En: "Failed to set the journal mode: {error}",
         Fr: "Échec de la configuration du mode journal : {error}",
@@ -400,6 +422,7 @@ messages! {
 
     db_read_version_failed(error: &str) {
         ZhHant: "讀取 schema 版本失敗：{error}",
+        ZhHans: "读取 schema 版本失败：{error}",
         Ja: "スキーマバージョンの読み取りに失敗しました：{error}",
         En: "Failed to read the schema version: {error}",
         Fr: "Échec de la lecture de la version du schéma : {error}",
@@ -410,6 +433,7 @@ messages! {
     /// 不試著降級：新版寫進去的欄位砍掉就是弄丟資料，寧可不開。
     db_newer_version(found: i64, known: i64) {
         ZhHant: "這個資料庫是較新版本的 QQKey 建立的（schema v{found}，本程式只認得 v{known}）。請改用新版，或把資料庫移到別處讓 QQKey 重建一個。",
+        ZhHans: "这个数据库是较新版本的 QQKey 创建的（schema v{found}，本程序只认得 v{known}）。请改用新版，或把数据库移到别处让 QQKey 重建一个。",
         Ja: "このデータベースは新しいバージョンの QQKey が作成したものです（schema v{found}、このプログラムが認識できるのは v{known} まで）。新しいバージョンを使うか、データベースを別の場所へ移して QQKey に作り直させてください。",
         En: "This database was created by a newer version of QQKey (schema v{found}; this build only understands v{known}). Please use the newer version, or move the database elsewhere so QQKey can rebuild one.",
         Fr: "Cette base de données a été créée par une version plus récente de QQKey (schéma v{found} ; cette version ne reconnaît que v{known}). Utilisez la version plus récente, ou déplacez la base de données ailleurs pour que QQKey en recrée une.",
@@ -419,6 +443,7 @@ messages! {
 
     db_create_tables_failed(error: &str) {
         ZhHant: "建立資料表失敗：{error}",
+        ZhHans: "创建数据表失败：{error}",
         Ja: "テーブルの作成に失敗しました：{error}",
         En: "Failed to create the tables: {error}",
         Fr: "Échec de la création des tables : {error}",
@@ -428,6 +453,7 @@ messages! {
 
     db_write_version_failed(error: &str) {
         ZhHant: "寫入 schema 版本失敗：{error}",
+        ZhHans: "写入 schema 版本失败：{error}",
         Ja: "スキーマバージョンの書き込みに失敗しました：{error}",
         En: "Failed to write the schema version: {error}",
         Fr: "Échec de l'écriture de la version du schéma : {error}",
@@ -439,6 +465,7 @@ messages! {
 
     entry_not_found(id: i64) {
         ZhHant: "找不到 id 為 {id} 的命令",
+        ZhHans: "找不到 id 为 {id} 的命令",
         Ja: "id が {id} のコマンドが見つかりません",
         En: "No command with id {id}",
         Fr: "Aucune commande avec l'identifiant {id}",
@@ -448,6 +475,7 @@ messages! {
 
     invalid_json(error: &str) {
         ZhHant: "JSON 格式不正確：{error}",
+        ZhHans: "JSON 格式不正确：{error}",
         Ja: "JSON の形式が正しくありません：{error}",
         En: "Malformed JSON: {error}",
         Fr: "JSON mal formé : {error}",
@@ -457,6 +485,7 @@ messages! {
 
     shared_file_newer(version: u32) {
         ZhHant: "這個檔案是較新的格式（version {version}），請先更新 QQKey",
+        ZhHans: "这个文件是较新的格式（version {version}），请先更新 QQKey",
         Ja: "このファイルは新しい形式です（version {version}）。先に QQKey を更新してください",
         En: "This file uses a newer format (version {version}); please update QQKey first",
         Fr: "Ce fichier utilise un format plus récent (version {version}) ; mettez d'abord QQKey à jour",
@@ -466,6 +495,7 @@ messages! {
 
     invalid_backup(error: &str) {
         ZhHant: "不是有效的備份檔：{error}",
+        ZhHans: "不是有效的备份文件：{error}",
         Ja: "有効なバックアップファイルではありません：{error}",
         En: "Not a valid backup file: {error}",
         Fr: "Fichier de sauvegarde non valide : {error}",
@@ -475,6 +505,7 @@ messages! {
 
     backup_newer(version: u32) {
         ZhHant: "這個備份是較新的格式（version {version}），請先更新 QQKey",
+        ZhHans: "这个备份是较新的格式（version {version}），请先更新 QQKey",
         Ja: "このバックアップは新しい形式です（version {version}）。先に QQKey を更新してください",
         En: "This backup uses a newer format (version {version}); please update QQKey first",
         Fr: "Cette sauvegarde utilise un format plus récent (version {version}) ; mettez d'abord QQKey à jour",
@@ -487,6 +518,7 @@ messages! {
     /// 所以要明講替代做法。
     boost_not_finite() {
         ZhHant: "手動加權要是一個有限的數字",
+        ZhHans: "手动加权要是一个有限的数字",
         Ja: "手動の重みづけは有限の数値でなければなりません",
         En: "The manual boost must be a finite number",
         Fr: "La pondération manuelle doit être un nombre fini",
@@ -496,6 +528,7 @@ messages! {
 
     boost_negative(boost: f64) {
         ZhHant: "手動加權不能是負數（收到 {boost}）。想讓某筆命令不要出現，請改用「停用」。",
+        ZhHans: "手动加权不能是负数（收到 {boost}）。想让某条命令不出现，请改用“停用”。",
         Ja: "手動の重みづけに負の数は使えません（{boost} を受け取りました）。特定のコマンドを表示させたくない場合は「無効」を使ってください。",
         En: "The manual boost cannot be negative (got {boost}). To keep a command out of the launcher, disable it instead.",
         Fr: "La pondération manuelle ne peut pas être négative ({boost} reçu). Pour qu'une commande n'apparaisse pas, désactivez-la plutôt.",
@@ -507,6 +540,7 @@ messages! {
     /// 的第一道防線，所以要在入口就講出問題，而不是事後默默改掉使用者的東西。
     template_has_control_chars(escaped: &str) {
         ZhHant: "命令裡有換行或 Tab 這類控制字元，不能存下來——送進終端機時換行等同按下 Enter。\n\n{escaped}",
+        ZhHans: "命令里有换行或 Tab 这类控制字符，不能保存——送进终端时换行等同于按下 Enter。\n\n{escaped}",
         Ja: "コマンドに改行やタブなどの制御文字が含まれているため保存できません。ターミナルに送ると改行は Enter と同じ働きをします。\n\n{escaped}",
         En: "The command contains control characters such as a newline or tab and cannot be saved — sent to a terminal, a newline is the same as pressing Enter.\n\n{escaped}",
         Fr: "La commande contient des caractères de contrôle (retour à la ligne, tabulation) et ne peut pas être enregistrée — envoyé à un terminal, un retour à la ligne équivaut à appuyer sur Entrée.\n\n{escaped}",
@@ -518,6 +552,7 @@ messages! {
 
     invalid_regex(error: &str) {
         ZhHant: "不是有效的正規表示式：{error}",
+        ZhHans: "不是有效的正则表达式：{error}",
         Ja: "有効な正規表現ではありません：{error}",
         En: "Not a valid regular expression: {error}",
         Fr: "Expression régulière non valide : {error}",
@@ -527,6 +562,7 @@ messages! {
 
     opacity_out_of_range(min: u8, max: u8, got: u8) {
         ZhHant: "不透明度必須介於 {min}–{max}%，收到 {got}%",
+        ZhHans: "不透明度必须介于 {min}–{max}%，收到 {got}%",
         Ja: "不透明度は {min}–{max}% の範囲でなければなりません（{got}% を受け取りました）",
         En: "Opacity must be between {min}% and {max}%, got {got}%",
         Fr: "L'opacité doit être comprise entre {min} % et {max} %, reçu {got} %",
@@ -536,6 +572,7 @@ messages! {
 
     unsupported_language(value: &str) {
         ZhHant: "不支援的語言：{value}",
+        ZhHans: "不支持的语言：{value}",
         Ja: "サポートされていない言語です：{value}",
         En: "Unsupported language: {value}",
         Fr: "Langue non prise en charge : {value}",
@@ -547,6 +584,7 @@ messages! {
 
     write_failed(path: &str, error: &str) {
         ZhHant: "寫入 {path} 失敗：{error}",
+        ZhHans: "写入 {path} 失败：{error}",
         Ja: "{path} への書き込みに失敗しました：{error}",
         En: "Failed to write {path}: {error}",
         Fr: "Échec de l'écriture de {path} : {error}",
@@ -556,6 +594,7 @@ messages! {
 
     read_failed(path: &str, error: &str) {
         ZhHant: "讀取 {path} 失敗：{error}",
+        ZhHans: "读取 {path} 失败：{error}",
         Ja: "{path} の読み込みに失敗しました：{error}",
         En: "Failed to read {path}: {error}",
         Fr: "Échec de la lecture de {path} : {error}",
@@ -565,6 +604,7 @@ messages! {
 
     no_log_dir(error: &str) {
         ZhHant: "取不到日誌資料夾位置：{error}",
+        ZhHans: "获取不到日志文件夹位置：{error}",
         Ja: "ログフォルダーの場所を取得できません：{error}",
         En: "Could not determine the log folder: {error}",
         Fr: "Impossible de déterminer le dossier des journaux : {error}",
@@ -574,6 +614,7 @@ messages! {
 
     create_log_dir_failed(error: &str) {
         ZhHant: "建立日誌資料夾失敗：{error}",
+        ZhHans: "创建日志文件夹失败：{error}",
         Ja: "ログフォルダーの作成に失敗しました：{error}",
         En: "Failed to create the log folder: {error}",
         Fr: "Échec de la création du dossier des journaux : {error}",
@@ -583,6 +624,7 @@ messages! {
 
     open_log_dir_failed(error: &str) {
         ZhHant: "開啟日誌資料夾失敗：{error}",
+        ZhHans: "打开日志文件夹失败：{error}",
         Ja: "ログフォルダーを開けませんでした：{error}",
         En: "Failed to open the log folder: {error}",
         Fr: "Échec de l'ouverture du dossier des journaux : {error}",
@@ -594,6 +636,7 @@ messages! {
     /// 檔案總管、拿到檔案會執行關聯程式。
     link_not_allowed(target: &str) {
         ZhHant: "不允許開啟這個連結：{target}",
+        ZhHans: "不允许打开这个链接：{target}",
         Ja: "このリンクは開けません：{target}",
         En: "Opening this link is not allowed: {target}",
         Fr: "L'ouverture de ce lien n'est pas autorisée : {target}",
@@ -603,6 +646,7 @@ messages! {
 
     open_link_failed(error: &str) {
         ZhHant: "開啟連結失敗：{error}",
+        ZhHans: "打开链接失败：{error}",
         Ja: "リンクを開けませんでした：{error}",
         En: "Failed to open the link: {error}",
         Fr: "Échec de l'ouverture du lien : {error}",
@@ -616,6 +660,7 @@ messages! {
 
     no_target_window() {
         ZhHant: "沒有記錄到要送回的視窗",
+        ZhHans: "没有记录到要送回的窗口",
         Ja: "送り先のウィンドウが記録されていません",
         En: "No target window was recorded",
         Fr: "Aucune fenêtre cible n'a été enregistrée",
@@ -625,6 +670,7 @@ messages! {
 
     restore_focus_failed() {
         ZhHant: "無法把焦點還原到原視窗",
+        ZhHans: "无法把焦点还原到原窗口",
         Ja: "元のウィンドウにフォーカスを戻せません",
         En: "Could not return focus to the original window",
         Fr: "Impossible de redonner le focus à la fenêtre d'origine",
@@ -636,6 +682,7 @@ messages! {
     /// 命令的日常情境。
     input_partially_sent(sent: u32, expected: u32) {
         ZhHant: "鍵盤事件只送出 {sent}/{expected} 個，可能被攔截",
+        ZhHans: "键盘事件只发出 {sent}/{expected} 个，可能被拦截",
         Ja: "キーボードイベントを {sent}/{expected} 個しか送信できませんでした。ブロックされている可能性があります",
         En: "Only {sent} of {expected} keyboard events were sent; something may be blocking them",
         Fr: "Seuls {sent} événements clavier sur {expected} ont été envoyés ; ils sont peut-être bloqués",
@@ -647,6 +694,7 @@ messages! {
 
     shortcut_parse_failed(value: &str, error: &str) {
         ZhHant: "無法解析快捷鍵 {value:?}：{error}",
+        ZhHans: "无法解析快捷键 {value:?}：{error}",
         Ja: "ショートカット {value:?} を解析できません：{error}",
         En: "Could not parse the shortcut {value:?}: {error}",
         Fr: "Impossible d'analyser le raccourci {value:?} : {error}",
@@ -656,6 +704,7 @@ messages! {
 
     shortcut_register_failed(value: &str, error: &str) {
         ZhHant: "註冊 {value} 失敗（可能已被其他程式佔用）：{error}",
+        ZhHans: "注册 {value} 失败（可能已被其他程序占用）：{error}",
         Ja: "{value} の登録に失敗しました（他のプログラムが使用している可能性があります）：{error}",
         En: "Failed to register {value} (another program may already be using it): {error}",
         Fr: "Échec de l'enregistrement de {value} (un autre programme l'utilise peut-être déjà) : {error}",
@@ -687,13 +736,17 @@ mod tests {
     }
 
     #[test]
-    fn simplified_chinese_prefers_traditional_over_english() {
+    fn chinese_variants_are_told_apart_by_script_or_region() {
+        assert_eq!(match_tag("zh-Hans-CN"), Lang::ZhHans);
+        assert_eq!(match_tag("zh-CN"), Lang::ZhHans, "實測簡中版 Windows 回報的形式");
+        assert_eq!(match_tag("zh-SG"), Lang::ZhHans);
+        assert_eq!(match_tag("zh-HK"), Lang::ZhHant, "香港用繁體");
+        assert_eq!(match_tag("zh-MO"), Lang::ZhHant);
         assert_eq!(
-            match_tag("zh-Hans-CN"),
+            match_tag("zh"),
             Lang::ZhHant,
-            "簡體讀者看繁體遠比看英文可讀"
+            "判不出簡繁時給繁體——CLDR 的預設是簡體，但 Windows 從不回報裸 zh"
         );
-        assert_eq!(match_tag("zh-CN"), Lang::ZhHant);
     }
 
     #[test]

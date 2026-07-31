@@ -5,6 +5,7 @@
       "template": "wsl --list --verbose",
       "description": {
         "zh-Hant": "列出所有發行版與其狀態、WSL 版本",
+        "zh-Hans": "列出所有发行版及其状态、WSL 版本",
         "ja": "すべてのディストリビューションと状態、WSL バージョンを一覧表示",
         "en": "List all distributions with their state and WSL version",
         "fr": "Lister toutes les distributions avec leur état et version WSL",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "列表 發行版 狀態",
+        "zh-Hans": "列表 发行版 状态",
         "ja": "一覧 リスト ディストリビューション 状態",
         "en": "list distributions distro state",
         "fr": "liste lister distributions état",
@@ -24,6 +26,7 @@
       "template": "wsl --status",
       "description": {
         "zh-Hant": "顯示 WSL 整體設定與預設發行版",
+        "zh-Hans": "显示 WSL 整体设置与默认发行版",
         "ja": "WSL 全体の設定と既定のディストリビューションを表示",
         "en": "Show the overall WSL configuration and default distribution",
         "fr": "Afficher la configuration WSL globale et la distribution par défaut",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "狀態 設定",
+        "zh-Hans": "状态 设置",
         "ja": "状態 ステータス 設定",
         "en": "status configuration settings",
         "fr": "statut configuration paramètres",
@@ -43,6 +47,7 @@
       "template": "wsl -d {distro}",
       "description": {
         "zh-Hant": "進入指定的發行版",
+        "zh-Hans": "进入指定的发行版",
         "ja": "指定したディストリビューションに入る",
         "en": "Enter a specific distribution",
         "fr": "Entrer dans une distribution précise",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "進入 啟動",
+        "zh-Hans": "进入 启动",
         "ja": "入る 起動 開く",
         "en": "enter open launch shell",
         "fr": "entrer ouvrir lancer",
@@ -62,6 +68,7 @@
       "template": "wsl --shutdown",
       "description": {
         "zh-Hant": "關閉所有發行版與虛擬機（網路異常時常用）",
+        "zh-Hans": "关闭所有发行版与虚拟机（网络异常时常用）",
         "ja": "すべてのディストリビューションと仮想マシンを停止（ネットワーク異常時によく使う）",
         "en": "Shut down every distribution and the VM (common fix for network issues)",
         "fr": "Arrêter toutes les distributions et la machine virtuelle (utile en cas de problème réseau)",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "關閉 重啟 網路",
+        "zh-Hans": "关闭 重启 网络",
         "ja": "停止 シャットダウン 再起動 ネットワーク",
         "en": "shutdown restart network",
         "fr": "arrêter redémarrer réseau",
@@ -81,6 +89,7 @@
       "template": "wsl --terminate {distro}",
       "description": {
         "zh-Hant": "只關閉指定的發行版",
+        "zh-Hans": "只关闭指定的发行版",
         "ja": "指定したディストリビューションのみを停止",
         "en": "Stop just one distribution",
         "fr": "Arrêter une seule distribution",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "關閉 終止",
+        "zh-Hans": "关闭 终止",
         "ja": "停止 終了 ターミネート",
         "en": "terminate stop kill",
         "fr": "arrêter terminer",
@@ -100,6 +110,7 @@
       "template": "wsl --set-default {distro}",
       "description": {
         "zh-Hant": "設定預設發行版",
+        "zh-Hans": "设置默认发行版",
         "ja": "既定のディストリビューションを設定",
         "en": "Set the default distribution",
         "fr": "Définir la distribution par défaut",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "預設",
+        "zh-Hans": "默认",
         "ja": "既定 デフォルト",
         "en": "default set",
         "fr": "défaut définir",
@@ -119,6 +131,7 @@
       "template": "wsl --install -d {distro}",
       "description": {
         "zh-Hant": "安裝指定的發行版",
+        "zh-Hans": "安装指定的发行版",
         "ja": "指定したディストリビューションをインストール",
         "en": "Install a specific distribution",
         "fr": "Installer une distribution précise",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "安裝",
+        "zh-Hans": "安装",
         "ja": "インストール",
         "en": "install",
         "fr": "installer",
@@ -138,6 +152,7 @@
       "template": "wsl --list --online",
       "description": {
         "zh-Hant": "列出可安裝的發行版",
+        "zh-Hans": "列出可安装的发行版",
         "ja": "インストール可能なディストリビューションを一覧表示",
         "en": "List the distributions available to install",
         "fr": "Lister les distributions disponibles à l'installation",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "列表 線上 可安裝",
+        "zh-Hans": "列表 在线 可安装",
         "ja": "一覧 オンライン インストール可能",
         "en": "list online available install",
         "fr": "liste en ligne disponible installer",
@@ -157,6 +173,7 @@
       "template": "wsl --update",
       "description": {
         "zh-Hant": "更新 WSL 核心",
+        "zh-Hans": "更新 WSL 内核",
         "ja": "WSL カーネルを更新",
         "en": "Update the WSL kernel",
         "fr": "Mettre à jour le noyau WSL",
@@ -165,6 +182,7 @@
       },
       "keywords": {
         "zh-Hant": "更新 核心",
+        "zh-Hans": "更新 内核 升级",
         "ja": "更新 アップデート カーネル",
         "en": "update kernel upgrade",
         "fr": "mettre à jour noyau",
@@ -176,6 +194,7 @@
       "template": "wsl --export {distro} {path}",
       "description": {
         "zh-Hant": "把發行版匯出成 tar 檔備份",
+        "zh-Hans": "把发行版导出成 tar 文件备份",
         "ja": "ディストリビューションを tar ファイルにエクスポートしてバックアップ",
         "en": "Export a distribution to a tar file as a backup",
         "fr": "Exporter une distribution vers un fichier tar comme sauvegarde",
@@ -184,6 +203,7 @@
       },
       "keywords": {
         "zh-Hant": "匯出 備份",
+        "zh-Hans": "导出 备份",
         "ja": "エクスポート バックアップ",
         "en": "export backup tar",
         "fr": "exporter sauvegarde tar",
@@ -195,6 +215,7 @@
       "template": "wsl --import {distro} {installPath} {tarball}",
       "description": {
         "zh-Hant": "從 tar 檔還原發行版",
+        "zh-Hans": "从 tar 文件还原发行版",
         "ja": "tar ファイルからディストリビューションを復元",
         "en": "Restore a distribution from a tar file",
         "fr": "Restaurer une distribution depuis un fichier tar",
@@ -203,6 +224,7 @@
       },
       "keywords": {
         "zh-Hant": "匯入 還原",
+        "zh-Hans": "导入 还原 恢复",
         "ja": "インポート 復元 リストア",
         "en": "import restore tar",
         "fr": "importer restaurer tar",
@@ -214,6 +236,7 @@
       "template": "wsl --unregister {distro}",
       "description": {
         "zh-Hant": "移除發行版與其所有資料",
+        "zh-Hans": "移除发行版及其所有数据",
         "ja": "ディストリビューションとそのすべてのデータを削除",
         "en": "Remove a distribution and all of its data",
         "fr": "Supprimer une distribution et toutes ses données",
@@ -222,6 +245,7 @@
       },
       "keywords": {
         "zh-Hant": "移除 刪除 註銷",
+        "zh-Hans": "移除 删除 注销",
         "ja": "削除 登録解除 アンレジスター",
         "en": "unregister remove delete",
         "fr": "supprimer désinscrire retirer",

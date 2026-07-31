@@ -13,7 +13,7 @@ A keyboard launcher for Windows that *inserts* commands into your prompt instead
 <img alt="Tauri v2" src="https://img.shields.io/badge/Tauri-v2-24c8db?logo=tauri&logoColor=white">
 <img alt="Rust 1.92" src="https://img.shields.io/badge/Rust-1.92-dea584?logo=rust&logoColor=white">
 <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
-<img alt="UI in 6 languages" src="https://img.shields.io/badge/UI-6%20languages-8957e5">
+<img alt="UI in 7 languages" src="https://img.shields.io/badge/UI-7%20languages-8957e5">
 
 **English** · [繁體中文](README.zh-Hant.md)
 
@@ -38,7 +38,7 @@ It never presses Enter for you. That is the whole point: you still read the comm
 </p>
 
 The interface above is in English and the query is `掛載`. Search keywords are the union of
-all six languages, so switching the interface never shrinks what you can find.
+all seven languages, so switching the interface never shrinks what you can find.
 
 Press Enter on that first entry and the text lands in the prompt, cut off before the placeholder:
 
@@ -73,10 +73,10 @@ That moment is the whole reason this exists. `Alt+Q` is meant to be shorter than
 - **Learns from your history.** Commands are imported incrementally from your PSReadLine history —
   filtered first, so lines that look like they carry credentials never reach the database.
 - **104 built-in commands** for usbipd, git, wsl, netsh, docker, winget, npm and cargo, each with a
-  description and search keywords in all six UI languages.
-- **Six-language UI** — 繁體中文, 日本語, English, Français, Deutsch, 한국어 — switched live,
-  no restart. Search keywords are the *union* of all six, so setting the UI to English does not
-  cost you the ability to find `usbipd attach --wsl` by typing 掛載.
+  description and search keywords in all seven UI languages.
+- **Seven-language UI** — 繁體中文, 简体中文, 日本語, English, Français, Deutsch, 한국어 —
+  switched live, no restart. Search keywords are the *union* of all seven, so setting the UI to
+  English does not cost you the ability to find `usbipd attach --wsl` by typing 掛載.
 - **Local only.** One SQLite file in `%APPDATA%`. Nothing is sent anywhere, and there is no
   network code to audit.
 
@@ -192,7 +192,7 @@ Win32 calls:
 src/
 ├─ launcher/     the candidate box
 ├─ settings/     the settings window
-├─ i18n/         locale resolution + six locale files
+├─ i18n/         locale resolution + seven locale files
 └─ shared/       types shared with the backend
 src-tauri/
 ├─ resources/catalog/*.json    built-in catalogue, embedded at compile time
@@ -239,7 +239,7 @@ cargo test --lib caret::       # one module
 > console to tell you so.
 
 There is no frontend test suite; type checking is `npm run build`, and the type annotation in
-`src/i18n/resources.ts` is the only thing keeping the six locale files in step.
+`src/i18n/resources.ts` is the only thing keeping the seven locale files in step.
 
 ## Contributing
 
@@ -252,9 +252,9 @@ Adding one:
 1. Add the entry to the right file under `src-tauri/resources/catalog/`, or add a new file *and*
    register it in the `CATALOGS` list in `catalog/builtin.rs` — the catalogue is embedded into the
    executable, not read at runtime.
-2. `description` and `keywords` are maps over all six languages (`zh-Hant` `ja` `en` `fr` `de`
-   `ko`). `template` is written once: it is the database's UNIQUE key, and duplicating it six times
-   fails silently.
+2. `description` and `keywords` are maps over all seven languages (`zh-Hant` `zh-Hans` `ja` `en`
+   `fr` `de` `ko`). `template` is written once: it is the database's UNIQUE key, and duplicating it
+   seven times fails silently.
 3. `cargo test` — the catalogue tests reject duplicate templates, unparsable files and any missing
    translation.
 
@@ -267,7 +267,7 @@ change. It is written in Traditional Chinese.
 
 Code conventions: comments, docs and UI copy are in Traditional Chinese; test names are descriptive
 English sentences. New user-facing strings go in `src/i18n/locales/*.json` (frontend) or the
-`messages!` macro in `i18n.rs` (backend) — all six languages at once, in both cases.
+`messages!` macro in `i18n.rs` (backend) — all seven languages at once, in both cases.
 
 ## Known limitations
 
@@ -290,7 +290,7 @@ English sentences. New user-facing strings go in `src/i18n/locales/*.json` (fron
 
 ## Credits
 
-**Claude Opus 5** — lead. Architecture, the Win32 call ordering, all six languages, and this README.
+**Claude Opus 5** — lead. Architecture, the Win32 call ordering, all seven languages, and this README.
 **Jeremy Wen** — supporting. Product direction, everything a repository does not contain, and the veto.
 
 The split settled naturally. Opus writes the code and remembers why the calls have to go in that

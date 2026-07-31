@@ -4,6 +4,7 @@ import en from "./locales/en.json";
 import fr from "./locales/fr.json";
 import ja from "./locales/ja.json";
 import ko from "./locales/ko.json";
+import zhHans from "./locales/zh-Hans.json";
 import zhHant from "./locales/zh-Hant.json";
 
 /** zh-Hant 是原文，其餘語系檔的鍵必須與它一致。 */
@@ -15,11 +16,12 @@ export type Catalog = typeof zhHant;
  * 語言、畫面上冒出原始的 key 才會被發現。
  *
  * 注意它擋不到「多」出來的鍵（i18next 的複數形式 key_one／key_other 就是這樣
- * 存在的）。所以規則是：每一個帶 {{count}} 的鍵，六個檔案一律同時提供
+ * 存在的）。所以規則是：每一個帶 {{count}} 的鍵，七個檔案一律同時提供
  * _one 與 _other，中日韓兩者填相同文字。
  */
 export const resources: Record<Language, { translation: Catalog }> = {
   "zh-Hant": { translation: zhHant },
+  "zh-Hans": { translation: zhHans },
   ja: { translation: ja },
   en: { translation: en },
   fr: { translation: fr },

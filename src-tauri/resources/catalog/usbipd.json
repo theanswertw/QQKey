@@ -5,6 +5,7 @@
       "template": "usbipd list",
       "description": {
         "zh-Hant": "列出所有 USB 裝置與其 BUSID",
+        "zh-Hans": "列出所有 USB 设备及其 BUSID",
         "ja": "すべての USB デバイスと BUSID を一覧表示",
         "en": "List all USB devices and their BUSIDs",
         "fr": "Lister tous les périphériques USB et leurs BUSID",
@@ -13,6 +14,7 @@
       },
       "keywords": {
         "zh-Hant": "usb 列表 裝置 busid",
+        "zh-Hans": "usb 列表 设备 busid",
         "ja": "usb 一覧 リスト デバイス busid",
         "en": "usb list devices busid",
         "fr": "usb liste lister périphériques busid",
@@ -24,6 +26,7 @@
       "template": "usbipd state",
       "description": {
         "zh-Hant": "以 JSON 輸出目前的分享狀態",
+        "zh-Hans": "以 JSON 输出当前的共享状态",
         "ja": "現在の共有状態を JSON で出力",
         "en": "Print the current sharing state as JSON",
         "fr": "Afficher l'état de partage actuel en JSON",
@@ -32,6 +35,7 @@
       },
       "keywords": {
         "zh-Hant": "狀態 json",
+        "zh-Hans": "状态 json",
         "ja": "状態 ステータス json",
         "en": "state status json",
         "fr": "état statut json",
@@ -43,6 +47,7 @@
       "template": "usbipd bind --busid {busid}",
       "description": {
         "zh-Hant": "綁定裝置以供分享（需系統管理員）",
+        "zh-Hans": "绑定设备以供共享（需管理员权限）",
         "ja": "デバイスを共有用にバインド（管理者権限が必要）",
         "en": "Bind a device so it can be shared (requires administrator)",
         "fr": "Lier un périphérique pour le partager (nécessite l'administrateur)",
@@ -51,6 +56,7 @@
       },
       "keywords": {
         "zh-Hant": "綁定 分享",
+        "zh-Hans": "绑定 共享",
         "ja": "バインド 共有",
         "en": "bind share",
         "fr": "lier partager",
@@ -62,6 +68,7 @@
       "template": "usbipd unbind --busid {busid}",
       "description": {
         "zh-Hant": "解除單一裝置的綁定",
+        "zh-Hans": "解除单个设备的绑定",
         "ja": "特定のデバイスのバインドを解除",
         "en": "Unbind a single device",
         "fr": "Délier un seul périphérique",
@@ -70,6 +77,7 @@
       },
       "keywords": {
         "zh-Hant": "解除綁定",
+        "zh-Hans": "解绑 解除绑定",
         "ja": "アンバインド 解除",
         "en": "unbind release",
         "fr": "délier détacher",
@@ -81,6 +89,7 @@
       "template": "usbipd unbind --all",
       "description": {
         "zh-Hant": "解除所有裝置的綁定",
+        "zh-Hans": "解除所有设备的绑定",
         "ja": "すべてのデバイスのバインドを解除",
         "en": "Unbind every device",
         "fr": "Délier tous les périphériques",
@@ -89,6 +98,7 @@
       },
       "keywords": {
         "zh-Hant": "解除綁定 全部",
+        "zh-Hans": "解绑 解除绑定 全部",
         "ja": "アンバインド 解除 すべて 全部",
         "en": "unbind all every",
         "fr": "délier tous tout",
@@ -100,6 +110,7 @@
       "template": "usbipd attach --wsl --busid {busid}",
       "description": {
         "zh-Hant": "將裝置掛載到 WSL",
+        "zh-Hans": "将设备挂载到 WSL",
         "ja": "デバイスを WSL にアタッチ",
         "en": "Attach a device to WSL",
         "fr": "Attacher un périphérique à WSL",
@@ -108,6 +119,7 @@
       },
       "keywords": {
         "zh-Hant": "掛載 wsl 連接",
+        "zh-Hans": "挂载 wsl 连接",
         "ja": "アタッチ wsl 接続",
         "en": "attach wsl connect mount",
         "fr": "attacher wsl connecter monter",
@@ -119,6 +131,7 @@
       "template": "usbipd attach --wsl --auto-attach --busid {busid}",
       "description": {
         "zh-Hant": "掛載到 WSL 並在重新插拔後自動重連",
+        "zh-Hans": "挂载到 WSL 并在重新插拔后自动重连",
         "ja": "WSL にアタッチし、抜き差し後に自動で再接続",
         "en": "Attach to WSL and reconnect automatically after replugging",
         "fr": "Attacher à WSL et reconnecter automatiquement après rebranchement",
@@ -127,6 +140,7 @@
       },
       "keywords": {
         "zh-Hant": "掛載 wsl 自動 重連",
+        "zh-Hans": "挂载 wsl 自动 重连",
         "ja": "アタッチ wsl 自動 再接続",
         "en": "attach wsl auto reconnect",
         "fr": "attacher wsl automatique reconnecter",
@@ -138,6 +152,7 @@
       "template": "usbipd detach --busid {busid}",
       "description": {
         "zh-Hant": "從 WSL 卸離裝置",
+        "zh-Hans": "从 WSL 分离设备",
         "ja": "デバイスを WSL からデタッチ",
         "en": "Detach a device from WSL",
         "fr": "Détacher un périphérique de WSL",
@@ -146,6 +161,7 @@
       },
       "keywords": {
         "zh-Hant": "卸離 中斷",
+        "zh-Hans": "分离 断开",
         "ja": "デタッチ 切断",
         "en": "detach disconnect",
         "fr": "détacher déconnecter",
@@ -157,6 +173,7 @@
       "template": "usbipd detach --all",
       "description": {
         "zh-Hant": "卸離所有已掛載的裝置",
+        "zh-Hans": "分离所有已挂载的设备",
         "ja": "アタッチ済みのすべてのデバイスをデタッチ",
         "en": "Detach every attached device",
         "fr": "Détacher tous les périphériques attachés",
@@ -165,6 +182,7 @@
       },
       "keywords": {
         "zh-Hant": "卸離 全部",
+        "zh-Hans": "分离 断开 全部",
         "ja": "デタッチ 切断 すべて 全部",
         "en": "detach all every",
         "fr": "détacher tous tout",
@@ -176,6 +194,7 @@
       "template": "usbipd --version",
       "description": {
         "zh-Hant": "顯示 usbipd-win 版本",
+        "zh-Hans": "显示 usbipd-win 版本",
         "ja": "usbipd-win のバージョンを表示",
         "en": "Show the usbipd-win version",
         "fr": "Afficher la version de usbipd-win",
@@ -184,6 +203,7 @@
       },
       "keywords": {
         "zh-Hant": "版本",
+        "zh-Hans": "版本",
         "ja": "バージョン",
         "en": "version",
         "fr": "version",
