@@ -3,7 +3,7 @@
 本檔案記錄 QQKey 的重要變更，格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，
 版本號依循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
-## [Unreleased]
+## [0.2.0] - 2026-07-31
 
 ### Added
 
@@ -18,6 +18,10 @@
   授權並附上原始碼，不能閉源再商業化。0.1.0 是以 MIT 發布的，那份授權不可撤回、
   仍然適用於當時的 commit，本次變更自此之後生效。`LICENSE`、兩份 README、
   `package.json`、`Cargo.toml` 與設定畫面的「關於」都同步更新。
+- 安裝程式帶上授權全文與版權宣告。`bundle.licenseFile` 讓 MSI 與 NSIS 在安裝過程
+  顯示 GPL 全文——Tauri 會自動把純文字的 `LICENSE` 轉成 WiX 要的 RTF，所以 repo
+  根目錄那一份維持純文字，與 GitHub 的授權偵測共用同一個檔案。`bundle.copyright`
+  則寫進 exe 的 `LegalCopyright` 與 NSIS 安裝視窗底部的品牌列。
 - 系統語系判定改為區分簡繁。`zh` 是**唯一**需要再看 script 與 region 子標籤的語言
   （簡繁共用同一個主要子標籤），其餘語言仍然只看第一段。判別採白名單：明確指向
   簡體的（`Hans`／`CN`／`SG`／`MY`）對到 `zh-Hans`，其餘的 `zh` 一律 `zh-Hant`——
