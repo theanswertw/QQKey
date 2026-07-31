@@ -72,7 +72,7 @@ export default function AboutPanel({
           </div>
           <div className="about__row">
             <dt className="about__label">{t("settings.about.license")}</dt>
-            <dd className="about__value">MIT License</dd>
+            <dd className="about__value">GNU GPL v3</dd>
           </div>
           <div className="about__row">
             <dt className="about__label">{t("settings.about.data")}</dt>

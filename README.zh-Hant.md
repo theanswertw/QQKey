@@ -8,7 +8,7 @@
 
 Windows 上的鍵盤啟動器——把命令**填入**你的命令列，而不是執行它。
 
-<img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-3da639">
+<img alt="License: GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-3da639">
 <img alt="Platform: Windows 10 / 11" src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?logo=windows&logoColor=white">
 <img alt="Tauri v2" src="https://img.shields.io/badge/Tauri-v2-24c8db?logo=tauri&logoColor=white">
 <img alt="Rust 1.92" src="https://img.shields.io/badge/Rust-1.92-dea584?logo=rust&logoColor=white">
@@ -275,4 +275,9 @@ Jeremy 在它執行前先讀了那一行。
 
 ## 授權
 
-[MIT](LICENSE) © 2026 Jeremy Wen——不管上面那段怎麼寫，著作權是他的。
+[GNU GPL v3.0](LICENSE) © 2026 Jeremy Wen——不管上面那段怎麼寫，著作權是他的。
+
+刻意選 copyleft。拿去用、拿去讀、拿去改、在公司裡跑都沒問題；但你散布出去的衍生作品同樣要以
+GPL-3.0 授權並附上原始碼。沒有人能把它閉源之後拿去賣。
+
+0.1.0 是以 MIT 發布的。那份授權不可撤回，仍然適用於當時那些 commit；本次變更從此之後生效。

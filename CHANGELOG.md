@@ -14,6 +14,10 @@
 
 ### Changed
 
+- **授權由 MIT 改為 GPL-3.0-only**。目的是 copyleft：散布衍生作品必須同樣以 GPL-3.0
+  授權並附上原始碼，不能閉源再商業化。0.1.0 是以 MIT 發布的，那份授權不可撤回、
+  仍然適用於當時的 commit，本次變更自此之後生效。`LICENSE`、兩份 README、
+  `package.json`、`Cargo.toml` 與設定畫面的「關於」都同步更新。
 - 系統語系判定改為區分簡繁。`zh` 是**唯一**需要再看 script 與 region 子標籤的語言
   （簡繁共用同一個主要子標籤），其餘語言仍然只看第一段。判別採白名單：明確指向
   簡體的（`Hans`／`CN`／`SG`／`MY`）對到 `zh-Hans`，其餘的 `zh` 一律 `zh-Hant`——

@@ -8,7 +8,7 @@
 
 A keyboard launcher for Windows that *inserts* commands into your prompt instead of running them.
 
-<img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-3da639">
+<img alt="License: GPL-3.0" src="https://img.shields.io/badge/License-GPL--3.0-3da639">
 <img alt="Platform: Windows 10 / 11" src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078d4?logo=windows&logoColor=white">
 <img alt="Tauri v2" src="https://img.shields.io/badge/Tauri-v2-24c8db?logo=tauri&logoColor=white">
 <img alt="Rust 1.92" src="https://img.shields.io/badge/Rust-1.92-dea584?logo=rust&logoColor=white">
@@ -309,4 +309,12 @@ avoid pasting command text that contains credentials or internal paths.
 
 ## Licence
 
-[MIT](LICENSE) © 2026 Jeremy Wen — who holds the copyright, whatever the section above implies.
+[GNU GPL v3.0](LICENSE) © 2026 Jeremy Wen — who holds the copyright, whatever the section above
+implies.
+
+Copyleft on purpose. Use it, read it, change it, run it at work — all fine. But if you distribute
+something built on it, that thing ships under GPL-3.0 too, with its source. Nobody gets to close this
+up and sell it.
+
+Version 0.1.0 went out under MIT. That grant cannot be withdrawn and still covers those commits;
+the change applies from here on.

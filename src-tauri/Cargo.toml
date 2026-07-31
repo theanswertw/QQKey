@@ -7,7 +7,7 @@ version = "0.1.0"
 description = "QQKey — global quick command launcher"
 authors = ["Jeremy Wen <jeremy@jeremywen.com>"]
 edition = "2021"
-license = "MIT"
+license = "GPL-3.0-only"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
